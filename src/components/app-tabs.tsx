@@ -1,32 +1,55 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Image } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
-
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="profilo">
-        <NativeTabs.Trigger.Label>Profilo</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: Colors.light.accent,
+        tabBarInactiveTintColor: Colors.light.textSecondary,
+        tabBarStyle: {
+          backgroundColor: Colors.light.card,
+          borderTopColor: Colors.light.backgroundElement,
+        },
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={require('@/assets/images/tabIcons/home.png')}
+              style={{
+                width: 22,
+                height: 22,
+                tintColor: focused ? Colors.light.accent : Colors.light.textSecondary,
+              }}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profilo"
+        options={{
+          title: 'Profilo',
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={require('@/assets/images/tabIcons/explore.png')}
+              style={{
+                width: 22,
+                height: 22,
+                tintColor: focused ? Colors.light.accent : Colors.light.textSecondary,
+              }}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen name="esercizi" options={{ href: null }} />
+      <Tabs.Screen name="allenamenti" options={{ href: null }} />
+      <Tabs.Screen name="partite" options={{ href: null }} />
+    </Tabs>
   );
 }

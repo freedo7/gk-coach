@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -29,8 +29,11 @@ export default function RegisterScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedText type="title">Crea account</ThemedText>
-        <ThemedText type="subtitle" themeColor="textSecondary">
+        <Image source={require('@/assets/images/gk-coach-logo.jpeg')} style={styles.logo} />
+        <ThemedText type="title" style={styles.title}>
+          Crea account
+        </ThemedText>
+        <ThemedText type="subtitle" themeColor="textSecondary" style={styles.subtitle}>
           Registrati per accedere ad allenamenti, esercizi e partite
         </ThemedText>
 
@@ -82,7 +85,7 @@ export default function RegisterScreen() {
                   pressed && styles.pressed,
                 ]}>
                 {submitting ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={Colors.light.accentText} />
                 ) : (
                   <ThemedText type="smallBold" style={styles.buttonText}>
                     Registrati
@@ -111,6 +114,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.two,
   },
+  logo: {
+    alignSelf: 'center',
+    width: 80,
+    height: 80,
+    borderRadius: Radius.control,
+    marginBottom: Spacing.two,
+  },
+  title: {
+    textAlign: 'center',
+  },
+  subtitle: {
+    textAlign: 'center',
+  },
   card: {
     marginTop: Spacing.four,
     borderRadius: Radius.card,
@@ -135,7 +151,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.85,

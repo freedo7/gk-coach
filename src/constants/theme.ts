@@ -14,8 +14,9 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
-    accent: '#F2632A',
-    accentSoft: '#FDE7DC',
+    accent: '#6FC22C',
+    accentText: '#0F1A05',
+    accentSoft: '#E6F5D9',
     card: '#FFFFFF',
   },
   dark: {
@@ -24,8 +25,9 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
-    accent: '#F2632A',
-    accentSoft: '#3A2A22',
+    accent: '#6FC22C',
+    accentText: '#0F1A05',
+    accentSoft: '#25361A',
     card: '#1A1B1E',
   },
 } as const;
@@ -74,4 +76,13 @@ export const Radius = {
   card: 20,
   control: 14,
   pill: 999,
+} as const;
+
+// Alone sfumato colorato dietro icone/pulsanti circolari (effetto "glass glow").
+export const AccentGlow = {
+  shadowColor: Colors.light.accent,
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.45,
+  shadowRadius: 16,
+  elevation: 8,
 } as const;

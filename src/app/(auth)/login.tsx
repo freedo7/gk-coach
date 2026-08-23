@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -26,8 +26,8 @@ export default function LoginScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedText type="title">GK Coach</ThemedText>
-        <ThemedText type="subtitle" themeColor="textSecondary">
+        <Image source={require('@/assets/images/gk-coach-logo.jpeg')} style={styles.logo} />
+        <ThemedText type="subtitle" themeColor="textSecondary" style={styles.subtitle}>
           Accedi per vedere allenamenti, esercizi e partite
         </ThemedText>
 
@@ -65,7 +65,7 @@ export default function LoginScreen() {
               pressed && styles.pressed,
             ]}>
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={Colors.light.accentText} />
             ) : (
               <ThemedText type="smallBold" style={styles.buttonText}>
                 Accedi
@@ -92,6 +92,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.two,
   },
+  logo: {
+    alignSelf: 'center',
+    width: 120,
+    height: 120,
+    borderRadius: Radius.card,
+  },
+  subtitle: {
+    textAlign: 'center',
+  },
   card: {
     marginTop: Spacing.four,
     borderRadius: Radius.card,
@@ -116,7 +125,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.85,
