@@ -1,27 +1,43 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { IconTecnicaBase } from '@/components/icons/icon-tecnica-base';
+import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { listCategories } from '@/lib/api/categories';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import type { ExerciseCategory } from '@/types/database';
+
+function CategoryIcon({ icon, size, color }: { icon: string | null; size: number; color: string }) {
+  if (icon === 'body-outline') return <IconTecnicaBase size={size} color={color} />;
+  if (icon === 'football-outline') return <IconTecnicaPodalica size={size} color={color} />;
+  return <Ionicons name={(icon ?? 'fitness-outline') as any} size={size} color={color} />;
+}
 
 export default function EserciziScreen() {
   const { isAdmin } = useAuth();
   const router = useRouter();
-  const [exercises, setExercises] = useState<ExerciseWithCategory[] | null>(null);
+  const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
+  const [allExercises, setAllExercises] = useState<ExerciseWithCategory[] | null>(null);
+  const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      listExercises()
-        .then((data) => {
-          if (!cancelled) setExercises(data);
+      Promise.all([listCategories(), listExercises()])
+        .then(([cats, exs]) => {
+          if (!cancelled) {
+            setCategories(cats);
+            setAllExercises(exs);
+          }
         })
         .catch((err) => {
           if (!cancelled) setError(err.message);
@@ -32,74 +48,99 @@ export default function EserciziScreen() {
     }, [])
   );
 
-  const grouped = groupByCategory(exercises ?? []);
+  const trimmed = query.trim();
+  const searchResults =
+    trimmed.length > 0 && allExercises
+      ? allExercises.filter((e) => e.title.toLowerCase().includes(trimmed.toLowerCase()))
+      : null;
+
+  const loading = categories === null && !error;
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-        {exercises === null && !error && (
-          <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
-        )}
+        <View style={styles.searchWrapper}>
+          <ThemedView type="backgroundElement" style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color={Colors.light.textSecondary} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Cerca esercizi..."
+              placeholderTextColor={Colors.light.textSecondary}
+              style={styles.searchInput}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </ThemedView>
+        </View>
+
+        {loading && <ActivityIndicator style={styles.loader} color={Colors.light.accent} />}
+
         {error && (
           <ThemedText type="small" themeColor="accent" style={styles.padding}>
             {error}
           </ThemedText>
         )}
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {exercises !== null && exercises.length === 0 && (
-            <ThemedText themeColor="textSecondary" style={styles.padding}>
-              Nessun esercizio ancora. {isAdmin ? 'Aggiungine uno con il pulsante qui sotto.' : ''}
-            </ThemedText>
-          )}
-
-          {grouped.map(([category, items]) => (
-            <View key={category.id} style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {category.name.toUpperCase()}
-              </ThemedText>
-              {items.map((exercise) => (
-                <Link key={exercise.id} href={`/esercizi/${exercise.id}`} asChild>
-                  <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-                    <ThemedView type="card" style={styles.rowCard}>
-                      <ThemedText type="smallBold">{exercise.title}</ThemedText>
-                      {exercise.video_url && (
-                        <ThemedText type="small" themeColor="accent">
-                          Video incluso
-                        </ThemedText>
-                      )}
-                    </ThemedView>
+        {searchResults !== null ? (
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {searchResults.length === 0 ? (
+              <ThemedText themeColor="textSecondary">Nessun esercizio trovato.</ThemedText>
+            ) : (
+              searchResults.map((exercise) => (
+                <Pressable
+                  key={exercise.id}
+                  onPress={() => router.push(`/esercizi/${exercise.id}`)}
+                  style={({ pressed }) => [pressed && styles.pressed]}>
+                  <ThemedView type="card" style={styles.resultCard}>
+                    <ThemedText type="smallBold">{exercise.title}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {exercise.category.name}
+                    </ThemedText>
+                  </ThemedView>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+        ) : (
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {categories !== null && (
+              <View style={styles.grid}>
+                {categories.map((category) => (
+                  <Pressable
+                    key={category.id}
+                    style={({ pressed }) => [styles.cardWrapper, pressed && styles.pressed]}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/esercizi/categoria/[id]',
+                        params: { id: category.id, title: category.name },
+                      })
+                    }>
+                    <View style={styles.categoryCard}>
+                      <View style={styles.iconCircle}>
+                        <CategoryIcon icon={category.icon} size={28} color={Colors.light.accent} />
+                      </View>
+                      <ThemedText type="smallBold" style={styles.categoryName}>
+                        {category.name}
+                      </ThemedText>
+                    </View>
                   </Pressable>
-                </Link>
-              ))}
-            </View>
-          ))}
-        </ScrollView>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        )}
 
         {isAdmin && (
           <Pressable
             onPress={() => router.push('/esercizi/new')}
             style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={styles.fabText}>
-              + Nuovo esercizio
-            </ThemedText>
+            <Ionicons name="add" size={24} color={Colors.light.accentText} />
           </Pressable>
         )}
       </SafeAreaView>
     </ThemedView>
   );
-}
-
-function groupByCategory(exercises: ExerciseWithCategory[]) {
-  const map = new Map<string, { category: ExerciseWithCategory['category']; items: ExerciseWithCategory[] }>();
-  for (const exercise of exercises) {
-    const key = exercise.category.id;
-    if (!map.has(key)) map.set(key, { category: exercise.category, items: [] });
-    map.get(key)!.items.push(exercise);
-  }
-  return Array.from(map.values())
-    .sort((a, b) => a.category.sort_order - b.category.sort_order)
-    .map((entry) => [entry.category, entry.items] as const);
 }
 
 const styles = StyleSheet.create({
@@ -108,6 +149,24 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  searchWrapper: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.two,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    gap: Spacing.two,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Colors.light.text,
   },
   loader: {
     marginTop: Spacing.five,
@@ -118,20 +177,39 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.six,
-    gap: Spacing.four,
   },
-  section: {
-    gap: Spacing.two,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.three,
   },
-  sectionTitle: {
-    letterSpacing: 0.5,
+  cardWrapper: {
+    width: '47%',
   },
-  row: {
-    marginBottom: Spacing.one,
-  },
-  rowCard: {
+  categoryCard: {
+    backgroundColor: Colors.light.accentSoft,
     borderRadius: Radius.card,
     padding: Spacing.three,
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: 120,
+    justifyContent: 'center',
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.light.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryName: {
+    textAlign: 'center',
+  },
+  resultCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    marginBottom: Spacing.two,
     gap: Spacing.half,
   },
   pressed: {
@@ -143,10 +221,9 @@ const styles = StyleSheet.create({
     bottom: Spacing.four,
     backgroundColor: Colors.light.accent,
     borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-  },
-  fabText: {
-    color: Colors.light.accentText,
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -12,6 +12,7 @@ export interface ExerciseCategory {
   id: string;
   name: string;
   sort_order: number;
+  icon: string | null;
 }
 
 export interface Exercise {
@@ -20,6 +21,9 @@ export interface Exercise {
   description: string;
   category_id: string;
   video_url: string | null;
+  difficulty: 'base' | 'intermedio' | 'avanzato' | null;
+  duration_minutes: number | null;
+  equipment: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

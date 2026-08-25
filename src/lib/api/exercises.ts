@@ -29,6 +29,9 @@ export interface ExerciseInput {
   description: string;
   category_id: string;
   video_url: string | null;
+  difficulty: 'base' | 'intermedio' | 'avanzato' | null;
+  duration_minutes: number | null;
+  equipment: string | null;
 }
 
 export async function createExercise(input: ExerciseInput, createdBy: string) {
@@ -44,4 +47,14 @@ export async function updateExercise(id: string, input: ExerciseInput) {
 export async function deleteExercise(id: string) {
   const { error } = await supabase.from('exercises').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function listExercisesByCategory(categoryId: string): Promise<ExerciseWithCategory[]> {
+  const { data, error } = await supabase
+    .from('exercises')
+    .select('*, category:exercise_categories(*)')
+    .eq('category_id', categoryId)
+    .order('title');
+  if (error) throw error;
+  return data as unknown as ExerciseWithCategory[];
 }

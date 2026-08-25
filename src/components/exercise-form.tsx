@@ -20,6 +20,9 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   const [description, setDescription] = useState(initial?.description ?? '');
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? '');
   const [videoUrl, setVideoUrl] = useState(initial?.video_url ?? '');
+  const [difficulty, setDifficulty] = useState<'base' | 'intermedio' | 'avanzato' | null>(initial?.difficulty ?? null);
+  const [durationMinutes, setDurationMinutes] = useState(initial?.duration_minutes?.toString() ?? '');
+  const [equipment, setEquipment] = useState(initial?.equipment ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,6 +44,9 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         description: description.trim(),
         category_id: categoryId,
         video_url: videoUrl.trim() || null,
+        difficulty,
+        duration_minutes: durationMinutes.trim() ? parseInt(durationMinutes.trim(), 10) : null,
+        equipment: equipment.trim() || null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -85,6 +91,51 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           })}
         </ThemedView>
       )}
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Difficoltà (opzionale)
+      </ThemedText>
+      <ThemedView style={styles.chipRow}>
+        {(['base', 'intermedio', 'avanzato'] as const).map((level) => {
+          const selected = difficulty === level;
+          return (
+            <Pressable
+              key={level}
+              onPress={() => setDifficulty(selected ? null : level)}>
+              <ThemedView
+                style={[styles.chip, selected && styles.chipSelected]}
+                type={selected ? undefined : 'backgroundElement'}>
+                <ThemedText type="small" themeColor={selected ? 'accentText' : 'text'}>
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          );
+        })}
+      </ThemedView>
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Durata in minuti (opzionale)
+      </ThemedText>
+      <TextInput
+        value={durationMinutes}
+        onChangeText={setDurationMinutes}
+        placeholder="Es. 15"
+        placeholderTextColor={Colors.light.textSecondary}
+        keyboardType="number-pad"
+        style={styles.input}
+      />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Attrezzatura (opzionale)
+      </ThemedText>
+      <TextInput
+        value={equipment}
+        onChangeText={setEquipment}
+        placeholder="Es. Pallone, coni, ostacoli"
+        placeholderTextColor={Colors.light.textSecondary}
+        style={styles.input}
+      />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Istruzioni
