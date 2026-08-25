@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -17,21 +18,23 @@ export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
             <ThemedText type="smallBold" themeColor="textSecondary">
               {formatDateLong(match.match_date)}
             </ThemedText>
-            <ThemedText type="subtitle">{match.opponent}</ThemedText>
-          </View>
-          <View style={styles.rowRight}>
-            <ThemedView
-              type="backgroundElement"
-              style={[styles.homeBadge, match.is_home && styles.homeBadgeActive]}>
-              <ThemedText type="small" themeColor={match.is_home ? 'accentText' : 'textSecondary'}>
-                {match.is_home ? 'Casa' : 'Fuori'}
-              </ThemedText>
-            </ThemedView>
+            <ThemedText type="default" style={{ fontWeight: '700' }}>{match.opponent}</ThemedText>
             {time && (
               <ThemedText type="small" themeColor="textSecondary">
                 {time}
               </ThemedText>
             )}
+          </View>
+          <View style={styles.rowRight}>
+            <ThemedView
+              type="backgroundElement"
+              style={[styles.homeBadge, match.is_home && styles.homeBadgeActive]}>
+              <Ionicons
+                name={match.is_home ? 'home' : 'airplane'}
+                size={16}
+                color={match.is_home ? Colors.light.accentText : Colors.light.textSecondary}
+              />
+            </ThemedView>
           </View>
         </ThemedView>
       </Pressable>
@@ -41,8 +44,9 @@ export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
 
 const styles = StyleSheet.create({
   row: {
-    borderRadius: Radius.card,
-    padding: Spacing.three,
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

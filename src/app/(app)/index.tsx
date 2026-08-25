@@ -62,7 +62,7 @@ export default function HomeScreen() {
                 <ThemedText type="smallBold" themeColor="textSecondary">
                   {formatDateLong(nextTraining.training_date)}
                 </ThemedText>
-                <ThemedText type="subtitle">{nextTraining.title}</ThemedText>
+                <ThemedText type="default" style={{ fontWeight: '700' }}>{nextTraining.title}</ThemedText>
                 {formatTime(nextTraining.training_time) && (
                   <ThemedText type="small" themeColor="textSecondary">
                     {formatTime(nextTraining.training_time)}
@@ -123,8 +123,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   summaryCard: {
-    borderRadius: Radius.card,
-    padding: Spacing.three,
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
     gap: Spacing.half,
   },
 });

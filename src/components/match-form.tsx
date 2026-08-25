@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
@@ -56,24 +57,26 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Casa o fuori casa
+        Casa o trasferta
       </ThemedText>
       <ThemedView style={styles.chipRow}>
         {(
           [
-            { label: 'Casa', value: true },
-            { label: 'Fuori casa', value: false },
-          ] as const
+            { icon: 'home' as const, value: true },
+            { icon: 'airplane' as const, value: false },
+          ]
         ).map((option) => {
           const selected = isHome === option.value;
           return (
-            <Pressable key={option.label} onPress={() => setIsHome(option.value)} style={styles.chipFlex}>
+            <Pressable key={String(option.value)} onPress={() => setIsHome(option.value)} style={styles.chipFlex}>
               <ThemedView
                 style={[styles.chip, selected && styles.chipSelected]}
                 type={selected ? undefined : 'backgroundElement'}>
-                <ThemedText type="small" themeColor={selected ? 'accentText' : 'text'}>
-                  {option.label}
-                </ThemedText>
+                <Ionicons
+                  name={option.icon}
+                  size={22}
+                  color={selected ? Colors.light.accentText : Colors.light.textSecondary}
+                />
               </ThemedView>
             </Pressable>
           );
