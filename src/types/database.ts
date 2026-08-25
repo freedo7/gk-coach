@@ -21,6 +21,7 @@ export interface Exercise {
   description: string;
   category_id: string;
   video_url: string | null;
+  content_url: string | null;
   difficulty: 'base' | 'intermedio' | 'avanzato' | null;
   duration_minutes: number | null;
   equipment: string | null;

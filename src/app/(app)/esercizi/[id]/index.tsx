@@ -81,9 +81,19 @@ export default function EsercizioDettaglioScreen() {
           {exercise.video_url && (
             <Pressable
               onPress={() => Linking.openURL(exercise.video_url!)}
-              style={({ pressed }) => [styles.videoButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={styles.videoButtonText}>
+              style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.actionLinkText}>
                 ▶ Guarda il video
+              </ThemedText>
+            </Pressable>
+          )}
+
+          {exercise.content_url && (
+            <Pressable
+              onPress={() => router.push({ pathname: '/esercizi/scheda', params: { url: exercise.content_url! } })}
+              style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.actionLinkText}>
+                📄 Apri scheda esercizio
               </ThemedText>
             </Pressable>
           )}
@@ -134,13 +144,13 @@ const styles = StyleSheet.create({
   description: {
     lineHeight: 22,
   },
-  videoButton: {
+  actionLink: {
     backgroundColor: Colors.light.accentSoft,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
-  videoButtonText: {
+  actionLinkText: {
     color: Colors.light.accent,
   },
   adminActions: {

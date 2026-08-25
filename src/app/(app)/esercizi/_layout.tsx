@@ -12,6 +12,7 @@ export default function EserciziLayout() {
       <Stack.Screen name="[id]/index" options={{ title: 'Esercizio' }} />
       <Stack.Screen name="[id]/edit" options={{ title: 'Modifica esercizio', presentation: 'modal' }} />
       <Stack.Screen name="categoria/[id]" options={{ title: 'Esercizi' }} />
+      <Stack.Screen name="scheda/index" options={{ title: 'Scheda esercizio' }} />
     </Stack>
   );
 }

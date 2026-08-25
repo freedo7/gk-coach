@@ -20,6 +20,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   const [description, setDescription] = useState(initial?.description ?? '');
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? '');
   const [videoUrl, setVideoUrl] = useState(initial?.video_url ?? '');
+  const [contentUrl, setContentUrl] = useState(initial?.content_url ?? '');
   const [difficulty, setDifficulty] = useState<'base' | 'intermedio' | 'avanzato' | null>(initial?.difficulty ?? null);
   const [durationMinutes, setDurationMinutes] = useState(initial?.duration_minutes?.toString() ?? '');
   const [equipment, setEquipment] = useState(initial?.equipment ?? '');
@@ -44,6 +45,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         description: description.trim(),
         category_id: categoryId,
         video_url: videoUrl.trim() || null,
+        content_url: contentUrl.trim() || null,
         difficulty,
         duration_minutes: durationMinutes.trim() ? parseInt(durationMinutes.trim(), 10) : null,
         equipment: equipment.trim() || null,
@@ -157,6 +159,19 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={videoUrl}
         onChangeText={setVideoUrl}
         placeholder="https://youtube.com/..."
+        placeholderTextColor={Colors.light.textSecondary}
+        autoCapitalize="none"
+        keyboardType="url"
+        style={styles.input}
+      />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        URL scheda HTML (opzionale)
+      </ThemedText>
+      <TextInput
+        value={contentUrl}
+        onChangeText={setContentUrl}
+        placeholder="https://...supabase.co/storage/..."
         placeholderTextColor={Colors.light.textSecondary}
         autoCapitalize="none"
         keyboardType="url"
