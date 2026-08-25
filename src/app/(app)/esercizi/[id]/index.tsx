@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -76,6 +77,14 @@ export default function EsercizioDettaglioScreen() {
           </ThemedView>
 
           <ThemedText type="title">{exercise.title}</ThemedText>
+          {(exercise.sets || exercise.reps) && (
+            <ThemedText type="smallBold" themeColor="accent">
+              {[exercise.sets && `${exercise.sets} serie`, exercise.reps && `${exercise.reps} ripetizioni`]
+                .filter(Boolean)
+                .join(' × ')}
+            </ThemedText>
+          )}
+
           <ThemedText style={styles.description}>{exercise.description}</ThemedText>
 
           {exercise.video_url && (
@@ -102,15 +111,15 @@ export default function EsercizioDettaglioScreen() {
             <ThemedView style={styles.adminActions}>
               <Link href={`/esercizi/${exercise.id}/edit`} asChild>
                 <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
                   <ThemedText type="smallBold">Modifica</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" themeColor="accent">
-                  Elimina
-                </ThemedText>
+                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
+                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
               </Pressable>
             </ThemedView>
           )}
@@ -160,10 +169,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
     backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-    alignItems: 'center',
+  },
+  actionButtonDelete: {
+    backgroundColor: Colors.light.dangerSoft,
   },
   pressed: {
     opacity: 0.7,

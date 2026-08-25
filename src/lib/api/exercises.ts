@@ -33,6 +33,8 @@ export interface ExerciseInput {
   difficulty: 'base' | 'intermedio' | 'avanzato' | null;
   duration_minutes: number | null;
   equipment: string | null;
+  sets: number | null;
+  reps: number | null;
 }
 
 export async function createExercise(input: ExerciseInput, createdBy: string) {

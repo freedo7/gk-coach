@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -17,6 +18,7 @@ export default function AllenamentoDettaglioScreen() {
   const router = useRouter();
   const [training, setTraining] = useState<TrainingWithExercises | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showActions, setShowActions] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,13 +74,37 @@ export default function AllenamentoDettaglioScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="title">{training.title}</ThemedText>
-          <ThemedText type="subtitle" themeColor="textSecondary">
-            {formatDateLong(training.training_date)}
-            {time ? ` · ${time}` : ''}
-          </ThemedText>
+          <Pressable onPress={() => isAdmin && setShowActions((v) => !v)}>
+          <ThemedView type="card" style={styles.headerCard}>
+            <ThemedText type="default" themeColor="textSecondary" style={styles.dateText}>
+              {formatDateLong(training.training_date)}
+              {time ? ` · ${time}` : ''}
+            </ThemedText>
+            <ThemedText type="default" style={styles.titleText}>{training.title}</ThemedText>
+            {training.notes && (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.notes}>
+                {training.notes}
+              </ThemedText>
+            )}
+          </ThemedView>
+          </Pressable>
 
-          {training.notes && <ThemedText style={styles.notes}>{training.notes}</ThemedText>}
+          {isAdmin && showActions && (
+            <View style={styles.adminActions}>
+              <Link href={`/allenamenti/${training.id}/edit`} asChild>
+                <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
+                  <ThemedText type="smallBold">Modifica</ThemedText>
+                </Pressable>
+              </Link>
+              <Pressable
+                onPress={handleDelete}
+                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
+                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
+              </Pressable>
+            </View>
+          )}
 
           {training.training_exercises.length > 0 && (
             <View style={styles.exerciseSection}>
@@ -108,22 +134,6 @@ export default function AllenamentoDettaglioScreen() {
             </View>
           )}
 
-          {isAdmin && (
-            <View style={styles.adminActions}>
-              <Link href={`/allenamenti/${training.id}/edit`} asChild>
-                <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold">Modifica</ThemedText>
-                </Pressable>
-              </Link>
-              <Pressable
-                onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" themeColor="accent">
-                  Elimina
-                </ThemedText>
-              </Pressable>
-            </View>
-          )}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -145,9 +155,23 @@ const styles = StyleSheet.create({
     paddingBottom: BottomTabInset + Spacing.six,
     gap: Spacing.two,
   },
+  headerCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    gap: Spacing.one,
+    borderWidth: 2,
+    borderColor: Colors.light.accent,
+  },
+  dateText: {
+    fontWeight: '500',
+  },
+  titleText: {
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
+  },
   notes: {
-    marginTop: Spacing.two,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   exerciseSection: {
     marginTop: Spacing.four,
@@ -165,10 +189,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
     backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-    alignItems: 'center',
+  },
+  actionButtonDelete: {
+    backgroundColor: Colors.light.dangerSoft,
   },
   pressed: {
     opacity: 0.7,

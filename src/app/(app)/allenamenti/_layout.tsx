@@ -8,11 +8,11 @@ export default function AllenamentiLayout() {
         headerTitleStyle: { fontWeight: '700' },
       }}>
       <Stack.Screen name="index" options={{ title: 'Allenamenti' }} />
-      <Stack.Screen name="new" options={{ title: 'Nuovo allenamento', presentation: 'formSheet' }} />
+      <Stack.Screen name="new" options={{ title: 'Nuovo allenamento', presentation: 'modal' }} />
       <Stack.Screen name="[id]/index" options={{ title: 'Allenamento' }} />
       <Stack.Screen
         name="[id]/edit"
-        options={{ title: 'Modifica allenamento', presentation: 'formSheet' }}
+        options={{ title: 'Modifica allenamento', presentation: 'modal' }}
       />
     </Stack>
   );

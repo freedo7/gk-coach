@@ -25,6 +25,8 @@ export interface Exercise {
   difficulty: 'base' | 'intermedio' | 'avanzato' | null;
   duration_minutes: number | null;
   equipment: string | null;
+  sets: number | null;
+  reps: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

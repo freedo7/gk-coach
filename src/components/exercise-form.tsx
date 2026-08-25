@@ -24,6 +24,8 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   const [difficulty, setDifficulty] = useState<'base' | 'intermedio' | 'avanzato' | null>(initial?.difficulty ?? null);
   const [durationMinutes, setDurationMinutes] = useState(initial?.duration_minutes?.toString() ?? '');
   const [equipment, setEquipment] = useState(initial?.equipment ?? '');
+  const [sets, setSets] = useState(initial?.sets?.toString() ?? '');
+  const [reps, setReps] = useState(initial?.reps?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +51,8 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         difficulty,
         duration_minutes: durationMinutes.trim() ? parseInt(durationMinutes.trim(), 10) : null,
         equipment: equipment.trim() || null,
+        sets: sets.trim() ? parseInt(sets.trim(), 10) : null,
+        reps: reps.trim() ? parseInt(reps.trim(), 10) : null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -127,6 +131,29 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         keyboardType="number-pad"
         style={styles.input}
       />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Serie e ripetizioni (opzionale)
+      </ThemedText>
+      <ThemedView style={styles.setsRow}>
+        <TextInput
+          value={sets}
+          onChangeText={setSets}
+          placeholder="Serie"
+          placeholderTextColor={Colors.light.textSecondary}
+          keyboardType="number-pad"
+          style={[styles.input, styles.setsInput]}
+        />
+        <ThemedText style={styles.setsSeparator}>×</ThemedText>
+        <TextInput
+          value={reps}
+          onChangeText={setReps}
+          placeholder="Ripetizioni"
+          placeholderTextColor={Colors.light.textSecondary}
+          keyboardType="number-pad"
+          style={[styles.input, styles.setsInput]}
+        />
+      </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Attrezzatura (opzionale)
@@ -223,6 +250,21 @@ const styles = StyleSheet.create({
   },
   spacing: {
     marginTop: Spacing.four,
+  },
+  setsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  setsInput: {
+    flex: 1,
+    marginTop: 0,
+  },
+  setsSeparator: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.textSecondary,
   },
   chipRow: {
     flexDirection: 'row',
