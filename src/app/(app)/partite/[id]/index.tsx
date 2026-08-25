@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -85,11 +86,21 @@ export default function PartitaDettaglioScreen() {
             {time ? ` · ${time}` : ''}
           </ThemedText>
 
+          {match.result && (
+            <ThemedView type="card" style={styles.resultCard}>
+              <ThemedText type="smallBold" themeColor="textSecondary">RISULTATO</ThemedText>
+              <ThemedText style={styles.resultText}>{match.result}</ThemedText>
+              {match.result_notes && (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.notesText}>
+                  {match.result_notes}
+                </ThemedText>
+              )}
+            </ThemedView>
+          )}
+
           {match.notes && (
             <ThemedView type="card" style={styles.notesCard}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Note
-              </ThemedText>
+              <ThemedText type="smallBold" themeColor="textSecondary">NOTE</ThemedText>
               <ThemedText style={styles.notesText}>{match.notes}</ThemedText>
             </ThemedView>
           )}
@@ -98,15 +109,15 @@ export default function PartitaDettaglioScreen() {
             <View style={styles.adminActions}>
               <Link href={`/partite/${match.id}/edit`} asChild>
                 <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
                   <ThemedText type="smallBold">Modifica</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" themeColor="accent">
-                  Elimina
-                </ThemedText>
+                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
+                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
               </Pressable>
             </View>
           )}
@@ -137,6 +148,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
   },
+  resultCard: {
+    marginTop: Spacing.three,
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    gap: Spacing.one,
+    borderWidth: 2,
+    borderColor: Colors.light.accent,
+  },
+  resultText: {
+    fontSize: 32,
+    fontWeight: '800',
+    lineHeight: 38,
+  },
   notesCard: {
     marginTop: Spacing.three,
     borderRadius: Radius.card,
@@ -153,10 +177,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
     backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-    alignItems: 'center',
+  },
+  actionButtonDelete: {
+    backgroundColor: Colors.light.dangerSoft,
   },
   pressed: {
     opacity: 0.7,

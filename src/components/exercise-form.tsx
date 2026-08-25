@@ -55,7 +55,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         reps: reps.trim() ? parseInt(reps.trim(), 10) : null,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError((err as any)?.message ?? (err as any)?.error_description ?? JSON.stringify(err));
     } finally {
       setSubmitting(false);
     }

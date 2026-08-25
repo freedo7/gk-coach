@@ -17,8 +17,11 @@ interface Props {
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [isHome, setIsHome] = useState(initial?.is_home ?? true);
+  const [matchType, setMatchType] = useState<'amichevole' | 'campionato' | 'coppa'>(initial?.match_type ?? 'campionato');
   const [matchDate, setMatchDate] = useState<string | null>(initial?.match_date ?? null);
   const [matchTime, setMatchTime] = useState(initial?.match_time ?? '');
+  const [result, setResult] = useState(initial?.result ?? '');
+  const [resultNotes, setResultNotes] = useState(initial?.result_notes ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -34,10 +37,13 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         is_home: isHome,
         match_date: matchDate!,
         match_time: matchTime.trim() || null,
+        match_type: matchType,
+        result: result.trim() || null,
+        result_notes: resultNotes.trim() || null,
         notes: notes.trim() || null,
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+    } catch (err: any) {
+      setError(err?.message ?? err?.error_description ?? JSON.stringify(err));
     } finally {
       setSubmitting(false);
     }
@@ -84,6 +90,39 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Tipo di partita
+      </ThemedText>
+      <ThemedView style={styles.chipRow}>
+        {(
+          [
+            { value: 'amichevole', icon: 'people-outline', label: 'Amichevole' },
+            { value: 'campionato', icon: 'ribbon-outline', label: 'Campionato' },
+            { value: 'coppa',      icon: 'trophy-outline', label: 'Coppa' },
+          ] as const
+        ).map((option) => {
+          const selected = matchType === option.value;
+          return (
+            <Pressable key={option.value} onPress={() => setMatchType(option.value)} style={styles.chipFlex}>
+              <ThemedView
+                style={[styles.chip, selected && styles.chipSelected]}
+                type={selected ? undefined : 'backgroundElement'}>
+                <Ionicons
+                  name={option.icon}
+                  size={22}
+                  color={selected ? Colors.light.accentText : Colors.light.textSecondary}
+                />
+                <ThemedText
+                  type="small"
+                  style={{ color: selected ? Colors.light.accentText : Colors.light.textSecondary }}>
+                  {option.label}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          );
+        })}
+      </ThemedView>
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Data
       </ThemedText>
       <ThemedView style={styles.spacingSmall}>
@@ -102,7 +141,31 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Note (opzionale)
+        Risultato (opzionale)
+      </ThemedText>
+      <TextInput
+        value={result}
+        onChangeText={setResult}
+        placeholder="Es. 2-1"
+        placeholderTextColor={Colors.light.textSecondary}
+        style={styles.input}
+      />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Note sul risultato (opzionale)
+      </ThemedText>
+      <TextInput
+        value={resultNotes}
+        onChangeText={setResultNotes}
+        placeholder="Parate, gol subiti, prestazione..."
+        placeholderTextColor={Colors.light.textSecondary}
+        multiline
+        numberOfLines={4}
+        style={[styles.input, styles.multiline]}
+      />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Note generali (opzionale)
       </ThemedText>
       <TextInput
         value={notes ?? ''}
@@ -175,6 +238,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+    gap: Spacing.one,
   },
   chipSelected: {
     backgroundColor: Colors.light.accent,

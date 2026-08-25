@@ -18,6 +18,9 @@ export interface MatchInput {
   is_home: boolean;
   match_date: string;
   match_time: string | null;
+  match_type: 'amichevole' | 'campionato' | 'coppa';
+  result: string | null;
+  result_notes: string | null;
   notes: string | null;
 }
 

@@ -49,7 +49,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
         selectedIds
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError((err as any)?.message ?? (err as any)?.error_description ?? JSON.stringify(err));
     } finally {
       setSubmitting(false);
     }

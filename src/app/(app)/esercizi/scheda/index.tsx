@@ -1,5 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
@@ -11,14 +12,22 @@ export default function SchedaScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
   const [html, setHtml] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [webViewKey, setWebViewKey] = useState(0);
 
-  useEffect(() => {
-    if (!url) return;
-    fetch(url)
-      .then((res) => res.text())
-      .then(setHtml)
-      .catch(() => setError(true));
-  }, [url]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!url) return;
+      setHtml(null);
+      setError(false);
+      fetch(url)
+        .then((res) => res.text())
+        .then((text) => {
+          setHtml(text);
+          setWebViewKey((k) => k + 1);
+        })
+        .catch(() => setError(true));
+    }, [url])
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -28,6 +37,7 @@ export default function SchedaScreen() {
         )}
         {html && (
           <WebView
+            key={webViewKey}
             source={{ html, baseUrl: url }}
             style={styles.webview}
             javaScriptEnabled
