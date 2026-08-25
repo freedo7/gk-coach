@@ -35,6 +35,11 @@ export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
                 color={match.is_home ? Colors.light.accentText : Colors.light.textSecondary}
               />
             </ThemedView>
+            {match.match_type && (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.matchType}>
+                {match.match_type.charAt(0).toUpperCase() + match.match_type.slice(1)}
+              </ThemedText>
+            )}
           </View>
         </ThemedView>
       </Pressable>
@@ -70,6 +75,9 @@ const styles = StyleSheet.create({
   },
   homeBadgeActive: {
     backgroundColor: Colors.light.accentSoft,
+  },
+  matchType: {
+    textAlign: 'right',
   },
   pressed: {
     opacity: 0.7,

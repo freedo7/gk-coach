@@ -117,6 +117,13 @@ export default function EserciziScreen() {
                       })
                     }>
                     <View style={styles.categoryCard}>
+                      {allExercises !== null && (
+                        <View style={styles.countBadge}>
+                          <ThemedText type="small" style={styles.countText}>
+                            {allExercises.filter((e) => e.category_id === category.id).length}
+                          </ThemedText>
+                        </View>
+                      )}
                       <View style={styles.iconCircle}>
                         <CategoryIcon icon={category.icon} size={28} color={Colors.light.accent} />
                       </View>
@@ -194,6 +201,23 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     minHeight: 120,
     justifyContent: 'center',
+  },
+  countBadge: {
+    position: 'absolute',
+    top: Spacing.two,
+    right: Spacing.two,
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.pill,
+    minWidth: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.one,
+  },
+  countText: {
+    color: Colors.light.accentText,
+    fontWeight: '700',
+    fontSize: 12,
   },
   iconCircle: {
     width: 52,
