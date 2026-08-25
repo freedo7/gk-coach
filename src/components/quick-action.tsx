@@ -18,7 +18,7 @@ export function QuickAction({ href, icon, label }: Props) {
     <Link href={href} asChild>
       <Pressable style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
         <GlowIcon>
-          <Ionicons name={icon} size={24} color={Colors.light.accent} />
+          <Ionicons name={icon} size={30} color={Colors.light.accent} />
         </GlowIcon>
         <ThemedText type="small" style={styles.label}>
           {label}
@@ -32,10 +32,11 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   label: {
     textAlign: 'center',
+    alignSelf: 'stretch',
   },
   pressed: {
     opacity: 0.7,

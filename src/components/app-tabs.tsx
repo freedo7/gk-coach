@@ -9,11 +9,13 @@ export default function AppTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.light.accent,
-        tabBarInactiveTintColor: Colors.light.textSecondary,
+        tabBarInactiveTintColor: '#333333',
         tabBarStyle: {
-          backgroundColor: Colors.light.card,
-          borderTopColor: Colors.light.backgroundElement,
+          backgroundColor: 'transparent',
+          borderTopColor: 'transparent',
+          elevation: 0,
         },
+        sceneStyle: { backgroundColor: 'transparent' },
       }}>
       <Tabs.Screen
         name="index"
@@ -23,9 +25,9 @@ export default function AppTabs() {
             <Image
               source={require('@/assets/images/tabIcons/home.png')}
               style={{
-                width: 22,
-                height: 22,
-                tintColor: focused ? Colors.light.accent : Colors.light.textSecondary,
+                width: 28,
+                height: 28,
+                tintColor: focused ? Colors.light.accent : '#333333',
               }}
             />
           ),
@@ -39,9 +41,9 @@ export default function AppTabs() {
             <Image
               source={require('@/assets/images/tabIcons/explore.png')}
               style={{
-                width: 22,
-                height: 22,
-                tintColor: focused ? Colors.light.accent : Colors.light.textSecondary,
+                width: 28,
+                height: 28,
+                tintColor: focused ? Colors.light.accent : '#333333',
               }}
             />
           ),

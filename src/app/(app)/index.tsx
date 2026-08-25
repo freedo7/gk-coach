@@ -12,7 +12,7 @@ import { listMatches } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 
 function todayISO() {
   const now = new Date();
@@ -48,12 +48,6 @@ export default function HomeScreen() {
           <ThemedText type="title" style={styles.greeting}>
             Ciao{name ? `, ${name.split(' ')[0]}` : ''}
           </ThemedText>
-
-          <View style={styles.quickActions}>
-            <QuickAction href="/esercizi" icon="book-outline" label="Libreria esercizi" />
-            <QuickAction href="/allenamenti" icon="calendar-outline" label="Allenamenti" />
-            <QuickAction href="/partite" icon="football-outline" label="Partite" />
-          </View>
 
           <View style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
@@ -91,6 +85,12 @@ export default function HomeScreen() {
             )}
           </View>
         </ScrollView>
+
+        <View style={styles.quickActions}>
+          <QuickAction href="/esercizi" icon="book-outline" label="Libreria esercizi" />
+          <QuickAction href="/allenamenti" icon="calendar-outline" label="Allenamenti" />
+          <QuickAction href="/partite" icon="football-outline" label="Partite" />
+        </View>
       </SafeAreaView>
     </ThemedView>
   );
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.six,
+    paddingBottom: Spacing.four,
     gap: Spacing.four,
   },
   greeting: {
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
+    paddingVertical: Spacing.three,
   },
   section: {
     gap: Spacing.two,
