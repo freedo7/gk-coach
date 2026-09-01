@@ -26,15 +26,21 @@ export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
             )}
           </View>
           <View style={styles.rowRight}>
-            <ThemedView
-              type="backgroundElement"
-              style={[styles.homeBadge, match.is_home && styles.homeBadgeActive]}>
-              <Ionicons
-                name={match.is_home ? 'home' : 'airplane'}
-                size={16}
-                color={match.is_home ? Colors.light.accentText : Colors.light.textSecondary}
-              />
-            </ThemedView>
+            {match.result ? (
+              <ThemedView type="backgroundElement" style={styles.resultBadge}>
+                <ThemedText type="smallBold">{match.result}</ThemedText>
+              </ThemedView>
+            ) : (
+              <ThemedView
+                type="backgroundElement"
+                style={[styles.homeBadge, match.is_home && styles.homeBadgeActive]}>
+                <Ionicons
+                  name={match.is_home ? 'home' : 'airplane'}
+                  size={16}
+                  color={match.is_home ? Colors.light.accentText : Colors.light.textSecondary}
+                />
+              </ThemedView>
+            )}
             {match.match_type && (
               <ThemedText type="small" themeColor="textSecondary" style={styles.matchType}>
                 {match.match_type.charAt(0).toUpperCase() + match.match_type.slice(1)}
@@ -67,6 +73,11 @@ const styles = StyleSheet.create({
   rowRight: {
     alignItems: 'flex-end',
     gap: Spacing.one,
+  },
+  resultBadge: {
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
   },
   homeBadge: {
     borderRadius: Radius.pill,

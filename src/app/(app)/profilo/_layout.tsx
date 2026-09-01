@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-export default function AllenamentiLayout() {
+export default function ProfiloLayout() {
   return (
     <Stack
       screenOptions={{
@@ -11,12 +11,7 @@ export default function AllenamentiLayout() {
         headerShadowVisible: false,
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="new" options={{ title: 'Nuovo allenamento', presentation: 'modal' }} />
-      <Stack.Screen name="[id]/index" options={{ title: 'Allenamento' }} />
-      <Stack.Screen
-        name="[id]/edit"
-        options={{ title: 'Modifica allenamento', presentation: 'modal' }}
-      />
+      <Stack.Screen name="utenti" options={{ title: 'Utenti registrati' }} />
     </Stack>
   );
 }

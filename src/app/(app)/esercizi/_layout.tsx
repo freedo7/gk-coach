@@ -4,10 +4,13 @@ export default function EserciziLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
         headerTitleStyle: { fontWeight: '700' },
+        headerBackTitle: 'Indietro',
+        contentStyle: { backgroundColor: 'transparent' },
+        headerStyle: { backgroundColor: 'transparent' },
+        headerShadowVisible: false,
       }}>
-      <Stack.Screen name="index" options={{ title: 'Esercizi' }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="new" options={{ title: 'Nuovo esercizio', presentation: 'modal' }} />
       <Stack.Screen name="[id]/index" options={{ title: 'Esercizio' }} />
       <Stack.Screen name="[id]/edit" options={{ title: 'Modifica esercizio', presentation: 'modal' }} />

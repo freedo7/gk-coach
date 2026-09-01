@@ -85,8 +85,8 @@ export const Radius = {
 // Alone sfumato colorato dietro icone/pulsanti circolari (effetto "glass glow").
 export const AccentGlow = {
   shadowColor: Colors.light.accent,
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.45,
-  shadowRadius: 16,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.25,
+  shadowRadius: 30,
   elevation: 8,
 } as const;

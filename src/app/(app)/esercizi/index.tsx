@@ -58,7 +58,18 @@ export default function EserciziScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.pageHeader}>
+          <ThemedText type="title">Esercizi</ThemedText>
+          {isAdmin && (
+            <Pressable
+              onPress={() => router.push('/esercizi/new')}
+              style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}>
+              <ThemedText style={styles.addBtnText}>+ Nuovo</ThemedText>
+            </Pressable>
+          )}
+        </View>
+
         <View style={styles.searchWrapper}>
           <ThemedView type="backgroundElement" style={styles.searchBar}>
             <Ionicons name="search-outline" size={18} color={Colors.light.textSecondary} />
@@ -137,14 +148,6 @@ export default function EserciziScreen() {
             )}
           </ScrollView>
         )}
-
-        {isAdmin && (
-          <Pressable
-            onPress={() => router.push('/esercizi/new')}
-            style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-            <Ionicons name="add" size={24} color={Colors.light.accentText} />
-          </Pressable>
-        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -157,9 +160,27 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  searchWrapper: {
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
+    paddingBottom: Spacing.two,
+  },
+  addBtn: {
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  addBtnText: {
+    color: Colors.light.accentText,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  searchWrapper: {
+    paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.two,
   },
   searchBar: {
@@ -238,16 +259,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  fab: {
-    position: 'absolute',
-    right: Spacing.four,
-    bottom: Spacing.four,
-    backgroundColor: Colors.light.accent,
-    borderRadius: Radius.pill,
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

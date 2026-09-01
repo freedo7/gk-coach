@@ -1,8 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -12,6 +12,15 @@ import { getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/
 import { formatTime } from '@/lib/format';
 import type { Training } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+
+LocaleConfig.locales['it'] = {
+  monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
+  monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+  dayNames: ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],
+  dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
+  today: 'Oggi',
+};
+LocaleConfig.defaultLocale = 'it';
 
 function todayISO() {
   const now = new Date();
@@ -53,9 +62,11 @@ export default function AllenamentiScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.pageHeader}>
           <ThemedText type="title">Allenamenti</ThemedText>
+        </View>
 
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedView type="card" style={styles.calendarCard}>
             <Calendar
               current={selectedDate}
@@ -124,6 +135,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  pageHeader: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.two,
   },
   scrollContent: {
     padding: Spacing.four,

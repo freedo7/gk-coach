@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   halo: {
     position: 'absolute',
     backgroundColor: Colors.light.accent,
-    opacity: 0.18,
+    opacity: 0.10,
   },
   circle: {
     backgroundColor: Colors.light.accentSoft,

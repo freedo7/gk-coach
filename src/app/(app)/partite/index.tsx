@@ -47,7 +47,18 @@ export default function PartiteScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.pageHeader}>
+          <ThemedText type="title">Partite</ThemedText>
+          {isAdmin && (
+            <Pressable
+              onPress={() => router.push('/partite/new')}
+              style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}>
+              <ThemedText style={styles.addBtnText}>+ Nuova</ThemedText>
+            </Pressable>
+          )}
+        </View>
+
         {matches === null && !error && (
           <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
         )}
@@ -86,16 +97,6 @@ export default function PartiteScreen() {
             </View>
           )}
         </ScrollView>
-
-        {isAdmin && (
-          <Pressable
-            onPress={() => router.push('/partite/new')}
-            style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={styles.fabText}>
-              + Nuova partita
-            </ThemedText>
-          </Pressable>
-        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -107,6 +108,25 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.two,
+  },
+  addBtn: {
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  addBtnText: {
+    color: Colors.light.accentText,
+    fontWeight: '700',
+    fontSize: 14,
   },
   loader: {
     marginTop: Spacing.five,
@@ -127,17 +147,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  fab: {
-    position: 'absolute',
-    right: Spacing.four,
-    bottom: Spacing.four,
-    backgroundColor: Colors.light.accent,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-  },
-  fabText: {
-    color: Colors.light.accentText,
   },
 });
