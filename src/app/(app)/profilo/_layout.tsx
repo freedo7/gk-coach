@@ -11,7 +11,8 @@ export default function ProfiloLayout() {
         headerShadowVisible: false,
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="utenti" options={{ title: 'Utenti registrati' }} />
+      <Stack.Screen name="utenti" options={{ title: 'Membri squadra' }} />
+      <Stack.Screen name="invite" options={{ title: 'Invita portieri' }} />
     </Stack>
   );
 }

@@ -9,10 +9,11 @@ export interface TrainingWithExercises extends Training {
   training_exercises: TrainingExerciseWithExercise[];
 }
 
-export async function listTrainings(): Promise<Training[]> {
+export async function listTrainings(teamId: string): Promise<Training[]> {
   const { data, error } = await supabase
     .from('trainings')
     .select('*')
+    .eq('team_id', teamId)
     .order('training_date');
   if (error) throw error;
   return data;
@@ -29,11 +30,12 @@ export async function getTraining(id: string): Promise<TrainingWithExercises> {
   return data as unknown as TrainingWithExercises;
 }
 
-export async function getTrainingByDate(date: string): Promise<TrainingWithExercises | null> {
+export async function getTrainingByDate(date: string, teamId: string): Promise<TrainingWithExercises | null> {
   const { data, error } = await supabase
     .from('trainings')
     .select('*, training_exercises(*, exercise:exercises(*))')
     .eq('training_date', date)
+    .eq('team_id', teamId)
     .order('position', { referencedTable: 'training_exercises' })
     .maybeSingle();
   if (error) throw error;
@@ -47,10 +49,10 @@ export interface TrainingInput {
   notes: string | null;
 }
 
-export async function createTraining(input: TrainingInput, createdBy: string) {
+export async function createTraining(input: TrainingInput, createdBy: string, teamId: string): Promise<string> {
   const { data, error } = await supabase
     .from('trainings')
-    .insert({ ...input, created_by: createdBy })
+    .insert({ ...input, created_by: createdBy, team_id: teamId })
     .select('id')
     .single();
   if (error) throw error;
@@ -67,10 +69,7 @@ export async function deleteTraining(id: string) {
   if (error) throw error;
 }
 
-export async function setTrainingExercises(
-  trainingId: string,
-  exerciseIds: string[]
-) {
+export async function setTrainingExercises(trainingId: string, exerciseIds: string[]) {
   await supabase.from('training_exercises').delete().eq('training_id', trainingId);
   if (exerciseIds.length === 0) return;
   const rows = exerciseIds.map((exercise_id, index) => ({

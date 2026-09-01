@@ -20,7 +20,7 @@ function todayISO() {
 }
 
 export default function HomeScreen() {
-  const { profile } = useAuth();
+  const { profile, currentTeam } = useAuth();
   const today = todayISO();
 
   const [nextTraining, setNextTraining] = useState<Training | null | undefined>(undefined);
@@ -28,15 +28,16 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      listTrainings().then((data) => {
+      if (!currentTeam) return;
+      listTrainings(currentTeam.id).then((data) => {
         const upcoming = data.filter((t) => t.training_date >= today);
         setNextTraining(upcoming[0] ?? null);
       });
-      listMatches().then((data) => {
+      listMatches(currentTeam.id).then((data) => {
         const upcoming = data.filter((m) => m.match_date >= today);
         setNextMatch(upcoming[0] ?? null);
       });
-    }, [])
+    }, [currentTeam])
   );
 
   const name = profile?.full_name?.trim() || profile?.email || '';

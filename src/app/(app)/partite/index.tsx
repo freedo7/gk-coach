@@ -18,15 +18,16 @@ function todayISO() {
 }
 
 export default function PartiteScreen() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentTeam } = useAuth();
   const router = useRouter();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
+      if (!currentTeam) return;
       let cancelled = false;
-      listMatches()
+      listMatches(currentTeam.id)
         .then((data) => {
           if (!cancelled) setMatches(data);
         })
@@ -36,7 +37,7 @@ export default function PartiteScreen() {
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, [currentTeam])
   );
 
   const today = todayISO();

@@ -147,13 +147,20 @@ export default function ProfiloScreen() {
             </Pressable>
           </ThemedView>
 
-          {/* Admin: utenti */}
+          {/* Admin: squadra */}
           {isAdmin && (
-            <Pressable
-              onPress={() => router.push('/profilo/utenti')}
-              style={({ pressed }) => [styles.adminButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold">Utenti registrati</ThemedText>
-            </Pressable>
+            <>
+              <Pressable
+                onPress={() => router.push('/profilo/utenti')}
+                style={({ pressed }) => [styles.adminButton, pressed && styles.pressed]}>
+                <ThemedText type="smallBold">Membri squadra</ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/profilo/invite')}
+                style={({ pressed }) => [styles.adminButton, pressed && styles.pressed]}>
+                <ThemedText type="smallBold">Invita portieri</ThemedText>
+              </Pressable>
+            </>
           )}
 
           {/* Logout */}

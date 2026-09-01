@@ -28,7 +28,7 @@ function todayISO() {
 }
 
 export default function AllenamentiScreen() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentTeam } = useAuth();
   const today = todayISO();
 
   const [trainings, setTrainings] = useState<Training[] | null>(null);
@@ -38,16 +38,18 @@ export default function AllenamentiScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      listTrainings().then(setTrainings);
-    }, [])
+      if (!currentTeam) return;
+      listTrainings(currentTeam.id).then(setTrainings);
+    }, [currentTeam])
   );
 
   useEffect(() => {
+    if (!currentTeam) return;
     setLoadingTraining(true);
-    getTrainingByDate(selectedDate)
+    getTrainingByDate(selectedDate, currentTeam.id)
       .then(setSelectedTraining)
       .finally(() => setLoadingTraining(false));
-  }, [selectedDate, trainings]);
+  }, [selectedDate, trainings, currentTeam]);
 
   const markedDates: Record<string, any> = {};
   for (const training of trainings ?? []) {

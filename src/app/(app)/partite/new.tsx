@@ -6,17 +6,17 @@ import { useAuth } from '@/context/auth-context';
 import { createMatch } from '@/lib/api/matches';
 
 export default function NuovaPartitaScreen() {
-  const { isAdmin, session } = useAuth();
+  const { isAdmin, session, currentTeam } = useAuth();
   const router = useRouter();
 
-  if (!isAdmin || !session) return <Redirect href="/partite" />;
+  if (!isAdmin || !session || !currentTeam) return <Redirect href="/partite" />;
 
   return (
     <ThemedView style={{ flex: 1 }}>
       <MatchForm
         submitLabel="Crea partita"
         onSubmit={async (input) => {
-          await createMatch(input, session.user.id);
+          await createMatch(input, session.user.id, currentTeam.id);
           router.back();
         }}
       />

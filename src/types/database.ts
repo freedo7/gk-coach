@@ -8,6 +8,29 @@ export interface Profile {
   created_at: string;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  coach_id: string;
+  created_at: string;
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  profile_id: string;
+  joined_at: string;
+}
+
+export interface TeamInvite {
+  id: string;
+  team_id: string;
+  code: string;
+  expires_at: string;
+  used_by: string | null;
+  created_at: string;
+}
+
 export interface ExerciseCategory {
   id: string;
   name: string;
@@ -20,6 +43,8 @@ export interface Exercise {
   title: string;
   description: string;
   category_id: string;
+  team_id: string | null;
+  is_global: boolean;
   video_url: string | null;
   content_url: string | null;
   difficulty: 'base' | 'intermedio' | 'avanzato' | null;
@@ -34,6 +59,7 @@ export interface Exercise {
 
 export interface Training {
   id: string;
+  team_id: string | null;
   training_date: string;
   training_time: string | null;
   title: string;
@@ -53,6 +79,7 @@ export interface TrainingExercise {
 
 export interface Match {
   id: string;
+  team_id: string | null;
   opponent: string;
   is_home: boolean;
   match_date: string;

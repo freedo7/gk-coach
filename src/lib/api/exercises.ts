@@ -5,11 +5,14 @@ export interface ExerciseWithCategory extends Exercise {
   category: ExerciseCategory;
 }
 
-export async function listExercises(): Promise<ExerciseWithCategory[]> {
-  const { data, error } = await supabase
-    .from('exercises')
-    .select('*, category:exercise_categories(*)')
-    .order('title');
+export async function listExercises(teamId?: string): Promise<ExerciseWithCategory[]> {
+  let query = supabase.from('exercises').select('*, category:exercise_categories(*)');
+  if (teamId) {
+    query = query.or(`is_global.eq.true,team_id.eq.${teamId}`);
+  } else {
+    query = query.eq('is_global', true);
+  }
+  const { data, error } = await query.order('title');
   if (error) throw error;
   return data as unknown as ExerciseWithCategory[];
 }
@@ -37,8 +40,8 @@ export interface ExerciseInput {
   reps: number | null;
 }
 
-export async function createExercise(input: ExerciseInput, createdBy: string) {
-  const { error } = await supabase.from('exercises').insert({ ...input, created_by: createdBy });
+export async function createExercise(input: ExerciseInput, createdBy: string, teamId: string) {
+  const { error } = await supabase.from('exercises').insert({ ...input, created_by: createdBy, team_id: teamId });
   if (error) throw error;
 }
 
@@ -52,12 +55,17 @@ export async function deleteExercise(id: string) {
   if (error) throw error;
 }
 
-export async function listExercisesByCategory(categoryId: string): Promise<ExerciseWithCategory[]> {
-  const { data, error } = await supabase
+export async function listExercisesByCategory(categoryId: string, teamId?: string): Promise<ExerciseWithCategory[]> {
+  let query = supabase
     .from('exercises')
     .select('*, category:exercise_categories(*)')
-    .eq('category_id', categoryId)
-    .order('title');
+    .eq('category_id', categoryId);
+  if (teamId) {
+    query = query.or(`is_global.eq.true,team_id.eq.${teamId}`);
+  } else {
+    query = query.eq('is_global', true);
+  }
+  const { data, error } = await query.order('title');
   if (error) throw error;
   return data as unknown as ExerciseWithCategory[];
 }

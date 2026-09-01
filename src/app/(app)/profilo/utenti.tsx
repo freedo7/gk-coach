@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
-import { supabase } from '@/lib/supabase';
+import { listTeamMembers, removeTeamMember, type TeamMemberWithProfile } from '@/lib/api/teams';
 import { Colors, Radius, Spacing } from '@/constants/theme';
-import type { Profile } from '@/types/database';
 
 const ROLE_LABEL = {
   admin: 'Preparatore',
@@ -15,40 +15,77 @@ const ROLE_LABEL = {
 } as const;
 
 export default function UtentiScreen() {
-  const { isAdmin } = useAuth();
-  const [users, setUsers] = useState<Profile[] | null>(null);
+  const { isAdmin, currentTeam, profile } = useAuth();
+  const router = useRouter();
+  const [members, setMembers] = useState<TeamMemberWithProfile[] | null>(null);
 
   useEffect(() => {
-    supabase.from('profiles').select('*').order('full_name')
-      .then(({ data }) => setUsers(data ?? []));
-  }, []);
+    if (!currentTeam) return;
+    listTeamMembers(currentTeam.id).then(setMembers);
+  }, [currentTeam]);
 
   if (!isAdmin) return <Redirect href="/profilo" />;
+
+  async function handleRemove(memberId: string, profileId: string) {
+    if (!currentTeam) return;
+    await removeTeamMember(currentTeam.id, profileId);
+    setMembers((prev) => prev?.filter((m) => m.id !== memberId) ?? null);
+  }
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {users === null && (
+        {members === null && (
           <ActivityIndicator color={Colors.light.accent} style={styles.loader} />
         )}
-        {users !== null && users.length === 0 && (
-          <ThemedText themeColor="textSecondary">Nessun utente trovato.</ThemedText>
+        {members !== null && members.length === 0 && (
+          <ThemedText themeColor="textSecondary">Nessun membro nella squadra.</ThemedText>
         )}
-        {users?.map((user) => (
-          <ThemedView key={user.id} type="card" style={styles.userCard}>
+        {members?.map((member) => (
+          <ThemedView key={member.id} type="card" style={styles.userCard}>
             <View style={styles.userLeft}>
-              <ThemedText type="smallBold">{user.full_name || 'Senza nome'}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">{user.email}</ThemedText>
-            </View>
-            <View style={[styles.roleBadge, user.role === 'admin' && styles.roleBadgeAdmin]}>
-              <ThemedText
-                type="small"
-                style={[styles.roleText, user.role === 'admin' && styles.roleTextAdmin]}>
-                {ROLE_LABEL[user.role]}
+              <ThemedText type="smallBold">
+                {member.profile.full_name || 'Senza nome'}
               </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {member.profile.email}
+              </ThemedText>
+            </View>
+            <View style={styles.right}>
+              <View
+                style={[
+                  styles.roleBadge,
+                  member.profile.role === 'admin' && styles.roleBadgeAdmin,
+                ]}>
+                <ThemedText
+                  type="small"
+                  style={[
+                    styles.roleText,
+                    member.profile.role === 'admin' && styles.roleTextAdmin,
+                  ]}>
+                  {ROLE_LABEL[member.profile.role]}
+                </ThemedText>
+              </View>
+              {member.profile.id !== profile?.id && (
+                <Pressable
+                  onPress={() => handleRemove(member.id, member.profile.id)}
+                  style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.6 }]}>
+                  <ThemedText type="small" style={styles.removeBtnText}>
+                    Rimuovi
+                  </ThemedText>
+                </Pressable>
+              )}
             </View>
           </ThemedView>
         ))}
+
+        <Pressable
+          onPress={() => router.push('/profilo/invite')}
+          style={({ pressed }) => [styles.inviteBtn, pressed && { opacity: 0.8 }]}>
+          <ThemedText type="smallBold" style={styles.inviteBtnText}>
+            + Genera codice invito
+          </ThemedText>
+        </Pressable>
       </ScrollView>
     </ThemedView>
   );
@@ -72,6 +109,10 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     flexShrink: 1,
   },
+  right: {
+    alignItems: 'flex-end',
+    gap: Spacing.one,
+  },
   roleBadge: {
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.two,
@@ -87,6 +128,25 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
   roleTextAdmin: {
+    color: Colors.light.accentText,
+  },
+  removeBtn: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+  },
+  removeBtnText: {
+    color: Colors.light.danger ?? '#FF3B30',
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  inviteBtn: {
+    marginTop: Spacing.two,
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  inviteBtnText: {
     color: Colors.light.accentText,
   },
 });

@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -13,6 +13,8 @@ export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'admin' | 'portiere'>('admin');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -20,7 +22,13 @@ export default function RegisterScreen() {
   async function handleSubmit() {
     setError(null);
     setSubmitting(true);
-    const { error: signUpError } = await signUp(email.trim(), password, fullName);
+    const { error: signUpError } = await signUp(
+      email.trim(),
+      password,
+      fullName,
+      role,
+      role === 'portiere' && inviteCode.trim() ? inviteCode.trim() : undefined
+    );
     setSubmitting(false);
     if (signUpError) setError(signUpError);
     else setDone(true);
@@ -69,6 +77,41 @@ export default function RegisterScreen() {
                 onChangeText={setPassword}
                 style={styles.input}
               />
+
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Sei un:
+              </ThemedText>
+              <View style={styles.roleRow}>
+                <Pressable
+                  onPress={() => setRole('admin')}
+                  style={[styles.roleButton, role === 'admin' && styles.roleButtonActive]}>
+                  <ThemedText
+                    type="smallBold"
+                    style={role === 'admin' ? styles.roleTextActive : styles.roleTextInactive}>
+                    Preparatore
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  onPress={() => setRole('portiere')}
+                  style={[styles.roleButton, role === 'portiere' && styles.roleButtonActive]}>
+                  <ThemedText
+                    type="smallBold"
+                    style={role === 'portiere' ? styles.roleTextActive : styles.roleTextInactive}>
+                    Portiere
+                  </ThemedText>
+                </Pressable>
+              </View>
+
+              {role === 'portiere' && (
+                <TextInput
+                  placeholder="Codice squadra (es. GK-ABC123)"
+                  placeholderTextColor={Colors.light.textSecondary}
+                  autoCapitalize="characters"
+                  value={inviteCode}
+                  onChangeText={setInviteCode}
+                  style={styles.input}
+                />
+              )}
 
               {error && (
                 <ThemedText type="small" themeColor="accent">
@@ -139,6 +182,26 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
+  },
+  roleRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  roleButton: {
+    flex: 1,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+    backgroundColor: Colors.light.backgroundElement,
+  },
+  roleButtonActive: {
+    backgroundColor: Colors.light.accent,
+  },
+  roleTextActive: {
+    color: Colors.light.accentText,
+  },
+  roleTextInactive: {
+    color: Colors.light.textSecondary,
   },
   button: {
     backgroundColor: Colors.light.accent,

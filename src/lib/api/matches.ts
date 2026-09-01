@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import type { Match } from '@/types/database';
 
-export async function listMatches(): Promise<Match[]> {
-  const { data, error } = await supabase.from('matches').select('*').order('match_date');
+export async function listMatches(teamId: string): Promise<Match[]> {
+  const { data, error } = await supabase.from('matches').select('*').eq('team_id', teamId).order('match_date');
   if (error) throw error;
   return data;
 }
@@ -24,8 +24,8 @@ export interface MatchInput {
   notes: string | null;
 }
 
-export async function createMatch(input: MatchInput, createdBy: string) {
-  const { error } = await supabase.from('matches').insert({ ...input, created_by: createdBy });
+export async function createMatch(input: MatchInput, createdBy: string, teamId: string) {
+  const { error } = await supabase.from('matches').insert({ ...input, created_by: createdBy, team_id: teamId });
   if (error) throw error;
 }
 

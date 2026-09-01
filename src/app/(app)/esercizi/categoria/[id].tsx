@@ -22,7 +22,7 @@ const DIFFICULTY_LABELS: { value: DifficultyFilter; label: string }[] = [
 
 export default function CategoriaScreen() {
   const { id, title } = useLocalSearchParams<{ id: string; title: string }>();
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentTeam } = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
   const [exercises, setExercises] = useState<ExerciseWithCategory[] | null>(null);
@@ -39,7 +39,7 @@ export default function CategoriaScreen() {
     useCallback(() => {
       if (!id) return;
       let cancelled = false;
-      listExercisesByCategory(id)
+      listExercisesByCategory(id, currentTeam?.id)
         .then((data) => {
           if (!cancelled) setExercises(data);
         })
@@ -49,7 +49,7 @@ export default function CategoriaScreen() {
       return () => {
         cancelled = true;
       };
-    }, [id])
+    }, [id, currentTeam])
   );
 
   const filtered =

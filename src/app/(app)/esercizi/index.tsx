@@ -22,7 +22,7 @@ function CategoryIcon({ icon, size, color }: { icon: string | null; size: number
 }
 
 export default function EserciziScreen() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentTeam } = useAuth();
   const router = useRouter();
   const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
   const [allExercises, setAllExercises] = useState<ExerciseWithCategory[] | null>(null);
@@ -32,7 +32,7 @@ export default function EserciziScreen() {
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      Promise.all([listCategories(), listExercises()])
+      Promise.all([listCategories(), listExercises(currentTeam?.id)])
         .then(([cats, exs]) => {
           if (!cancelled) {
             setCategories(cats);
@@ -45,7 +45,7 @@ export default function EserciziScreen() {
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, [currentTeam])
   );
 
   const trimmed = query.trim();

@@ -6,11 +6,11 @@ import { useAuth } from '@/context/auth-context';
 import { createTraining, setTrainingExercises } from '@/lib/api/trainings';
 
 export default function NuovoAllenamentoScreen() {
-  const { isAdmin, session } = useAuth();
+  const { isAdmin, session, currentTeam } = useAuth();
   const router = useRouter();
   const { date } = useLocalSearchParams<{ date?: string }>();
 
-  if (!isAdmin || !session) return <Redirect href="/" />;
+  if (!isAdmin || !session || !currentTeam) return <Redirect href="/" />;
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -18,7 +18,7 @@ export default function NuovoAllenamentoScreen() {
         initial={date ? { training_date: date } : undefined}
         submitLabel="Crea allenamento"
         onSubmit={async (input, exerciseIds) => {
-          const id = await createTraining(input, session.user.id);
+          const id = await createTraining(input, session.user.id, currentTeam.id);
           await setTrainingExercises(id, exerciseIds);
           router.back();
         }}
