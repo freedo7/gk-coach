@@ -113,10 +113,11 @@ function JoinTeamSetup() {
 }
 
 export default function AppLayout() {
-  const { session, loading, isAdmin, currentTeam } = useAuth();
+  const { session, loading, profile, isAdmin, currentTeam } = useAuth();
 
   if (loading) return <ThemedView style={{ flex: 1 }} />;
   if (!session) return <Redirect href="/(auth)/login" />;
+  if (!profile) return <ThemedView style={{ flex: 1 }} />;
 
   if (!currentTeam) {
     if (isAdmin) return <CreateTeamSetup />;

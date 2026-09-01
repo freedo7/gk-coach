@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function loadProfile(userId: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    setProfile((data as Profile) ?? null);
+    if (data) setProfile(data as Profile);
   }
 
   async function loadTeams() {
