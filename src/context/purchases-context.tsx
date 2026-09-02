@@ -63,11 +63,13 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
           setIsPro(info.entitlements.active[PRO_ENTITLEMENT] != null);
         }
 
-        // Carica i package disponibili
+        // Carica i package dell'offering per il ruolo dell'utente
         try {
           const offerings = await RC.getOfferings();
-          if (!cancelled && offerings.current) {
-            setPackages(offerings.current.availablePackages);
+          const offeringId = profile?.role === 'portiere' ? 'portiere' : 'preparatore';
+          const offering = offerings.all[offeringId] ?? offerings.current;
+          if (!cancelled && offering) {
+            setPackages(offering.availablePackages);
           }
         } catch { /* nessun offering configurato */ }
 
@@ -83,7 +85,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     })();
 
     return () => { cancelled = true; if (typeof listenerRef?.remove === 'function') listenerRef.remove(); };
-  }, [session?.user.id]);
+  }, [session?.user.id, profile?.role]);
 
   async function purchasePackage(pkg: RCPackage): Promise<{ error: string | null }> {
     if (!Purchases) return { error: 'Acquisti non disponibili in questa versione.' };
