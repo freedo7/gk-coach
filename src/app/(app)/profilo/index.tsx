@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { usePlan } from '@/hooks/use-plan';
 import { supabase } from '@/lib/supabase';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
@@ -25,6 +26,7 @@ const ROLE_LABEL = {
 
 export default function ProfiloScreen() {
   const { profile, isAdmin, signOut, refreshProfile, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
+  const plan = usePlan();
   const router = useRouter();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
@@ -116,6 +118,22 @@ export default function ProfiloScreen() {
                 </Pressable>
               )}
             </View>
+
+            <Pressable
+              onPress={() => router.push('/profilo/paywall')}
+              style={({ pressed }) => [styles.planBadge, pressed && styles.pressed,
+                plan.tier === 'pro' && styles.planBadgePro,
+                plan.isTrialActive && styles.planBadgeTrial,
+                !plan.isTrialActive && plan.tier !== 'pro' && styles.planBadgeBase,
+              ]}>
+              <ThemedText type="small" style={styles.planBadgeText}>
+                {plan.tier === 'pro'
+                  ? '★ Pro'
+                  : plan.isTrialActive
+                  ? `Trial — ${plan.trialDaysLeft}gg rimanenti`
+                  : 'Base — Passa a Pro'}
+              </ThemedText>
+            </Pressable>
           </ThemedView>
 
           {/* Info profilo */}
@@ -326,6 +344,27 @@ const styles = StyleSheet.create({
   switchBtnText: {
     color: Colors.light.accentText,
     fontWeight: '600',
+  },
+  planBadge: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.two,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    backgroundColor: Colors.light.backgroundElement,
+  },
+  planBadgePro: {
+    backgroundColor: Colors.light.accent,
+  },
+  planBadgeTrial: {
+    backgroundColor: Colors.light.accentSoft,
+  },
+  planBadgeBase: {
+    backgroundColor: Colors.light.dangerSoft,
+  },
+  planBadgeText: {
+    fontWeight: '600',
+    color: Colors.light.text,
   },
   input: {
     borderRadius: Radius.control,

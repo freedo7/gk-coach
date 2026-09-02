@@ -13,6 +13,7 @@ export default function ProfiloLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="utenti" options={{ title: 'Membri squadra' }} />
       <Stack.Screen name="invite" options={{ title: 'Invita portieri' }} />
+      <Stack.Screen name="paywall" options={{ title: 'GK Coach Pro' }} />
     </Stack>
   );
 }

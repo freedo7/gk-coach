@@ -1,10 +1,13 @@
 export type UserRole = 'admin' | 'portiere';
+export type SubscriptionTier = 'trial' | 'base' | 'pro';
 
 export interface Profile {
   id: string;
   email: string;
   full_name: string | null;
   role: UserRole;
+  subscription_tier: SubscriptionTier;
+  trial_started_at: string;
   created_at: string;
 }
 

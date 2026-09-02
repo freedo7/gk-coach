@@ -1,20 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UpgradeBanner } from '@/components/upgrade-banner';
 import { useAuth } from '@/context/auth-context';
-import { generateInviteCode } from '@/lib/api/teams';
+import { usePlan } from '@/hooks/use-plan';
+import { generateInviteCode, listTeamMembers } from '@/lib/api/teams';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function InviteScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const { canAddContent, maxPortieri } = usePlan();
   const [code, setCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portieriCount, setPortieriCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!currentTeam) return;
+    listTeamMembers(currentTeam.id).then((members) => {
+      const portieri = members.filter((m) => m.profile.role === 'portiere');
+      setPortieriCount(portieri.length);
+    });
+  }, [currentTeam]);
 
   if (!isAdmin) return <Redirect href="/profilo" />;
+
+  const atLimit = !canAddContent && portieriCount !== null && portieriCount >= maxPortieri;
 
   async function handleGenerate() {
     if (!currentTeam) return;
@@ -45,6 +59,10 @@ export default function InviteScreen() {
           alla squadra <ThemedText type="smallBold">{currentTeam?.name}</ThemedText>.
         </ThemedText>
 
+        {atLimit && (
+          <UpgradeBanner message={`Hai raggiunto il limite di ${maxPortieri} portieri. Passa a Pro per aggiungerne altri.`} />
+        )}
+
         {code ? (
           <ThemedView type="card" style={styles.codeCard}>
             <ThemedText type="title" style={styles.codeText}>
@@ -68,8 +86,8 @@ export default function InviteScreen() {
 
         <Pressable
           onPress={handleGenerate}
-          disabled={loading}
-          style={({ pressed }) => [styles.generateBtn, loading && styles.disabled, pressed && { opacity: 0.8 }]}>
+          disabled={loading || atLimit}
+          style={({ pressed }) => [styles.generateBtn, (loading || atLimit) && styles.disabled, pressed && { opacity: 0.8 }]}>
           {loading ? (
             <ActivityIndicator color={Colors.light.accentText} />
           ) : (

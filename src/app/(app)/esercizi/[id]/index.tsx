@@ -7,13 +7,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UpgradeBanner } from '@/components/upgrade-banner';
 import { useAuth } from '@/context/auth-context';
+import { usePlan } from '@/hooks/use-plan';
 import { deleteExercise, getExercise, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function EsercizioDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const { canViewVideo, canViewRichContent } = usePlan();
   const router = useRouter();
   const [exercise, setExercise] = useState<ExerciseWithCategory | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -88,23 +91,31 @@ export default function EsercizioDettaglioScreen() {
           <ThemedText style={styles.description}>{exercise.description}</ThemedText>
 
           {exercise.video_url && (
-            <Pressable
-              onPress={() => Linking.openURL(exercise.video_url!)}
-              style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={styles.actionLinkText}>
-                ▶ Guarda il video
-              </ThemedText>
-            </Pressable>
+            canViewVideo ? (
+              <Pressable
+                onPress={() => Linking.openURL(exercise.video_url!)}
+                style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
+                <ThemedText type="smallBold" style={styles.actionLinkText}>
+                  ▶ Guarda il video
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <UpgradeBanner message="Video disponibile nel piano Pro" />
+            )
           )}
 
           {exercise.content_url && (
-            <Pressable
-              onPress={() => router.push({ pathname: '/esercizi/scheda', params: { url: exercise.content_url! } })}
-              style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={styles.actionLinkText}>
-                📄 Apri scheda esercizio
-              </ThemedText>
-            </Pressable>
+            canViewRichContent ? (
+              <Pressable
+                onPress={() => router.push({ pathname: '/esercizi/scheda', params: { url: exercise.content_url! } })}
+                style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
+                <ThemedText type="smallBold" style={styles.actionLinkText}>
+                  📄 Apri scheda esercizio
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <UpgradeBanner message="Scheda PDF disponibile nel piano Pro" />
+            )
           )}
 
           {isAdmin && (
