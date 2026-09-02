@@ -6,17 +6,25 @@ export const PRO_ENTITLEMENT = 'pro';
 
 const IOS_KEY = 'test_ROsGGVQBgqVyUVOdbzretiFFzzq';
 
+export interface RCPackage {
+  identifier: string;
+  packageType: string;
+  product: { title: string; priceString: string; description: string };
+}
+
 interface PurchasesContextValue {
   isPro: boolean;
   loading: boolean;
-  purchasePro: () => Promise<{ error: string | null }>;
+  packages: RCPackage[];
+  purchasePackage: (pkg: RCPackage) => Promise<{ error: string | null }>;
   restorePurchases: () => Promise<{ error: string | null }>;
 }
 
 const PurchasesContext = createContext<PurchasesContextValue>({
   isPro: false,
   loading: false,
-  purchasePro: async () => ({ error: 'Non disponibile' }),
+  packages: [],
+  purchasePackage: async () => ({ error: 'Non disponibile' }),
   restorePurchases: async () => ({ error: 'Non disponibile' }),
 });
 
@@ -25,6 +33,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(false);
   const [Purchases, setPurchases] = useState<any>(null);
+  const [packages, setPackages] = useState<RCPackage[]>([]);
 
   useEffect(() => {
     if (!session) return;
@@ -51,8 +60,17 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
         const info = await RC.getCustomerInfo();
         if (!cancelled) {
           setIsPro(info.entitlements.active[PRO_ENTITLEMENT] != null);
-          setLoading(false);
         }
+
+        // Carica i package disponibili
+        try {
+          const offerings = await RC.getOfferings();
+          if (!cancelled && offerings.current) {
+            setPackages(offerings.current.availablePackages);
+          }
+        } catch { /* nessun offering configurato */ }
+
+        if (!cancelled) setLoading(false);
 
         const listener = RC.addCustomerInfoUpdateListener((newInfo: any) => {
           setIsPro(newInfo.entitlements.active[PRO_ENTITLEMENT] != null);
@@ -68,12 +86,9 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [session?.user.id]);
 
-  async function purchasePro(): Promise<{ error: string | null }> {
+  async function purchasePackage(pkg: RCPackage): Promise<{ error: string | null }> {
     if (!Purchases) return { error: 'Acquisti non disponibili in questa versione.' };
     try {
-      const offerings = await Purchases.getOfferings();
-      const pkg = offerings.current?.availablePackages[0];
-      if (!pkg) return { error: 'Nessun prodotto disponibile al momento.' };
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       setIsPro(customerInfo.entitlements.active[PRO_ENTITLEMENT] != null);
       return { error: null };
@@ -95,7 +110,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PurchasesContext.Provider value={{ isPro, loading, purchasePro, restorePurchases }}>
+    <PurchasesContext.Provider value={{ isPro, loading, packages, purchasePackage, restorePurchases }}>
       {children}
     </PurchasesContext.Provider>
   );
