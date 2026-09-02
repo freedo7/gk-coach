@@ -155,7 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin =
+    profile?.role === 'admin' || session?.user?.user_metadata?.role === 'admin';
 
   return (
     <AuthContext.Provider
