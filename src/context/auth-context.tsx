@@ -131,9 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function createTeam(name: string) {
-    if (!profile) return { error: 'Non autenticato' };
+    if (!session) return { error: 'Non autenticato' };
     try {
-      const team = await apiCreateTeam(name, profile.id);
+      const team = await apiCreateTeam(name, session.user.id);
       const updated = [...teams, team];
       setTeams(updated);
       setCurrentTeamState(team);
