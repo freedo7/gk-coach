@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
+import { PurchasesProvider } from '@/context/purchases-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -11,8 +12,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={DefaultTheme}>
       <AuthProvider>
-        <AnimatedSplashOverlay />
-        <Slot />
+        <PurchasesProvider>
+          <AnimatedSplashOverlay />
+          <Slot />
+        </PurchasesProvider>
       </AuthProvider>
     </ThemeProvider>
   );

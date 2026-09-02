@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/context/auth-context';
+import { usePurchases } from '@/context/purchases-context';
 
 const TRIAL_DAYS = 14;
 
@@ -41,9 +42,13 @@ const BASE: PlanInfo = {
 
 export function usePlan(): PlanInfo {
   const { profile } = useAuth();
+  const { isPro: isProRC } = usePurchases();
 
   return useMemo(() => {
     if (!profile) return PRO; // non ancora caricato, non bloccare
+
+    // RevenueCat ha la precedenza — entitlement attivo = Pro
+    if (isProRC) return PRO;
 
     if (profile.subscription_tier === 'pro') return PRO;
 
@@ -66,5 +71,5 @@ export function usePlan(): PlanInfo {
     }
 
     return BASE;
-  }, [profile]);
+  }, [profile, isProRC]);
 }

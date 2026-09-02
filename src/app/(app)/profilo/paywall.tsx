@@ -1,10 +1,12 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { usePlan } from '@/hooks/use-plan';
+import { usePurchases } from '@/context/purchases-context';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
 const FEATURES = [
@@ -32,6 +34,10 @@ function FeatureRow({ icon, base, pro }: { icon: string; base: string; pro: stri
 
 export default function PaywallScreen() {
   const plan = usePlan();
+  const { purchasePro, restorePurchases } = usePurchases();
+  const [buying, setBuying] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <ThemedView style={styles.container}>
@@ -71,13 +77,51 @@ export default function PaywallScreen() {
 
         <ThemedView type="card" style={styles.priceCard}>
           <ThemedText type="subtitle" style={styles.priceTitle}>Piano Pro</ThemedText>
-          <ThemedText themeColor="textSecondary">Abbonamento mensile o annuale</ThemedText>
-          <ThemedView style={styles.comingSoon}>
-            <Ionicons name="time-outline" size={20} color={Colors.light.accent} />
-            <ThemedText type="smallBold" style={styles.comingSoonText}>
-              Acquisto in-app disponibile a breve
-            </ThemedText>
-          </ThemedView>
+          <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
+            Abbonamento mensile o annuale
+          </ThemedText>
+
+          {plan.isPro ? (
+            <ThemedView style={styles.activeProBadge}>
+              <Ionicons name="checkmark-circle" size={20} color={Colors.light.accent} />
+              <ThemedText type="smallBold" style={styles.comingSoonText}>Piano Pro attivo</ThemedText>
+            </ThemedView>
+          ) : (
+            <>
+              {error && (
+                <ThemedText type="small" themeColor="accent" style={{ textAlign: 'center' }}>{error}</ThemedText>
+              )}
+              <Pressable
+                onPress={async () => {
+                  setError(null);
+                  setBuying(true);
+                  const { error: err } = await purchasePro();
+                  setBuying(false);
+                  if (err) setError(err);
+                }}
+                disabled={buying}
+                style={({ pressed }) => [styles.buyBtn, buying && { opacity: 0.6 }, pressed && { opacity: 0.8 }]}>
+                {buying
+                  ? <ActivityIndicator color={Colors.light.accentText} />
+                  : <ThemedText type="smallBold" style={styles.buyBtnText}>Passa a Pro</ThemedText>}
+              </Pressable>
+
+              <Pressable
+                onPress={async () => {
+                  setError(null);
+                  setRestoring(true);
+                  const { error: err } = await restorePurchases();
+                  setRestoring(false);
+                  if (err) setError(err);
+                }}
+                disabled={restoring}
+                style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}>
+                {restoring
+                  ? <ActivityIndicator color={Colors.light.accent} />
+                  : <ThemedText type="small" style={styles.restoreBtnText}>Ripristina acquisti</ThemedText>}
+              </Pressable>
+            </>
+          )}
         </ThemedView>
 
       </SafeAreaView>
@@ -164,7 +208,7 @@ const styles = StyleSheet.create({
   priceTitle: {
     fontWeight: '700',
   },
-  comingSoon: {
+  activeProBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
@@ -176,5 +220,24 @@ const styles = StyleSheet.create({
   },
   comingSoonText: {
     color: Colors.light.accent,
+  },
+  buyBtn: {
+    marginTop: Spacing.two,
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+    width: '100%',
+  },
+  buyBtnText: {
+    color: Colors.light.accentText,
+    fontSize: 16,
+  },
+  restoreBtn: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+  },
+  restoreBtnText: {
+    color: Colors.light.textSecondary,
   },
 });
