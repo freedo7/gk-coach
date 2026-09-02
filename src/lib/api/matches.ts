@@ -1,21 +1,20 @@
 import { supabase } from '@/lib/supabase';
 import type { Match } from '@/types/database';
 
-const COLUMNS_PUBLIC = 'id, team_id, opponent, is_home, match_date, match_time, match_type, result, created_by, created_at, updated_at';
-const COLUMNS_ADMIN = '*';
+function stripNotes(match: Match): Match {
+  return { ...match, notes: null, result_notes: null };
+}
 
 export async function listMatches(teamId: string, opts?: { isAdmin?: boolean }): Promise<Match[]> {
-  const cols = opts?.isAdmin ? COLUMNS_ADMIN : COLUMNS_PUBLIC;
-  const { data, error } = await supabase.from('matches').select(cols).eq('team_id', teamId).order('match_date');
+  const { data, error } = await supabase.from('matches').select('*').eq('team_id', teamId).order('match_date');
   if (error) throw error;
-  return data;
+  return opts?.isAdmin ? data : data.map(stripNotes);
 }
 
 export async function getMatch(id: string, opts?: { isAdmin?: boolean }): Promise<Match> {
-  const cols = opts?.isAdmin ? COLUMNS_ADMIN : COLUMNS_PUBLIC;
-  const { data, error } = await supabase.from('matches').select(cols).eq('id', id).single();
+  const { data, error } = await supabase.from('matches').select('*').eq('id', id).single();
   if (error) throw error;
-  return data;
+  return opts?.isAdmin ? data : stripNotes(data);
 }
 
 export interface MatchInput {

@@ -57,7 +57,7 @@ export default function ProfiloScreen() {
     const { error } = await supabase
       .from('profiles')
       .update({ full_name: fullName.trim() })
-      .eq('id', profile.id);
+      .eq('id', profile!.id);
     setSaving(false);
     if (error) { setProfileError(error.message); return; }
     await refreshProfile();

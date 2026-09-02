@@ -40,6 +40,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
     // Carica il modulo nativo in modo sicuro (non disponibile in Expo Go)
     let cancelled = false;
+    let listenerRef: any = null;
     (async () => {
       try {
         const mod = await import('react-native-purchases');
@@ -72,18 +73,16 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
         if (!cancelled) setLoading(false);
 
-        const listener = RC.addCustomerInfoUpdateListener((newInfo: any) => {
+        listenerRef = RC.addCustomerInfoUpdateListener((newInfo: any) => {
           setIsPro(newInfo.entitlements.active[PRO_ENTITLEMENT] != null);
         });
-
-        return () => { listener.remove(); };
       } catch {
         // Expo Go o errore nativo — silenzioso
         if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true; if (typeof listenerRef?.remove === 'function') listenerRef.remove(); };
   }, [session?.user.id]);
 
   async function purchasePackage(pkg: RCPackage): Promise<{ error: string | null }> {
