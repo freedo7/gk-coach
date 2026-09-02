@@ -36,11 +36,25 @@
           "imageWidth": 200,
           "resizeMode": "contain"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#6FC22C"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "06398aa4-c925-4ab6-8ade-1f41ce8bafcc"
+      }
+    },
+    "owner": "freedo7"
   }
 }
