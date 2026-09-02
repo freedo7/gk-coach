@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
@@ -8,6 +16,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { supabase } from '@/lib/supabase';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import type { Team } from '@/types/database';
 
 const ROLE_LABEL = {
   admin: 'Preparatore portieri',
@@ -15,7 +24,7 @@ const ROLE_LABEL = {
 } as const;
 
 export default function ProfiloScreen() {
-  const { profile, isAdmin, signOut, refreshProfile } = useAuth();
+  const { profile, isAdmin, signOut, refreshProfile, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
   const router = useRouter();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
@@ -28,6 +37,12 @@ export default function ProfiloScreen() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwNotice, setPwNotice] = useState<string | null>(null);
   const [changingPw, setChangingPw] = useState(false);
+
+  const [switcherVisible, setSwitcherVisible] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [createTeamError, setCreateTeamError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   if (!profile) return null;
 
@@ -61,11 +76,47 @@ export default function ProfiloScreen() {
     setConfirmPassword('');
   }
 
+  async function handleCreateTeam() {
+    if (!newTeamName.trim()) return;
+    setCreateTeamError(null);
+    setCreatingTeam(true);
+    const { error } = await createTeam(newTeamName.trim());
+    setCreatingTeam(false);
+    if (error) { setCreateTeamError(error); return; }
+    setNewTeamName('');
+    setShowCreateForm(false);
+    setSwitcherVisible(false);
+  }
+
+  function handleSwitchTeam(team: Team) {
+    setCurrentTeam(team);
+    setSwitcherVisible(false);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedText type="title">Profilo</ThemedText>
+
+          {/* Squadra attiva */}
+          <ThemedView type="card" style={styles.card}>
+            <ThemedText type="smallBold" themeColor="textSecondary">SQUADRA ATTIVA</ThemedText>
+            <View style={styles.teamRow}>
+              <ThemedText type="subtitle" style={styles.teamName}>
+                {currentTeam?.name ?? '—'}
+              </ThemedText>
+              {teams.length > 0 && (
+                <Pressable
+                  onPress={() => setSwitcherVisible(true)}
+                  style={({ pressed }) => [styles.switchBtn, pressed && styles.pressed]}>
+                  <ThemedText type="small" style={styles.switchBtnText}>
+                    {teams.length > 1 ? 'Cambia' : 'Gestisci'}
+                  </ThemedText>
+                </Pressable>
+              )}
+            </View>
+          </ThemedView>
 
           {/* Info profilo */}
           <ThemedView type="card" style={styles.card}>
@@ -171,6 +222,69 @@ export default function ProfiloScreen() {
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Modal squadre */}
+      <Modal visible={switcherVisible} transparent animationType="slide" onRequestClose={() => setSwitcherVisible(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setSwitcherVisible(false)} />
+        <View style={styles.modalSheet}>
+          <ThemedText type="subtitle" style={styles.modalTitle}>Le tue squadre</ThemedText>
+
+          {teams.map((team) => (
+            <Pressable
+              key={team.id}
+              onPress={() => handleSwitchTeam(team)}
+              style={({ pressed }) => [
+                styles.teamItem,
+                team.id === currentTeam?.id && styles.teamItemActive,
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">{team.name}</ThemedText>
+              {team.id === currentTeam?.id && (
+                <ThemedText type="small" style={styles.activeLabel}>Attiva</ThemedText>
+              )}
+            </Pressable>
+          ))}
+
+          {isAdmin && !showCreateForm && (
+            <Pressable
+              onPress={() => setShowCreateForm(true)}
+              style={({ pressed }) => [styles.newTeamBtn, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.newTeamBtnText}>+ Nuova squadra</ThemedText>
+            </Pressable>
+          )}
+
+          {isAdmin && showCreateForm && (
+            <View style={styles.createForm}>
+              <TextInput
+                placeholder="Nome squadra"
+                placeholderTextColor={Colors.light.textSecondary}
+                value={newTeamName}
+                onChangeText={setNewTeamName}
+                style={styles.input}
+                autoFocus
+              />
+              {createTeamError && (
+                <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
+                  {createTeamError}
+                </ThemedText>
+              )}
+              <Pressable
+                onPress={handleCreateTeam}
+                disabled={creatingTeam || !newTeamName.trim()}
+                style={({ pressed }) => [
+                  styles.saveButton,
+                  (creatingTeam || !newTeamName.trim()) && styles.saveButtonDisabled,
+                  pressed && styles.pressed,
+                  { marginTop: Spacing.two },
+                ]}>
+                {creatingTeam
+                  ? <ActivityIndicator color={Colors.light.accentText} />
+                  : <ThemedText type="smallBold" style={styles.saveButtonText}>Crea</ThemedText>}
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -192,6 +306,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 28,
+  },
+  teamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.one,
+  },
+  teamName: {
+    flex: 1,
+    fontWeight: '700',
+  },
+  switchBtn: {
+    backgroundColor: Colors.light.accent,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  switchBtnText: {
+    color: Colors.light.accentText,
+    fontWeight: '600',
   },
   input: {
     borderRadius: Radius.control,
@@ -237,4 +371,50 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: { color: '#ffffff' },
   pressed: { opacity: 0.7 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalSheet: {
+    backgroundColor: Colors.light.card,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    paddingBottom: Spacing.six,
+  },
+  modalTitle: {
+    fontWeight: '700',
+    marginBottom: Spacing.two,
+  },
+  teamItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    backgroundColor: Colors.light.backgroundElement,
+  },
+  teamItemActive: {
+    backgroundColor: Colors.light.accentSoft,
+  },
+  activeLabel: {
+    color: Colors.light.accent,
+    fontWeight: '600',
+  },
+  newTeamBtn: {
+    marginTop: Spacing.two,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.light.accent,
+  },
+  newTeamBtnText: {
+    color: Colors.light.accent,
+  },
+  createForm: {
+    marginTop: Spacing.one,
+  },
 });
