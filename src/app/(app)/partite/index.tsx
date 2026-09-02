@@ -1,10 +1,11 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/match-row';
+import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -22,23 +23,22 @@ export default function PartiteScreen() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!currentTeam) return;
-      let cancelled = false;
-      listMatches(currentTeam.id, { isAdmin })
-        .then((data) => {
-          if (!cancelled) setMatches(data);
-        })
-        .catch((err) => {
-          if (!cancelled) setError(err.message);
-        });
-      return () => {
-        cancelled = true;
-      };
-    }, [currentTeam])
-  );
+  const loadData = useCallback(() => {
+    if (!currentTeam) return;
+    listMatches(currentTeam.id, { isAdmin })
+      .then(setMatches)
+      .catch((err) => setError(err.message));
+  }, [currentTeam, isAdmin]);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  async function onRefresh() {
+    setRefreshing(true);
+    loadData();
+    setTimeout(() => setRefreshing(false), 600);
+  }
 
   const today = todayISO();
   const upcoming = (matches ?? []).filter((m) => m.match_date >= today);
@@ -60,16 +60,19 @@ export default function PartiteScreen() {
           )}
         </View>
 
-        {matches === null && !error && (
-          <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
-        )}
         {error && (
           <ThemedText type="small" themeColor="accent" style={styles.padding}>
             {error}
           </ThemedText>
         )}
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+        >
+          {matches === null && !error && (
+            <SkeletonList count={3} type="match" />
+          )}
           {matches !== null && matches.length === 0 && (
             <ThemedText themeColor="textSecondary" style={styles.padding}>
               Nessuna partita in calendario ancora.
@@ -128,9 +131,6 @@ const styles = StyleSheet.create({
     color: Colors.light.accentText,
     fontWeight: '700',
     fontSize: 14,
-  },
-  loader: {
-    marginTop: Spacing.five,
   },
   padding: {
     padding: Spacing.four,

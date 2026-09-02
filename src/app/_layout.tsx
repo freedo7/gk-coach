@@ -6,6 +6,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
 import { PurchasesProvider } from '@/context/purchases-context';
 import { PushRegistrar } from '@/components/push-registrar';
+import { ToastProvider } from '@/context/toast-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,9 +15,11 @@ export default function RootLayout() {
     <ThemeProvider value={DefaultTheme}>
       <AuthProvider>
         <PurchasesProvider>
-          <AnimatedSplashOverlay />
-          <PushRegistrar />
-          <Slot />
+          <ToastProvider>
+            <AnimatedSplashOverlay />
+            <PushRegistrar />
+            <Slot />
+          </ToastProvider>
         </PurchasesProvider>
       </AuthProvider>
     </ThemeProvider>

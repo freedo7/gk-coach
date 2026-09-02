@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -41,14 +41,21 @@ export default function AllenamentiScreen() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
   const [loadingTraining, setLoadingTraining] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!currentTeam) return;
-      listTrainings(currentTeam.id).then(setTrainings);
-      listMatches(currentTeam.id, { isAdmin }).then(setMatches);
-    }, [currentTeam])
-  );
+  const loadData = useCallback(() => {
+    if (!currentTeam) return;
+    listTrainings(currentTeam.id).then(setTrainings);
+    listMatches(currentTeam.id, { isAdmin }).then(setMatches);
+  }, [currentTeam, isAdmin]);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  async function onRefresh() {
+    setRefreshing(true);
+    loadData();
+    setTimeout(() => setRefreshing(false), 600);
+  }
 
   useEffect(() => {
     if (!currentTeam) return;
@@ -90,7 +97,10 @@ export default function AllenamentiScreen() {
           <ThemedText type="title">Allenamenti</ThemedText>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+        >
           <ThemedView type="card" style={styles.calendarCard}>
             <Calendar
               current={selectedDate}

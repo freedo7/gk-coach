@@ -1,10 +1,11 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/match-row';
 import { QuickAction } from '@/components/quick-action';
+import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -25,27 +26,37 @@ export default function HomeScreen() {
 
   const [nextTraining, setNextTraining] = useState<Training | null | undefined>(undefined);
   const [nextMatch, setNextMatch] = useState<Match | null | undefined>(undefined);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!currentTeam) return;
-      listTrainings(currentTeam.id).then((data) => {
-        const upcoming = data.filter((t) => t.training_date >= today);
-        setNextTraining(upcoming[0] ?? null);
-      });
-      listMatches(currentTeam.id, { isAdmin }).then((data) => {
-        const upcoming = data.filter((m) => m.match_date >= today);
-        setNextMatch(upcoming[0] ?? null);
-      });
-    }, [currentTeam])
-  );
+  const loadData = useCallback(() => {
+    if (!currentTeam) return;
+    listTrainings(currentTeam.id).then((data) => {
+      const upcoming = data.filter((t) => t.training_date >= today);
+      setNextTraining(upcoming[0] ?? null);
+    });
+    listMatches(currentTeam.id, { isAdmin }).then((data) => {
+      const upcoming = data.filter((m) => m.match_date >= today);
+      setNextMatch(upcoming[0] ?? null);
+    });
+  }, [currentTeam, isAdmin, today]);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  async function onRefresh() {
+    setRefreshing(true);
+    loadData();
+    setTimeout(() => setRefreshing(false), 600);
+  }
 
   const name = profile?.full_name?.trim() || profile?.email || '';
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+        >
           <ThemedText type="title" style={styles.greeting}>
             Ciao{name ? `, ${name.split(' ')[0]}` : ''}
           </ThemedText>
@@ -54,7 +65,7 @@ export default function HomeScreen() {
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
               PROSSIMO ALLENAMENTO
             </ThemedText>
-            {nextTraining === undefined ? null : nextTraining === null ? (
+            {nextTraining === undefined ? <SkeletonCard /> : nextTraining === null ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Nessun allenamento in programma.
               </ThemedText>
@@ -77,7 +88,7 @@ export default function HomeScreen() {
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
               PROSSIMA PARTITA
             </ThemedText>
-            {nextMatch === undefined ? null : nextMatch === null ? (
+            {nextMatch === undefined ? <SkeletonMatchRow /> : nextMatch === null ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Nessuna partita in programma.
               </ThemedText>
