@@ -9,10 +9,11 @@ import { useAuth } from '@/context/auth-context';
 import { listTeamMembers, removeTeamMember, type TeamMemberWithProfile } from '@/lib/api/teams';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
-const ROLE_LABEL = {
-  admin: 'Preparatore',
+const ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin',
+  preparatore: 'Preparatore',
   portiere: 'Portiere',
-} as const;
+};
 
 export default function UtentiScreen() {
   const { isAdmin, currentTeam, profile } = useAuth();
@@ -55,13 +56,13 @@ export default function UtentiScreen() {
               <View
                 style={[
                   styles.roleBadge,
-                  member.profile.role === 'admin' && styles.roleBadgeAdmin,
+                  (member.profile.role === 'admin' || member.profile.role === 'preparatore') && styles.roleBadgeAdmin,
                 ]}>
                 <ThemedText
                   type="small"
                   style={[
                     styles.roleText,
-                    member.profile.role === 'admin' && styles.roleTextAdmin,
+                    (member.profile.role === 'admin' || member.profile.role === 'preparatore') && styles.roleTextAdmin,
                   ]}>
                   {ROLE_LABEL[member.profile.role]}
                 </ThemedText>

@@ -29,7 +29,7 @@ const PurchasesContext = createContext<PurchasesContextValue>({
 });
 
 export function PurchasesProvider({ children }: { children: React.ReactNode }) {
-  const { session, isAdmin } = useAuth();
+  const { session, profile } = useAuth();
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(false);
   const [Purchases, setPurchases] = useState<any>(null);
@@ -109,7 +109,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PurchasesContext.Provider value={{ isPro: isPro || isAdmin, loading, packages, purchasePackage, restorePurchases }}>
+    <PurchasesContext.Provider value={{ isPro: isPro || profile?.role === 'admin', loading, packages, purchasePackage, restorePurchases }}>
       {children}
     </PurchasesContext.Provider>
   );

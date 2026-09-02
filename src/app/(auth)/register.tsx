@@ -13,7 +13,7 @@ export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'portiere'>('admin');
+  const [role, setRole] = useState<'preparatore' | 'portiere'>('preparatore');
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -83,11 +83,11 @@ export default function RegisterScreen() {
               </ThemedText>
               <View style={styles.roleRow}>
                 <Pressable
-                  onPress={() => setRole('admin')}
-                  style={[styles.roleButton, role === 'admin' && styles.roleButtonActive]}>
+                  onPress={() => setRole('preparatore')}
+                  style={[styles.roleButton, role === 'preparatore' && styles.roleButtonActive]}>
                   <ThemedText
                     type="smallBold"
-                    style={role === 'admin' ? styles.roleTextActive : styles.roleTextInactive}>
+                    style={role === 'preparatore' ? styles.roleTextActive : styles.roleTextInactive}>
                     Preparatore
                   </ThemedText>
                 </Pressable>

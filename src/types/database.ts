@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'portiere';
+export type UserRole = 'admin' | 'preparatore' | 'portiere';
 export type SubscriptionTier = 'trial' | 'base' | 'pro';
 
 export interface Profile {

@@ -19,10 +19,11 @@ import { supabase } from '@/lib/supabase';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
 
-const ROLE_LABEL = {
-  admin: 'Preparatore portieri',
+const ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin',
+  preparatore: 'Preparatore',
   portiere: 'Portiere',
-} as const;
+};
 
 export default function ProfiloScreen() {
   const { profile, isAdmin, signOut, refreshProfile, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();

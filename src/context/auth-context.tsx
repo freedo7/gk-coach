@@ -24,7 +24,7 @@ interface AuthContextValue {
     email: string,
     password: string,
     fullName: string,
-    role: 'admin' | 'portiere',
+    role: 'preparatore' | 'portiere',
     inviteCode?: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     fullName: string,
-    role: 'admin' | 'portiere',
+    role: 'preparatore' | 'portiere',
     inviteCode?: string
   ) {
     const { data, error } = await supabase.auth.signUp({
@@ -155,8 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const isAdmin =
-    profile?.role === 'admin' || session?.user?.user_metadata?.role === 'admin';
+  const role = profile?.role ?? session?.user?.user_metadata?.role;
+  const isAdmin = role === 'admin' || role === 'preparatore';
 
   return (
     <AuthContext.Provider

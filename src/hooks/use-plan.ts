@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { usePurchases } from '@/context/purchases-context';
 
-const TRIAL_DAYS = 14;
+const TRIAL_DAYS_ADMIN = 14;
+const TRIAL_DAYS_PORTIERE = 30;
 
 export interface PlanInfo {
   tier: 'trial' | 'base' | 'pro';
@@ -53,9 +54,10 @@ export function usePlan(): PlanInfo {
     if (profile.subscription_tier === 'pro') return PRO;
 
     if (profile.subscription_tier === 'trial') {
+      const trialDays = profile.role === 'portiere' ? TRIAL_DAYS_PORTIERE : TRIAL_DAYS_ADMIN;
       const start = new Date(profile.trial_started_at).getTime();
       const elapsed = (Date.now() - start) / (1000 * 60 * 60 * 24);
-      const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - elapsed));
+      const daysLeft = Math.max(0, Math.ceil(trialDays - elapsed));
 
       if (daysLeft > 0) {
         return {
