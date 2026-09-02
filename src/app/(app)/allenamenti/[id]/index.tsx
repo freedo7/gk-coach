@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { deleteTraining, getTraining, type TrainingWithExercises } from '@/lib/api/trainings';
+import { generateTrainingPdf } from '@/lib/pdf';
 import { formatDateLong, formatTime } from '@/lib/format';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
@@ -19,6 +20,7 @@ export default function AllenamentoDettaglioScreen() {
   const [training, setTraining] = useState<TrainingWithExercises | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -134,6 +136,30 @@ export default function AllenamentoDettaglioScreen() {
             </View>
           )}
 
+          {/* Esporta PDF */}
+          <Pressable
+            onPress={async () => {
+              setExporting(true);
+              try {
+                const uri = await generateTrainingPdf(training);
+                await Share.share({ url: uri, title: `${training.title}.pdf` });
+              } catch {
+                Alert.alert('Errore', 'Impossibile generare il PDF.');
+              }
+              setExporting(false);
+            }}
+            disabled={exporting}
+            style={({ pressed }) => [styles.pdfButton, pressed && styles.pressed, exporting && { opacity: 0.5 }]}>
+            {exporting ? (
+              <ActivityIndicator color={Colors.light.accent} />
+            ) : (
+              <>
+                <Ionicons name="document-outline" size={18} color={Colors.light.accent} />
+                <ThemedText type="smallBold" style={{ color: Colors.light.accent }}>Esporta PDF</ThemedText>
+              </>
+            )}
+          </Pressable>
+
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -199,6 +225,16 @@ const styles = StyleSheet.create({
   },
   actionButtonDelete: {
     backgroundColor: Colors.light.dangerSoft,
+  },
+  pdfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    marginTop: Spacing.two,
+    backgroundColor: Colors.light.accentSoft,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
   },
   pressed: {
     opacity: 0.7,

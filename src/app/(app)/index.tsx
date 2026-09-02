@@ -1,44 +1,88 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MatchRow } from '@/components/match-row';
-import { QuickAction } from '@/components/quick-action';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { listMatches } from '@/lib/api/matches';
-import { listTrainings } from '@/lib/api/trainings';
-import { formatDateLong, formatTime } from '@/lib/format';
+import { listTrainings, getTrainingByDate, type TrainingWithExercises } from '@/lib/api/trainings';
+import { formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+
+LocaleConfig.locales['it'] = {
+  monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
+  monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+  dayNames: ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],
+  dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
+  today: 'Oggi',
+};
+LocaleConfig.defaultLocale = 'it';
 
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+const DOT_TRAINING = { key: 'training', color: Colors.light.accent };
+const DOT_MATCH = { key: 'match', color: Colors.light.danger };
+
 export default function HomeScreen() {
-  const { profile, currentTeam } = useAuth();
+  const { profile, isAdmin, currentTeam } = useAuth();
   const today = todayISO();
 
-  const [nextTraining, setNextTraining] = useState<Training | null | undefined>(undefined);
-  const [nextMatch, setNextMatch] = useState<Match | null | undefined>(undefined);
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
+  const [loadingDay, setLoadingDay] = useState(false);
 
+  // Carica tutti gli allenamenti e partite
   useFocusEffect(
     useCallback(() => {
       if (!currentTeam) return;
-      listTrainings(currentTeam.id).then((data) => {
-        const upcoming = data.filter((t) => t.training_date >= today);
-        setNextTraining(upcoming[0] ?? null);
-      });
-      listMatches(currentTeam.id).then((data) => {
-        const upcoming = data.filter((m) => m.match_date >= today);
-        setNextMatch(upcoming[0] ?? null);
-      });
+      listTrainings(currentTeam.id).then(setTrainings);
+      listMatches(currentTeam.id, { isAdmin }).then(setMatches);
     }, [currentTeam])
   );
+
+  // Carica dettaglio allenamento per il giorno selezionato
+  useEffect(() => {
+    if (!currentTeam) return;
+    setLoadingDay(true);
+    getTrainingByDate(selectedDate, currentTeam.id)
+      .then(setSelectedTraining)
+      .finally(() => setLoadingDay(false));
+  }, [selectedDate, trainings, currentTeam]);
+
+  // Partite del giorno selezionato
+  const dayMatches = matches.filter((m) => m.match_date === selectedDate);
+
+  // Costruisci i dots per il calendario
+  const markedDates: Record<string, any> = {};
+
+  for (const t of trainings) {
+    markedDates[t.training_date] = {
+      ...(markedDates[t.training_date] ?? {}),
+      dots: [...(markedDates[t.training_date]?.dots ?? []), DOT_TRAINING],
+    };
+  }
+  for (const m of matches) {
+    markedDates[m.match_date] = {
+      ...(markedDates[m.match_date] ?? {}),
+      dots: [...(markedDates[m.match_date]?.dots ?? []), DOT_MATCH],
+    };
+  }
+  markedDates[selectedDate] = {
+    ...(markedDates[selectedDate] ?? {}),
+    selected: true,
+    selectedColor: Colors.light.accent,
+  };
 
   const name = profile?.full_name?.trim() || profile?.email || '';
 
@@ -50,48 +94,102 @@ export default function HomeScreen() {
             Ciao{name ? `, ${name.split(' ')[0]}` : ''}
           </ThemedText>
 
-          <View style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              PROSSIMO ALLENAMENTO
-            </ThemedText>
-            {nextTraining === undefined ? null : nextTraining === null ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Nessun allenamento in programma.
-              </ThemedText>
-            ) : (
-              <ThemedView type="card" style={styles.summaryCard}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  {formatDateLong(nextTraining.training_date)}
-                </ThemedText>
-                <ThemedText type="default" style={{ fontWeight: '700' }}>{nextTraining.title}</ThemedText>
-                {formatTime(nextTraining.training_time) && (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {formatTime(nextTraining.training_time)}
+          {/* Calendario */}
+          <ThemedView type="card" style={styles.calendarCard}>
+            <Calendar
+              current={selectedDate}
+              firstDay={1}
+              markingType="multi-dot"
+              onDayPress={(day) => setSelectedDate(day.dateString)}
+              markedDates={markedDates}
+              theme={{
+                backgroundColor: 'transparent',
+                calendarBackground: 'transparent',
+                textSectionTitleColor: Colors.light.textSecondary,
+                dayTextColor: Colors.light.text,
+                todayTextColor: Colors.light.accent,
+                monthTextColor: Colors.light.text,
+                arrowColor: Colors.light.accent,
+                selectedDayBackgroundColor: Colors.light.accent,
+                selectedDayTextColor: Colors.light.accentText,
+                textDayFontWeight: '500',
+                textMonthFontWeight: '700',
+              }}
+            />
+            <View style={styles.legend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.light.accent }]} />
+                <ThemedText type="small" themeColor="textSecondary">Allenamento</ThemedText>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.light.danger }]} />
+                <ThemedText type="small" themeColor="textSecondary">Partita</ThemedText>
+              </View>
+            </View>
+          </ThemedView>
+
+          {/* Dettaglio giorno */}
+          {loadingDay ? (
+            <ActivityIndicator color={Colors.light.accent} style={styles.loader} />
+          ) : (
+            <>
+              {/* Allenamento del giorno */}
+              {selectedTraining ? (
+                <View style={styles.section}>
+                  <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                    ALLENAMENTO
                   </ThemedText>
-                )}
-              </ThemedView>
-            )}
-          </View>
+                  <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
+                    <Pressable>
+                      <ThemedView type="card" style={styles.dayCard}>
+                        <ThemedText type="subtitle">{selectedTraining.title}</ThemedText>
+                        {formatTime(selectedTraining.training_time) && (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {formatTime(selectedTraining.training_time)}
+                          </ThemedText>
+                        )}
+                        {selectedTraining.training_exercises.length > 0 && (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {selectedTraining.training_exercises.length} esercizi
+                          </ThemedText>
+                        )}
+                      </ThemedView>
+                    </Pressable>
+                  </Link>
+                </View>
+              ) : isAdmin ? (
+                <Link href={`/allenamenti/new?date=${selectedDate}`} asChild>
+                  <Pressable>
+                    <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                      <ThemedText type="smallBold" themeColor="accent">
+                        + Aggiungi allenamento
+                      </ThemedText>
+                    </ThemedView>
+                  </Pressable>
+                </Link>
+              ) : null}
 
-          <View style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              PROSSIMA PARTITA
-            </ThemedText>
-            {nextMatch === undefined ? null : nextMatch === null ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Nessuna partita in programma.
-              </ThemedText>
-            ) : (
-              <MatchRow match={nextMatch} />
-            )}
-          </View>
+              {/* Partite del giorno */}
+              {dayMatches.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                    {dayMatches.length === 1 ? 'PARTITA' : 'PARTITE'}
+                  </ThemedText>
+                  {dayMatches.map((m) => (
+                    <MatchRow key={m.id} match={m} />
+                  ))}
+                </View>
+              )}
+
+              {/* Nessun evento */}
+              {!selectedTraining && dayMatches.length === 0 && !isAdmin && (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
+                  Nessun evento in programma per questo giorno.
+                </ThemedText>
+              )}
+            </>
+          )}
         </ScrollView>
-
-        <View style={styles.quickActions}>
-          <QuickAction href="/esercizi" icon="book-outline" label="Libreria esercizi" />
-          <QuickAction href="/allenamenti" icon="calendar-outline" label="Allenamenti" />
-          <QuickAction href="/partite" icon="football-outline" label="Partite" />
-        </View>
       </SafeAreaView>
     </ThemedView>
   );
@@ -106,16 +204,35 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.four,
-    paddingBottom: Spacing.four,
-    gap: Spacing.four,
+    paddingBottom: BottomTabInset + Spacing.six,
+    gap: Spacing.three,
   },
   greeting: {
     marginTop: Spacing.two,
   },
-  quickActions: {
+  calendarCard: {
+    borderRadius: Radius.card,
+    overflow: 'hidden',
+    paddingBottom: Spacing.two,
+  },
+  legend: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    paddingVertical: Spacing.three,
+    justifyContent: 'center',
+    gap: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  loader: {
+    marginVertical: Spacing.two,
   },
   section: {
     gap: Spacing.two,
@@ -123,10 +240,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     letterSpacing: 0.5,
   },
-  summaryCard: {
+  dayCard: {
     borderRadius: Radius.control,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
+    padding: Spacing.three,
     gap: Spacing.half,
+  },
+  emptyCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    alignItems: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    paddingVertical: Spacing.two,
   },
 });

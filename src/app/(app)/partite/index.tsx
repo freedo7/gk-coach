@@ -27,7 +27,7 @@ export default function PartiteScreen() {
     useCallback(() => {
       if (!currentTeam) return;
       let cancelled = false;
-      listMatches(currentTeam.id)
+      listMatches(currentTeam.id, { isAdmin })
         .then((data) => {
           if (!cancelled) setMatches(data);
         })

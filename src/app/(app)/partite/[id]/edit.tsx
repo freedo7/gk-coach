@@ -16,7 +16,7 @@ export default function ModificaPartitaScreen() {
   const [match, setMatch] = useState<Match | null>(null);
 
   useEffect(() => {
-    getMatch(id).then(setMatch);
+    getMatch(id, { isAdmin: true }).then(setMatch);
   }, [id]);
 
   if (!isAdmin) return <Redirect href="/partite" />;

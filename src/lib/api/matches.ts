@@ -1,14 +1,19 @@
 import { supabase } from '@/lib/supabase';
 import type { Match } from '@/types/database';
 
-export async function listMatches(teamId: string): Promise<Match[]> {
-  const { data, error } = await supabase.from('matches').select('*').eq('team_id', teamId).order('match_date');
+const COLUMNS_PUBLIC = 'id, team_id, opponent, is_home, match_date, match_time, match_type, result, created_by, created_at, updated_at';
+const COLUMNS_ADMIN = '*';
+
+export async function listMatches(teamId: string, opts?: { isAdmin?: boolean }): Promise<Match[]> {
+  const cols = opts?.isAdmin ? COLUMNS_ADMIN : COLUMNS_PUBLIC;
+  const { data, error } = await supabase.from('matches').select(cols).eq('team_id', teamId).order('match_date');
   if (error) throw error;
   return data;
 }
 
-export async function getMatch(id: string): Promise<Match> {
-  const { data, error } = await supabase.from('matches').select('*').eq('id', id).single();
+export async function getMatch(id: string, opts?: { isAdmin?: boolean }): Promise<Match> {
+  const cols = opts?.isAdmin ? COLUMNS_ADMIN : COLUMNS_PUBLIC;
+  const { data, error } = await supabase.from('matches').select(cols).eq('id', id).single();
   if (error) throw error;
   return data;
 }

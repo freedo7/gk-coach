@@ -5,6 +5,7 @@ import { TrainingForm } from '@/components/training-form';
 import { useAuth } from '@/context/auth-context';
 import { usePlan } from '@/hooks/use-plan';
 import { createTraining, setTrainingExercises } from '@/lib/api/trainings';
+import { sendPushToTeam } from '@/lib/api/push';
 
 export default function NuovoAllenamentoScreen() {
   const { isAdmin, session, currentTeam } = useAuth();
@@ -23,6 +24,7 @@ export default function NuovoAllenamentoScreen() {
         onSubmit={async (input, exerciseIds) => {
           const id = await createTraining(input, session.user.id, currentTeam.id);
           await setTrainingExercises(id, exerciseIds);
+          sendPushToTeam(currentTeam.id, 'Nuovo allenamento', input.title);
           router.back();
         }}
       />

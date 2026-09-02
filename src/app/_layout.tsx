@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
 import { PurchasesProvider } from '@/context/purchases-context';
+import { PushRegistrar } from '@/components/push-registrar';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,6 +15,7 @@ export default function RootLayout() {
       <AuthProvider>
         <PurchasesProvider>
           <AnimatedSplashOverlay />
+          <PushRegistrar />
           <Slot />
         </PurchasesProvider>
       </AuthProvider>

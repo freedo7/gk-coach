@@ -23,7 +23,7 @@ export default function PartitaDettaglioScreen() {
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      getMatch(id)
+      getMatch(id, { isAdmin })
         .then((data) => {
           if (!cancelled) setMatch(data);
         })
@@ -90,7 +90,7 @@ export default function PartitaDettaglioScreen() {
             <ThemedView type="card" style={styles.resultCard}>
               <ThemedText type="smallBold" themeColor="textSecondary">RISULTATO</ThemedText>
               <ThemedText style={styles.resultText}>{match.result}</ThemedText>
-              {match.result_notes && (
+              {isAdmin && match.result_notes && (
                 <ThemedText type="small" themeColor="textSecondary" style={styles.notesText}>
                   {match.result_notes}
                 </ThemedText>
@@ -98,7 +98,7 @@ export default function PartitaDettaglioScreen() {
             </ThemedView>
           )}
 
-          {match.notes && (
+          {isAdmin && match.notes && (
             <ThemedView type="card" style={styles.notesCard}>
               <ThemedText type="smallBold" themeColor="textSecondary">NOTE</ThemedText>
               <ThemedText style={styles.notesText}>{match.notes}</ThemedText>
