@@ -1,16 +1,18 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MatchRow } from '@/components/match-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { listMatches } from '@/lib/api/matches';
 import { getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
 import { formatTime } from '@/lib/format';
-import type { Training } from '@/types/database';
+import type { Match, Training } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 LocaleConfig.locales['it'] = {
@@ -27,11 +29,15 @@ function todayISO() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+const DOT_TRAINING = { key: 'training', color: Colors.light.accent };
+const DOT_MATCH = { key: 'match', color: Colors.light.danger };
+
 export default function AllenamentiScreen() {
   const { isAdmin, currentTeam } = useAuth();
   const today = todayISO();
 
   const [trainings, setTrainings] = useState<Training[] | null>(null);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
   const [loadingTraining, setLoadingTraining] = useState(false);
@@ -40,6 +46,7 @@ export default function AllenamentiScreen() {
     useCallback(() => {
       if (!currentTeam) return;
       listTrainings(currentTeam.id).then(setTrainings);
+      listMatches(currentTeam.id, { isAdmin }).then(setMatches);
     }, [currentTeam])
   );
 
@@ -51,9 +58,24 @@ export default function AllenamentiScreen() {
       .finally(() => setLoadingTraining(false));
   }, [selectedDate, trainings, currentTeam]);
 
+  const dayMatches = useMemo(
+    () => matches.filter((m) => m.match_date === selectedDate),
+    [matches, selectedDate],
+  );
+
+  // Multi-dot: allenamenti verdi, partite rosse
   const markedDates: Record<string, any> = {};
-  for (const training of trainings ?? []) {
-    markedDates[training.training_date] = { marked: true, dotColor: Colors.light.accent };
+  for (const t of trainings ?? []) {
+    markedDates[t.training_date] = {
+      ...(markedDates[t.training_date] ?? {}),
+      dots: [...(markedDates[t.training_date]?.dots ?? []), DOT_TRAINING],
+    };
+  }
+  for (const m of matches) {
+    markedDates[m.match_date] = {
+      ...(markedDates[m.match_date] ?? {}),
+      dots: [...(markedDates[m.match_date]?.dots ?? []), DOT_MATCH],
+    };
   }
   markedDates[selectedDate] = {
     ...(markedDates[selectedDate] ?? {}),
@@ -73,6 +95,7 @@ export default function AllenamentiScreen() {
             <Calendar
               current={selectedDate}
               firstDay={1}
+              markingType="multi-dot"
               onDayPress={(day) => setSelectedDate(day.dateString)}
               markedDates={markedDates}
               theme={{
@@ -90,8 +113,19 @@ export default function AllenamentiScreen() {
                 textMonthFontWeight: '700',
               }}
             />
+            <View style={styles.legend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.light.accent }]} />
+                <ThemedText type="small" themeColor="textSecondary">Allenamento</ThemedText>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.light.danger }]} />
+                <ThemedText type="small" themeColor="textSecondary">Partita</ThemedText>
+              </View>
+            </View>
           </ThemedView>
 
+          {/* Allenamento del giorno */}
           {loadingTraining ? (
             <ActivityIndicator color={Colors.light.accent} style={styles.trainingLoader} />
           ) : selectedTraining ? (
@@ -125,6 +159,18 @@ export default function AllenamentiScreen() {
               Nessun allenamento in programma per questo giorno.
             </ThemedText>
           )}
+
+          {/* Partite del giorno */}
+          {dayMatches.length > 0 && (
+            <View style={styles.matchSection}>
+              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                {dayMatches.length === 1 ? 'PARTITA' : 'PARTITE'}
+              </ThemedText>
+              {dayMatches.map((m) => (
+                <MatchRow key={m.id} match={m} />
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -153,6 +199,22 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingBottom: Spacing.two,
   },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   trainingLoader: {
     marginVertical: Spacing.two,
   },
@@ -169,5 +231,11 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     paddingVertical: Spacing.two,
+  },
+  matchSection: {
+    gap: Spacing.two,
+  },
+  sectionTitle: {
+    letterSpacing: 0.5,
   },
 });
