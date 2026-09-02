@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem(CURRENT_TEAM_KEY, team.id);
       return { error: null };
     } catch (e: unknown) {
-      return { error: e instanceof Error ? e.message : 'Errore sconosciuto' };
+      return { error: (e as any)?.message ?? String(e) };
     }
   }
 
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadTeams();
       return { error: null };
     } catch (e: unknown) {
-      return { error: e instanceof Error ? e.message : 'Errore sconosciuto' };
+      return { error: (e as any)?.message ?? String(e) };
     }
   }
 
