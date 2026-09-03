@@ -65,6 +65,11 @@ export async function updateTraining(id: string, input: TrainingInput) {
   if (error) throw error;
 }
 
+export async function toggleTrainingCompleted(id: string, completed: boolean) {
+  const { error } = await supabase.from('trainings').update({ completed }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function deleteTraining(id: string) {
   const { error } = await supabase.from('trainings').delete().eq('id', id);
   if (error) throw error;

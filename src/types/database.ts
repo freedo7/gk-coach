@@ -76,6 +76,7 @@ export interface Training {
   training_time: string | null;
   title: string;
   notes: string | null;
+  completed: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;

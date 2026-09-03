@@ -16,7 +16,8 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { useTheme } from '@/hooks/use-theme';
 import { listMatches } from '@/lib/api/matches';
-import { deleteTraining, getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
+import { haptic } from '@/hooks/use-haptic';
+import { deleteTraining, getTrainingByDate, listTrainings, toggleTrainingCompleted, type TrainingWithExercises } from '@/lib/api/trainings';
 import { formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -164,10 +165,30 @@ export default function AllenamentiScreen() {
               <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
                 <Pressable>
                   <ThemedView type="card" style={styles.trainingCard}>
-                    <ThemedText type="smallBold" themeColor="textSecondary">
-                      ALLENAMENTO
-                    </ThemedText>
-                    <ThemedText type="subtitle">{selectedTraining.title}</ThemedText>
+                    <View style={styles.trainingCardHeader}>
+                      <ThemedText type="smallBold" themeColor="textSecondary">
+                        ALLENAMENTO
+                      </ThemedText>
+                      <Pressable
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          haptic('light');
+                          const newVal = !selectedTraining.completed;
+                          setSelectedTraining({ ...selectedTraining, completed: newVal });
+                          toggleTrainingCompleted(selectedTraining.id, newVal).catch(() => {
+                            setSelectedTraining({ ...selectedTraining, completed: !newVal });
+                            showToast('Errore', 'error');
+                          });
+                        }}
+                        hitSlop={12}>
+                        <Ionicons
+                          name={selectedTraining.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={24}
+                          color={selectedTraining.completed ? colors.accent : colors.textSecondary}
+                        />
+                      </Pressable>
+                    </View>
+                    <ThemedText type="subtitle" style={selectedTraining.completed && styles.completedText}>{selectedTraining.title}</ThemedText>
                     {formatTime(selectedTraining.training_time) && (
                       <ThemedText type="small" themeColor="textSecondary">
                         {formatTime(selectedTraining.training_time)}
@@ -269,6 +290,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.half,
+  },
+  trainingCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
   },
   emptyTrainingCard: {
     borderRadius: Radius.card,

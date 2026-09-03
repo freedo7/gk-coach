@@ -177,7 +177,7 @@ export default function HomeScreen() {
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 ULTIMA PARTITA
               </ThemedText>
-              <MatchRow match={lastMatch} muted />
+              <MatchRow match={lastMatch} />
             </View>
           )}
         </ScrollView>
