@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -13,6 +13,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { listMatches } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { listGoalkeepers } from '@/lib/api/goalkeepers';
+import { useToast } from '@/context/toast-context';
+import { generateGoalkeeperPdf } from '@/lib/pdf';
 import type { Match, Training, Goalkeeper } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
@@ -20,12 +22,14 @@ export default function SchedaPortiereScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
+  const { show: showToast } = useToast();
 
   const [goalkeeper, setGoalkeeper] = useState<Goalkeeper | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!currentTeam) return;
@@ -103,6 +107,27 @@ export default function SchedaPortiereScreen() {
             </View>
             <ThemedText type="title">{goalkeeper.name}</ThemedText>
           </View>
+
+          {/* Share button */}
+          <Pressable
+            onPress={async () => {
+              setSharing(true);
+              try {
+                const uri = await generateGoalkeeperPdf(goalkeeper, matches, trainings.length);
+                const Sharing = await import('expo-sharing');
+                await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `Report ${goalkeeper.name}` });
+              } catch {
+                showToast('Errore nella generazione del PDF', 'error');
+              } finally {
+                setSharing(false);
+              }
+            }}
+            disabled={sharing}
+            style={({ pressed }) => [styles.shareBtn, { borderColor: colors.accent }, pressed && { opacity: 0.7 }]}>
+            {sharing
+              ? <ActivityIndicator size="small" color={colors.accent} />
+              : <><Ionicons name="share-outline" size={16} color={colors.accent} /><ThemedText type="smallBold" style={{ color: colors.accent }}>Condividi report</ThemedText></>}
+          </Pressable>
 
           {/* Quick stats */}
           <View style={styles.quickStats}>
@@ -290,6 +315,16 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 4,
     minHeight: 4,
+  },
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderRadius: Radius.control,
+    borderWidth: 1.5,
+    paddingVertical: Spacing.two,
+    marginBottom: Spacing.one,
   },
   emptyCard: {
     marginTop: Spacing.four,

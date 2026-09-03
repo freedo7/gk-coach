@@ -37,6 +37,23 @@ function shortWeekLabel(dateStr: string) {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
+function timeCutoff(period: 'all' | 'season' | '3m' | '1m'): string | null {
+  if (period === 'all') return null;
+  const now = new Date();
+  if (period === '1m') {
+    now.setMonth(now.getMonth() - 1);
+  } else if (period === '3m') {
+    now.setMonth(now.getMonth() - 3);
+  } else {
+    // season: from August 1 of current or previous year
+    const seasonStart = now.getMonth() >= 7
+      ? new Date(now.getFullYear(), 7, 1)
+      : new Date(now.getFullYear() - 1, 7, 1);
+    return seasonStart.toISOString().slice(0, 10);
+  }
+  return now.toISOString().slice(0, 10);
+}
+
 interface CategoryCount {
   name: string;
   count: number;
@@ -97,6 +114,7 @@ export default function StatisticheScreen() {
   const [allTrainings, setAllTrainings] = useState<Training[]>([]);
   const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
   const [selectedGk, setSelectedGk] = useState<string | null>(null);
+  const [timePeriod, setTimePeriod] = useState<'all' | 'season' | '3m' | '1m'>('all');
   const [categories, setCategories] = useState<CategoryCount[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -142,15 +160,18 @@ export default function StatisticheScreen() {
     setRefreshing(false);
   }
 
-  // ── Filter by goalkeeper ──
-  const matches = useMemo(() =>
-    selectedGk ? allMatches.filter((m) => m.goalkeeper_id === selectedGk) : allMatches,
-    [allMatches, selectedGk]
-  );
-  const trainings = useMemo(() =>
-    selectedGk ? allTrainings.filter((t) => t.goalkeeper_id === selectedGk) : allTrainings,
-    [allTrainings, selectedGk]
-  );
+  // ── Filter by goalkeeper + time period ──
+  const cutoffDate = useMemo(() => timeCutoff(timePeriod), [timePeriod]);
+  const matches = useMemo(() => {
+    let filtered = selectedGk ? allMatches.filter((m) => m.goalkeeper_id === selectedGk) : allMatches;
+    if (cutoffDate) filtered = filtered.filter((m) => m.match_date >= cutoffDate);
+    return filtered;
+  }, [allMatches, selectedGk, cutoffDate]);
+  const trainings = useMemo(() => {
+    let filtered = selectedGk ? allTrainings.filter((t) => t.goalkeeper_id === selectedGk) : allTrainings;
+    if (cutoffDate) filtered = filtered.filter((t) => t.training_date >= cutoffDate);
+    return filtered;
+  }, [allTrainings, selectedGk, cutoffDate]);
 
   // ── Computed stats ──
   const now = new Date();
@@ -256,6 +277,34 @@ export default function StatisticheScreen() {
               })}
             </View>
           )}
+
+          {/* ── Filtro periodo ── */}
+          <View style={styles.gkFilter}>
+            {([
+              { value: 'all' as const, label: 'Tutto' },
+              { value: 'season' as const, label: 'Stagione' },
+              { value: '3m' as const, label: '3 mesi' },
+              { value: '1m' as const, label: 'Mese' },
+            ]).map(({ value, label }) => {
+              const sel = timePeriod === value;
+              return (
+                <Pressable
+                  key={value}
+                  onPress={() => { haptic('light'); setTimePeriod(value); }}
+                  style={styles.gkChipWrapper}>
+                  <ThemedView
+                    type={sel ? undefined : 'backgroundElement'}
+                    style={[styles.gkChip, sel && { backgroundColor: colors.accent }]}>
+                    <ThemedText
+                      type="small"
+                      style={{ color: sel ? colors.accentText : colors.textSecondary, fontWeight: '600' }}>
+                      {label}
+                    </ThemedText>
+                  </ThemedView>
+                </Pressable>
+              );
+            })}
+          </View>
 
           {selectedGk && (
             <Pressable

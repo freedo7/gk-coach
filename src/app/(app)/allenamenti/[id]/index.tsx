@@ -107,12 +107,24 @@ export default function AllenamentoDettaglioScreen() {
                 </Pressable>
               </Link>
               <Pressable
-                onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
+                onPress={() => {
+                  haptic('light');
+                  const exerciseIds = training.training_exercises.map((te) => te.exercise_id).join(',');
+                  router.push(`/allenamenti/new?duplicate=1&title=${encodeURIComponent(training.title)}&notes=${encodeURIComponent(training.notes ?? '')}&time=${encodeURIComponent(training.training_time ?? '')}&goalkeeper_id=${training.goalkeeper_id ?? ''}&exercises=${exerciseIds}` as any);
+                }}
+                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
+                <Ionicons name="copy-outline" size={18} color={colors.accent} />
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>Duplica</ThemedText>
               </Pressable>
             </View>
+          )}
+          {isAdmin && showActions && (
+            <Pressable
+              onPress={handleDelete}
+              style={({ pressed }) => [styles.deleteButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
+            </Pressable>
           )}
 
           {training.training_exercises.length > 0 && (
@@ -221,6 +233,14 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+  },
+  deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
