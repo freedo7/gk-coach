@@ -35,7 +35,7 @@ export default function AppTabs() {
       <Tabs.Screen
         name="profilo"
         options={{
-          title: 'Profilo',
+          title: 'Impostazioni',
           tabBarIcon: ({ color }) => (
             <Image
               source={require('@/assets/images/tabIcons/explore.png')}

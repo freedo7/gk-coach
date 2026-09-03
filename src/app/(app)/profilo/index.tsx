@@ -5,18 +5,19 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
-import { supabase } from '@/lib/supabase';
 import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
@@ -27,23 +28,72 @@ const ROLE_LABEL: Record<string, string> = {
   portiere: 'Portiere',
 };
 
-export default function ProfiloScreen() {
-  const { profile, isAdmin, signOut, refreshProfile, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
+/* ── Row component (iOS-style) ── */
+function SettingsRow({
+  icon,
+  iconColor,
+  iconBg,
+  label,
+  value,
+  onPress,
+  trailing,
+  last,
+}: {
+  icon: string;
+  iconColor?: string;
+  iconBg?: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  trailing?: React.ReactNode;
+  last?: boolean;
+}) {
+  const colors = useTheme();
+  const row = (
+    <View style={[styles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
+      <View style={[styles.iconBox, { backgroundColor: iconBg ?? colors.accent }]}>
+        <Ionicons name={icon as any} size={18} color={iconColor ?? '#fff'} />
+      </View>
+      <View style={styles.rowBody}>
+        <ThemedText type="default">{label}</ThemedText>
+        <View style={styles.rowRight}>
+          {value !== undefined && (
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.rowValue}>
+              {value}
+            </ThemedText>
+          )}
+          {trailing}
+          {onPress && <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />}
+        </View>
+      </View>
+    </View>
+  );
+  if (!onPress) return row;
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+      {row}
+    </Pressable>
+  );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <ThemedText type="small" themeColor="textSecondary" style={styles.sectionHeader}>
+      {title}
+    </ThemedText>
+  );
+}
+
+export default function ImpostazioniScreen() {
+  const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
   const colors = useTheme();
   const plan = usePlan();
   const router = useRouter();
 
-  const [fullName, setFullName] = useState(profile?.full_name ?? '');
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileNotice, setProfileNotice] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState('');
+  const [notificheEnabled, setNotificheEnabled] = useState(true);
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [pwError, setPwError] = useState<string | null>(null);
-  const [pwNotice, setPwNotice] = useState<string | null>(null);
-  const [changingPw, setChangingPw] = useState(false);
-
+  // Team switcher modal
   const [switcherVisible, setSwitcherVisible] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [creatingTeam, setCreatingTeam] = useState(false);
@@ -51,37 +101,6 @@ export default function ProfiloScreen() {
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   if (!profile) return null;
-
-  const dirty = fullName.trim() !== (profile.full_name ?? '');
-
-  async function handleSave() {
-    haptic('medium');
-    setProfileError(null);
-    setProfileNotice(null);
-    haptic('success');
-    setProfileNotice('Salvato.');
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName.trim() })
-      .eq('id', profile!.id);
-    if (error) { haptic('error'); setProfileNotice(null); setProfileError(error.message); return; }
-    refreshProfile();
-  }
-
-  async function handleChangePassword() {
-    setPwError(null);
-    setPwNotice(null);
-    if (newPassword.length < 6) { setPwError('Minimo 6 caratteri.'); return; }
-    if (newPassword !== confirmPassword) { setPwError('Le password non coincidono.'); return; }
-    setChangingPw(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setChangingPw(false);
-    if (error) { haptic('error'); setPwError(error.message); return; }
-    haptic('success');
-    setPwNotice('Password aggiornata!');
-    setNewPassword('');
-    setConfirmPassword('');
-  }
 
   async function handleCreateTeam() {
     if (!newTeamName.trim()) return;
@@ -101,151 +120,190 @@ export default function ProfiloScreen() {
     setSwitcherVisible(false);
   }
 
+  // Filter rows by search
+  const trimmed = query.trim().toLowerCase();
+  const match = (text: string) => !trimmed || text.toLowerCase().includes(trimmed);
+
+  const planLabel = plan.tier === 'pro'
+    ? '★ Pro'
+    : plan.isTrialActive
+    ? `Trial · ${plan.trialDaysLeft}gg`
+    : 'Base';
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="title">Profilo</ThemedText>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <ThemedText type="title">Impostazioni</ThemedText>
 
-          {/* Squadra attiva */}
-          <ThemedView type="card" style={styles.card}>
-            <ThemedText type="smallBold" themeColor="textSecondary">SQUADRA ATTIVA</ThemedText>
-            <View style={styles.teamRow}>
-              <ThemedText type="subtitle" style={styles.teamName}>
-                {currentTeam?.name ?? '—'}
-              </ThemedText>
-              {teams.length > 0 && (
-                <Pressable
-                  onPress={() => setSwitcherVisible(true)}
-                  style={({ pressed }) => [styles.switchBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
-                  <ThemedText type="small" style={[styles.switchBtnText, { color: colors.accentText }]}>
-                    {teams.length > 1 ? 'Cambia' : 'Gestisci'}
-                  </ThemedText>
-                </Pressable>
-              )}
-            </View>
-
-            <Pressable
-              onPress={() => router.push('/profilo/paywall')}
-              style={({ pressed }) => [styles.planBadge,
-                { backgroundColor: colors.backgroundElement },
-                pressed && styles.pressed,
-                plan.tier === 'pro' && { backgroundColor: colors.accent },
-                plan.isTrialActive && { backgroundColor: colors.accentSoft },
-                !plan.isTrialActive && plan.tier !== 'pro' && { backgroundColor: colors.dangerSoft },
-              ]}>
-              <ThemedText type="small" style={[styles.planBadgeText, { color: colors.text }]}>
-                {plan.tier === 'pro'
-                  ? '★ Pro'
-                  : plan.isTrialActive
-                  ? `Trial — ${plan.trialDaysLeft}gg rimanenti`
-                  : 'Base — Passa a Pro'}
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-
-          {/* Info profilo */}
-          <ThemedView type="card" style={styles.card}>
-            <ThemedText type="smallBold" themeColor="textSecondary">Nome</ThemedText>
+          {/* Search */}
+          <ThemedView type="backgroundElement" style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
             <TextInput
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Nome e cognome"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Cerca nelle impostazioni..."
               placeholderTextColor={colors.textSecondary}
-              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+              style={[styles.searchInput, { color: colors.text }]}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
             />
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Email</ThemedText>
-            <ThemedText type="default" style={styles.displayValue}>{profile.email}</ThemedText>
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Ruolo</ThemedText>
-            <ThemedView type="backgroundElement" style={styles.roleBadge}>
-              <ThemedText type="smallBold">{ROLE_LABEL[profile.role]}</ThemedText>
-            </ThemedView>
-            {!isAdmin && (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.roleHint}>
-                Il ruolo viene assegnato dal preparatore.
-              </ThemedText>
-            )}
-
-            {profileError && (
-              <ThemedText type="small" themeColor="accent" style={styles.fieldSpacing}>{profileError}</ThemedText>
-            )}
-            {profileNotice && (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.fieldSpacing}>{profileNotice}</ThemedText>
-            )}
-
-            <Pressable
-              onPress={handleSave}
-              disabled={!dirty || saving}
-              style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.accent }, (!dirty || saving) && styles.saveButtonDisabled, pressed && styles.pressed]}>
-              {saving
-                ? <ActivityIndicator color={colors.accentText} />
-                : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Salva modifiche</ThemedText>}
-            </Pressable>
           </ThemedView>
 
-          {/* Cambia password */}
-          <ThemedView type="card" style={styles.card}>
-            <ThemedText type="subtitle" style={styles.cardTitle}>Cambia password</ThemedText>
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Nuova password</ThemedText>
-            <TextInput
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-              placeholder="Minimo 6 caratteri"
-              placeholderTextColor={colors.textSecondary}
-              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-            />
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Conferma password</ThemedText>
-            <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-            />
-
-            {pwError && (
-              <ThemedText type="small" themeColor="accent" style={styles.fieldSpacing}>{pwError}</ThemedText>
-            )}
-            {pwNotice && (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.fieldSpacing}>{pwNotice}</ThemedText>
-            )}
-
-            <Pressable
-              onPress={handleChangePassword}
-              disabled={changingPw}
-              style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.accent }, changingPw && styles.saveButtonDisabled, pressed && styles.pressed]}>
-              {changingPw
-                ? <ActivityIndicator color={colors.accentText} />
-                : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Aggiorna password</ThemedText>}
-            </Pressable>
-          </ThemedView>
-
-          {/* Admin: squadra */}
-          {isAdmin && (
+          {/* ─── ACCOUNT ─── */}
+          {(match('account') || match('nome') || match('email') || match('ruolo') || match('password')) && (
             <>
-              <Pressable
-                onPress={() => router.push('/profilo/utenti')}
-                style={({ pressed }) => [styles.adminButton, { backgroundColor: colors.card }, pressed && styles.pressed]}>
-                <ThemedText type="smallBold">Membri squadra</ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={() => router.push('/profilo/invite')}
-                style={({ pressed }) => [styles.adminButton, { backgroundColor: colors.card }, pressed && styles.pressed]}>
-                <ThemedText type="smallBold">Invita portieri</ThemedText>
-              </Pressable>
+              <SectionHeader title="ACCOUNT" />
+              <ThemedView type="card" style={styles.card}>
+                {match('nome') && (
+                  <SettingsRow
+                    icon="person-outline"
+                    iconBg="#5AC8FA"
+                    label="Nome"
+                    value={profile.full_name ?? '—'}
+                    onPress={() => router.push('/profilo/edit-name')}
+                  />
+                )}
+                {match('email') && (
+                  <SettingsRow
+                    icon="mail-outline"
+                    iconBg="#FF9500"
+                    label="Email"
+                    value={profile.email}
+                  />
+                )}
+                {match('ruolo') && (
+                  <SettingsRow
+                    icon="shield-outline"
+                    iconBg="#AF52DE"
+                    label="Ruolo"
+                    value={ROLE_LABEL[profile.role]}
+                  />
+                )}
+                {match('password') && (
+                  <SettingsRow
+                    icon="lock-closed-outline"
+                    iconBg="#FF3B30"
+                    label="Cambia password"
+                    onPress={() => router.push('/profilo/edit-password')}
+                    last
+                  />
+                )}
+              </ThemedView>
             </>
           )}
 
-          {/* Logout */}
-          <Pressable
-            onPress={signOut}
-            style={({ pressed }) => [styles.logoutButton, { backgroundColor: colors.danger }, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={styles.logoutButtonText}>Esci</ThemedText>
-          </Pressable>
+          {/* ─── SQUADRA ─── */}
+          {(match('squadra') || match('team') || match('membri') || match('invita')) && (
+            <>
+              <SectionHeader title="SQUADRA" />
+              <ThemedView type="card" style={styles.card}>
+                {match('squadra') && (
+                  <SettingsRow
+                    icon="people-outline"
+                    iconBg="#34C759"
+                    label="Squadra attiva"
+                    value={currentTeam?.name ?? '—'}
+                    onPress={() => setSwitcherVisible(true)}
+                  />
+                )}
+                {isAdmin && match('membri') && (
+                  <SettingsRow
+                    icon="person-add-outline"
+                    iconBg="#007AFF"
+                    label="Membri squadra"
+                    onPress={() => router.push('/profilo/utenti')}
+                  />
+                )}
+                {isAdmin && match('invita') && (
+                  <SettingsRow
+                    icon="link-outline"
+                    iconBg="#5856D6"
+                    label="Invita portieri"
+                    onPress={() => router.push('/profilo/invite')}
+                    last={!match('squadra') || isAdmin}
+                  />
+                )}
+              </ThemedView>
+            </>
+          )}
+
+          {/* ─── ABBONAMENTO ─── */}
+          {(match('abbonamento') || match('pro') || match('piano') || match('upgrade')) && (
+            <>
+              <SectionHeader title="ABBONAMENTO" />
+              <ThemedView type="card" style={styles.card}>
+                <SettingsRow
+                  icon="star-outline"
+                  iconBg={plan.tier === 'pro' ? '#FFD60A' : '#FF9500'}
+                  iconColor={plan.tier === 'pro' ? '#000' : '#fff'}
+                  label="Piano attuale"
+                  value={planLabel}
+                  onPress={() => router.push('/profilo/paywall')}
+                  last
+                />
+              </ThemedView>
+            </>
+          )}
+
+          {/* ─── NOTIFICHE ─── */}
+          {match('notifiche') && (
+            <>
+              <SectionHeader title="NOTIFICHE" />
+              <ThemedView type="card" style={styles.card}>
+                <SettingsRow
+                  icon="notifications-outline"
+                  iconBg="#FF3B30"
+                  label="Notifiche push"
+                  trailing={
+                    <Switch
+                      value={notificheEnabled}
+                      onValueChange={(v) => { haptic('light'); setNotificheEnabled(v); }}
+                      trackColor={{ false: colors.backgroundElement, true: colors.accent }}
+                      thumbColor="#fff"
+                    />
+                  }
+                  last
+                />
+              </ThemedView>
+            </>
+          )}
+
+          {/* ─── ASPETTO ─── */}
+          {match('aspetto') && (
+            <>
+              <SectionHeader title="ASPETTO" />
+              <ThemedView type="card" style={styles.card}>
+                <SettingsRow
+                  icon="moon-outline"
+                  iconBg="#5856D6"
+                  label="Tema"
+                  value="Automatico"
+                  last
+                />
+              </ThemedView>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.sectionFooter}>
+                L'app segue il tema del dispositivo.
+              </ThemedText>
+            </>
+          )}
+
+          {/* ─── LOGOUT ─── */}
+          <View style={{ marginTop: Spacing.three }}>
+            <ThemedView type="card" style={styles.card}>
+              <Pressable
+                onPress={() => { haptic('warning'); signOut(); }}
+                style={({ pressed }) => [styles.logoutRow, pressed && styles.pressed]}>
+                <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+                <ThemedText type="default" style={{ color: colors.danger }}>Esci</ThemedText>
+              </Pressable>
+            </ThemedView>
+          </View>
+
+          {/* Version */}
+          <ThemedText type="small" themeColor="textSecondary" style={styles.version}>
+            GK Coach v1.0.0
+          </ThemedText>
         </ScrollView>
       </SafeAreaView>
 
@@ -267,7 +325,7 @@ export default function ProfiloScreen() {
               ]}>
               <ThemedText type="smallBold">{team.name}</ThemedText>
               {team.id === currentTeam?.id && (
-                <ThemedText type="small" style={{ color: colors.accent, fontWeight: '600' }}>Attiva</ThemedText>
+                <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
               )}
             </Pressable>
           ))}
@@ -299,11 +357,10 @@ export default function ProfiloScreen() {
                 onPress={handleCreateTeam}
                 disabled={creatingTeam || !newTeamName.trim()}
                 style={({ pressed }) => [
-                  styles.saveButton,
+                  styles.createBtn,
                   { backgroundColor: colors.accent },
-                  (creatingTeam || !newTeamName.trim()) && styles.saveButtonDisabled,
+                  (creatingTeam || !newTeamName.trim()) && { opacity: 0.4 },
                   pressed && styles.pressed,
-                  { marginTop: Spacing.two },
                 ]}>
                 {creatingTeam
                   ? <ActivityIndicator color={colors.accentText} />
@@ -324,84 +381,81 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.five,
     paddingBottom: BottomTabInset + Spacing.three,
-    gap: Spacing.three,
+    gap: Spacing.one,
   },
-  card: {
-    borderRadius: Radius.card,
-    padding: Spacing.four,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    lineHeight: 28,
-  },
-  teamRow: {
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.one,
-  },
-  teamName: {
-    flex: 1,
-    fontWeight: '700',
-  },
-  switchBtn: {
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-  },
-  switchBtnText: {
-    fontWeight: '600',
-  },
-  planBadge: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.two,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-  },
-  planBadgeText: {
-    fontWeight: '600',
-  },
-  input: {
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    marginTop: Spacing.one,
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    marginBottom: Spacing.two,
+  },
+  searchInput: {
+    flex: 1,
     fontSize: 16,
   },
-  displayValue: {
-    marginTop: Spacing.one,
-    paddingHorizontal: Spacing.one,
+  sectionHeader: {
+    marginTop: Spacing.three,
+    marginBottom: Spacing.one,
+    marginLeft: Spacing.three,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  fieldSpacing: { marginTop: Spacing.three },
-  roleBadge: {
-    alignSelf: 'flex-start',
+  sectionFooter: {
     marginTop: Spacing.one,
-    borderRadius: Radius.pill,
+    marginLeft: Spacing.three,
+  },
+  card: {
+    borderRadius: Radius.card,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
+    paddingVertical: Spacing.two + 2,
+    gap: Spacing.three,
   },
-  roleHint: { marginTop: Spacing.one },
-  saveButton: {
+  iconBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowBody: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    flexShrink: 1,
+  },
+  rowValue: {
+    maxWidth: 160,
+  },
+  logoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.three,
+    gap: Spacing.two,
+  },
+  version: {
+    textAlign: 'center',
     marginTop: Spacing.four,
-    borderRadius: Radius.control,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
+    marginBottom: Spacing.two,
   },
-  saveButtonDisabled: { opacity: 0.4 },
-  adminButton: {
-    borderRadius: Radius.control,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  logoutButton: {
-    borderRadius: Radius.control,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  logoutButtonText: { color: '#ffffff' },
   pressed: { opacity: 0.7 },
+
+  /* Modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -434,5 +488,17 @@ const styles = StyleSheet.create({
   },
   createForm: {
     marginTop: Spacing.one,
+    gap: Spacing.two,
+  },
+  input: {
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    fontSize: 16,
+  },
+  createBtn: {
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
   },
 });
