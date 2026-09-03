@@ -102,7 +102,7 @@ export default function HomeScreen() {
         </ScrollView>
 
         <View style={styles.quickActions}>
-          <QuickAction href="/esercizi" icon="book-outline" label="Libreria esercizi" />
+          <QuickAction href="/esercizi" icon="book-outline" label="Libreria" />
           <QuickAction href="/allenamenti" icon="calendar-outline" label="Allenamenti" />
           <QuickAction href="/partite" icon="football-outline" label="Partite" />
         </View>
