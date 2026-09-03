@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/hooks/use-theme';
 
@@ -29,6 +30,15 @@ export default function AppTabs() {
               source={require('@/assets/images/tabIcons/home.png')}
               style={{ width: 28, height: 28, tintColor: color }}
             />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="statistiche"
+        options={{
+          title: 'Statistiche',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="stats-chart-outline" size={24} color={color} />
           ),
         }}
       />

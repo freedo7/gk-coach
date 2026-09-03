@@ -202,7 +202,7 @@ export default function ImpostazioniScreen() {
           )}
 
           {/* ─── SQUADRA ─── */}
-          {(match('squadra') || match('team') || match('membri') || match('invita')) && (
+          {(match('squadra') || match('team') || match('membri') || match('invita') || match('portieri')) && (
             <>
               <SectionHeader title="SQUADRA" />
               <ThemedView type="card" style={styles.card}>
@@ -223,13 +223,21 @@ export default function ImpostazioniScreen() {
                     onPress={() => router.push('/profilo/utenti')}
                   />
                 )}
+                {isAdmin && match('portieri') && (
+                  <SettingsRow
+                    icon="body-outline"
+                    iconBg="#FF9500"
+                    label="Portieri"
+                    onPress={() => router.push('/profilo/portieri')}
+                  />
+                )}
                 {isAdmin && match('invita') && (
                   <SettingsRow
                     icon="link-outline"
                     iconBg="#5856D6"
                     label="Invita portieri"
                     onPress={() => router.push('/profilo/invite')}
-                    last={!match('squadra') || isAdmin}
+                    last
                   />
                 )}
               </ThemedView>

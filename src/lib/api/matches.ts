@@ -18,6 +18,7 @@ export async function getMatch(id: string, opts?: { isAdmin?: boolean }): Promis
 }
 
 export interface MatchInput {
+  goalkeeper_id: string | null;
   opponent: string;
   is_home: boolean;
   match_date: string;

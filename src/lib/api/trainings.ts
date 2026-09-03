@@ -43,6 +43,7 @@ export async function getTrainingByDate(date: string, teamId: string): Promise<T
 }
 
 export interface TrainingInput {
+  goalkeeper_id: string | null;
   training_date: string;
   training_time: string | null;
   title: string;

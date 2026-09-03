@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
+import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
@@ -19,6 +20,7 @@ interface Props {
 
 export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmit }: Props) {
   const colors = useTheme();
+  const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [date, setDate] = useState<string | null>(initial?.training_date ?? null);
   const [time, setTime] = useState(initial?.training_time ?? '');
@@ -45,6 +47,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
     try {
       await onSubmit(
         {
+          goalkeeper_id: goalkeeperId,
           title: title.trim(),
           training_date: date!,
           training_time: time.trim() || null,
@@ -62,6 +65,11 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ThemedText type="smallBold" themeColor="textSecondary">
+        Portiere
+      </ThemedText>
+      <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Titolo
       </ThemedText>
       <TextInput

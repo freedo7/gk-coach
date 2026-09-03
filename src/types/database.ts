@@ -34,6 +34,14 @@ export interface TeamInvite {
   created_at: string;
 }
 
+export interface Goalkeeper {
+  id: string;
+  team_id: string;
+  name: string;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface ExerciseCategory {
   id: string;
   name: string;
@@ -63,6 +71,7 @@ export interface Exercise {
 export interface Training {
   id: string;
   team_id: string | null;
+  goalkeeper_id: string | null;
   training_date: string;
   training_time: string | null;
   title: string;
@@ -83,6 +92,7 @@ export interface TrainingExercise {
 export interface Match {
   id: string;
   team_id: string | null;
+  goalkeeper_id: string | null;
   opponent: string;
   is_home: boolean;
   match_date: string;

@@ -16,6 +16,7 @@ export default function ProfiloLayout() {
       <Stack.Screen name="edit-password" options={{ title: 'Cambia password' }} />
       <Stack.Screen name="utenti" options={{ title: 'Membri squadra' }} />
       <Stack.Screen name="invite" options={{ title: 'Invita portieri' }} />
+      <Stack.Screen name="portieri" options={{ title: 'Portieri' }} />
       <Stack.Screen name="paywall" options={{ title: 'GK Coach Pro' }} />
     </Stack>
   );

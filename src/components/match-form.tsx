@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
+import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import type { MatchInput } from '@/lib/api/matches';
@@ -18,6 +19,7 @@ interface Props {
 
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const colors = useTheme();
+  const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [isHome, setIsHome] = useState(initial?.is_home ?? true);
   const [matchType, setMatchType] = useState<'amichevole' | 'campionato' | 'coppa'>(initial?.match_type ?? 'campionato');
@@ -41,6 +43,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
     setSubmitting(true);
     try {
       await onSubmit({
+        goalkeeper_id: goalkeeperId,
         opponent: opponent.trim(),
         is_home: isHome,
         match_date: matchDate!,
@@ -64,6 +67,11 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ThemedText type="smallBold" themeColor="textSecondary">
+        Portiere
+      </ThemedText>
+      <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Avversario
       </ThemedText>
       <TextInput
