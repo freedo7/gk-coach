@@ -2,9 +2,32 @@ import type { TrainingWithExercises } from '@/lib/api/trainings';
 import type { Match, Goalkeeper } from '@/types/database';
 import { formatDateLong, formatTime } from '@/lib/format';
 
+const APP_URL = 'https://gk-coach.app';
+const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(APP_URL)}`;
+
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+const footerHtml = `
+  <div class="footer">
+    <div class="footer-inner">
+      <img src="${QR_URL}" width="70" height="70" alt="QR" />
+      <div>
+        <div class="footer-brand">GK Coach</div>
+        <div class="footer-tagline">L'app per i preparatori dei portieri</div>
+        <div class="footer-link">${APP_URL}</div>
+      </div>
+    </div>
+  </div>`;
+
+const footerCss = `
+  .footer { margin-top: 40px; border-top: 1px solid #E5E5E5; padding-top: 20px; }
+  .footer-inner { display: flex; align-items: center; gap: 16px; }
+  .footer-brand { font-size: 16px; font-weight: 700; color: #6FC22C; }
+  .footer-tagline { font-size: 12px; color: #60646C; margin-top: 2px; }
+  .footer-link { font-size: 11px; color: #B0B4BA; margin-top: 4px; }
+`;
 
 export async function generateTrainingPdf(training: TrainingWithExercises): Promise<string> {
   const Print = await import('expo-print');
@@ -57,7 +80,7 @@ export async function generateTrainingPdf(training: TrainingWithExercises): Prom
         .ex-meta { color: #60646C; font-size: 12px; margin-top: 2px; }
         .ex-desc { font-size: 13px; line-height: 1.5; color: #333; }
         .ex-note { font-size: 12px; color: #60646C; margin-top: 6px; font-style: italic; }
-        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #B0B4BA; }
+        ${footerCss}
       </style>
     </head>
     <body>
@@ -72,7 +95,7 @@ export async function generateTrainingPdf(training: TrainingWithExercises): Prom
         ${exercisesHtml}
       ` : '<p style="color:#60646C">Nessun esercizio assegnato.</p>'}
 
-      <div class="footer">GK Coach</div>
+      ${footerHtml}
     </body>
     </html>`;
 
@@ -143,7 +166,7 @@ export async function generateGoalkeeperPdf(
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background: #F7F7F9; padding: 8px; text-align: left; font-size: 11px; color: #60646C; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 8px; border-bottom: 1px solid #F0F0F0; }
-        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #B0B4BA; }
+        ${footerCss}
       </style>
     </head>
     <body>
@@ -189,7 +212,7 @@ export async function generateGoalkeeperPdf(
         </table>
       ` : '<p style="color:#60646C">Nessuna partita registrata.</p>'}
 
-      <div class="footer">GK Coach</div>
+      ${footerHtml}
     </body>
     </html>`;
 
