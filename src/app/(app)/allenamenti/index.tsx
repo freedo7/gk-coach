@@ -1,10 +1,12 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useRouter } from 'expo-router';
 import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
 import { SwipeableRow } from '@/components/swipeable-row';
@@ -36,6 +38,7 @@ function todayISO() {
 export default function AllenamentiScreen() {
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
+  const router = useRouter();
   const { show: showToast } = useToast();
   const today = todayISO();
 
@@ -101,6 +104,12 @@ export default function AllenamentiScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.pageHeader}>
           <ThemedText type="title">Allenamenti</ThemedText>
+          <Pressable
+            onPress={() => router.push('/esercizi')}
+            style={({ pressed }) => [styles.libraryBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.7 }]}>
+            <Ionicons name="book-outline" size={16} color={colors.accent} />
+            <ThemedText type="smallBold" style={{ color: colors.accent }}>Libreria</ThemedText>
+          </Pressable>
         </View>
 
         <ScrollView
@@ -213,9 +222,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  libraryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
   },
   scrollContent: {
     padding: Spacing.four,

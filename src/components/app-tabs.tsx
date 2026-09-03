@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router';
-import { Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -26,10 +25,25 @@ export default function AppTabs() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <Image
-              source={require('@/assets/images/tabIcons/home.png')}
-              style={{ width: 28, height: 28, tintColor: color }}
-            />
+            <Ionicons name="home-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="allenamenti"
+        options={{
+          title: 'Allenamenti',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="calendar-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="partite"
+        options={{
+          title: 'Partite',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="football-outline" size={22} color={color} />
           ),
         }}
       />
@@ -38,7 +52,7 @@ export default function AppTabs() {
         options={{
           title: 'Statistiche',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="bar-chart-outline" size={24} color={color} />
+            <Ionicons name="bar-chart-outline" size={22} color={color} />
           ),
         }}
       />
@@ -47,16 +61,11 @@ export default function AppTabs() {
         options={{
           title: 'Impostazioni',
           tabBarIcon: ({ color }) => (
-            <Image
-              source={require('@/assets/images/tabIcons/explore.png')}
-              style={{ width: 28, height: 28, tintColor: color }}
-            />
+            <Ionicons name="settings-outline" size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen name="esercizi" options={{ href: null }} />
-      <Tabs.Screen name="allenamenti" options={{ href: null }} />
-      <Tabs.Screen name="partite" options={{ href: null }} />
     </Tabs>
   );
 }

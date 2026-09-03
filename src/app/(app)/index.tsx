@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
-import { QuickAction } from '@/components/quick-action';
 import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -100,12 +99,6 @@ export default function HomeScreen() {
             )}
           </View>
         </ScrollView>
-
-        <View style={styles.quickActions}>
-          <QuickAction href="/esercizi" icon="book-outline" label="Libreria" />
-          <QuickAction href="/allenamenti" icon="calendar-outline" label="Allenamenti" />
-          <QuickAction href="/partite" icon="football-outline" label="Partite" />
-        </View>
       </SafeAreaView>
     </ThemedView>
   );
@@ -125,11 +118,6 @@ const styles = StyleSheet.create({
   },
   greeting: {
     marginTop: Spacing.two,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    paddingVertical: Spacing.three,
   },
   section: {
     gap: Spacing.two,
