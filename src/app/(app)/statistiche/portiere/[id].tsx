@@ -98,7 +98,7 @@ export default function SchedaPortiereScreen() {
           <View style={styles.header}>
             <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
               <ThemedText style={[styles.avatarText, { color: colors.accent }]}>
-                {goalkeeper.name.charAt(0).toUpperCase()}
+                {goalkeeper.name.split(' ').map((w) => w.charAt(0).toUpperCase()).join('')}
               </ThemedText>
             </View>
             <ThemedText type="title">{goalkeeper.name}</ThemedText>

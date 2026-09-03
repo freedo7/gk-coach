@@ -115,7 +115,7 @@ export default function PortieriScreen() {
                 <View style={styles.rowLeft}>
                   <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
                     <ThemedText type="smallBold" style={{ color: colors.accent }}>
-                      {gk.name.charAt(0).toUpperCase()}
+                      {gk.name.split(' ').map((w) => w.charAt(0).toUpperCase()).join('')}
                     </ThemedText>
                   </View>
                   <ThemedText type="default" style={{ fontWeight: '600' }}>{gk.name}</ThemedText>
