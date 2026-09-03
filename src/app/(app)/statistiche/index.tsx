@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
@@ -90,6 +91,7 @@ function MiniBarChart({ data, accentColor }: { data: { label: string; value: num
 export default function StatisticheScreen() {
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
+  const router = useRouter();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [allTrainings, setAllTrainings] = useState<Training[]>([]);
@@ -255,6 +257,16 @@ export default function StatisticheScreen() {
             </View>
           )}
 
+          {selectedGk && (
+            <Pressable
+              onPress={() => router.push(`/statistiche/portiere/${selectedGk}` as any)}
+              style={({ pressed }) => [styles.schedaBtn, { borderColor: colors.accent }, pressed && { opacity: 0.7 }]}>
+              <Ionicons name="person-outline" size={16} color={colors.accent} />
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>Vedi scheda completa</ThemedText>
+              <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+            </Pressable>
+          )}
+
           {/* ── Riepilogo ── */}
           <View style={styles.statsGrid}>
             <StatCard icon="football-outline" iconBg="#FF9500" label="Partite" value={matches.length} sub={`${matchesThisMonth.length} questo mese`} />
@@ -388,6 +400,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one + 2,
+  },
+  schedaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderRadius: Radius.control,
+    borderWidth: 1.5,
+    paddingVertical: Spacing.two,
   },
   sectionTitle: {
     marginTop: Spacing.three,
