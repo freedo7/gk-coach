@@ -16,6 +16,13 @@ export default function AppTabs() {
           backgroundColor: 'transparent',
           borderTopColor: 'transparent',
           elevation: 0,
+          height: 70,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
         sceneStyle: { backgroundColor: 'transparent' },
         animation: 'shift',
@@ -25,7 +32,7 @@ export default function AppTabs() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={22} color={color} />
+            <Ionicons name="home-outline" size={26} color={color} />
           ),
         }}
       />
@@ -34,7 +41,7 @@ export default function AppTabs() {
         options={{
           title: 'Allenamenti',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="calendar-outline" size={22} color={color} />
+            <Ionicons name="calendar-outline" size={26} color={color} />
           ),
         }}
       />
@@ -43,7 +50,7 @@ export default function AppTabs() {
         options={{
           title: 'Partite',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="football-outline" size={22} color={color} />
+            <Ionicons name="football-outline" size={26} color={color} />
           ),
         }}
       />
@@ -52,7 +59,7 @@ export default function AppTabs() {
         options={{
           title: 'Statistiche',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="bar-chart-outline" size={22} color={color} />
+            <Ionicons name="bar-chart-outline" size={26} color={color} />
           ),
         }}
       />
@@ -61,7 +68,7 @@ export default function AppTabs() {
         options={{
           title: 'Impostazioni',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-outline" size={22} color={color} />
+            <Ionicons name="settings-outline" size={26} color={color} />
           ),
         }}
       />
