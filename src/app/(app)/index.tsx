@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
@@ -127,13 +128,16 @@ export default function HomeScreen() {
           </ThemedText>
 
           {/* ── Mini stats ── */}
+          <FadeIn delay={100}>
           <View style={styles.miniStatsRow}>
             <MiniStat icon="calendar-outline" iconBg="#5AC8FA" value={trainingsThisMonth} label="Allenamenti" />
             <MiniStat icon="football-outline" iconBg="#FF9500" value={matchesThisMonth} label="Partite" />
             <MiniStat icon="flame-outline" iconBg="#FF3B30" value={streak > 0 ? `${streak}w` : '—'} label="Streak" />
           </View>
+          </FadeIn>
 
           {/* ── Prossimo allenamento ── */}
+          <FadeIn delay={200}>
           <View style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
               PROSSIMO ALLENAMENTO
@@ -156,8 +160,10 @@ export default function HomeScreen() {
               </ThemedView>
             )}
           </View>
+          </FadeIn>
 
           {/* ── Prossima partita ── */}
+          <FadeIn delay={300}>
           <View style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
               PROSSIMA PARTITA
@@ -170,15 +176,18 @@ export default function HomeScreen() {
               <MatchRow match={nextMatch} />
             )}
           </View>
+          </FadeIn>
 
           {/* ── Ultima partita ── */}
           {lastMatch && (
+            <FadeIn delay={400}>
             <View style={styles.section}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 ULTIMA PARTITA
               </ThemedText>
               <MatchRow match={lastMatch} />
             </View>
+            </FadeIn>
           )}
         </ScrollView>
       </SafeAreaView>
