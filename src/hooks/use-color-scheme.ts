@@ -1,5 +1,6 @@
-import { useColorScheme as useRNColorScheme } from 'react-native';
+import { useThemePreference } from '@/context/theme-context';
 
 export function useColorScheme() {
-  return useRNColorScheme() ?? 'light';
+  const { scheme } = useThemePreference();
+  return scheme;
 }

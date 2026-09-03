@@ -16,11 +16,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useThemePreference, type ThemePreference } from '@/context/theme-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
+
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: 'auto', label: 'Automatico', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Chiaro', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Scuro', icon: 'moon-outline' },
+];
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Admin',
@@ -89,6 +96,7 @@ export default function ImpostazioniScreen() {
   const colors = useTheme();
   const plan = usePlan();
   const router = useRouter();
+  const { preference, setPreference } = useThemePreference();
 
   const [query, setQuery] = useState('');
   const [notificheEnabled, setNotificheEnabled] = useState(true);
@@ -270,21 +278,29 @@ export default function ImpostazioniScreen() {
           )}
 
           {/* ─── ASPETTO ─── */}
-          {match('aspetto') && (
+          {(match('aspetto') || match('tema')) && (
             <>
               <SectionHeader title="ASPETTO" />
               <ThemedView type="card" style={styles.card}>
-                <SettingsRow
-                  icon="moon-outline"
-                  iconBg="#5856D6"
-                  label="Tema"
-                  value="Automatico"
-                  last
-                />
+                {THEME_OPTIONS.map((opt, idx) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => { haptic('light'); setPreference(opt.value); }}
+                    style={({ pressed }) => pressed && styles.pressed}>
+                    <View style={[styles.row, idx < THEME_OPTIONS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
+                      <View style={[styles.iconBox, { backgroundColor: '#5856D6' }]}>
+                        <Ionicons name={opt.icon as any} size={18} color="#fff" />
+                      </View>
+                      <View style={styles.rowBody}>
+                        <ThemedText type="default">{opt.label}</ThemedText>
+                        {preference === opt.value && (
+                          <Ionicons name="checkmark" size={20} color={colors.accent} />
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                ))}
               </ThemedView>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.sectionFooter}>
-                L'app segue il tema del dispositivo.
-              </ThemedText>
             </>
           )}
 
