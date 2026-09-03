@@ -19,6 +19,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [isHome, setIsHome] = useState(initial?.is_home ?? true);
   const [matchType, setMatchType] = useState<'amichevole' | 'campionato' | 'coppa'>(initial?.match_type ?? 'campionato');
+  const [matchday, setMatchday] = useState(initial?.matchday?.toString() ?? '');
   const [matchDate, setMatchDate] = useState<string | null>(initial?.match_date ?? null);
   const [matchTime, setMatchTime] = useState(initial?.match_time ?? '');
   const [result, setResult] = useState(initial?.result ?? '');
@@ -40,6 +41,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         match_date: matchDate!,
         match_time: matchTime.trim() || null,
         match_type: matchType,
+        matchday: matchType === 'campionato' && matchday.trim() ? parseInt(matchday.trim(), 10) : null,
         result: result.trim() || null,
         result_notes: resultNotes.trim() || null,
         notes: notes.trim() || null,
@@ -123,6 +125,22 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
           );
         })}
       </ThemedView>
+
+      {matchType === 'campionato' && (
+        <>
+          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+            Giornata (opzionale)
+          </ThemedText>
+          <TextInput
+            value={matchday}
+            onChangeText={setMatchday}
+            placeholder="Es. 1"
+            placeholderTextColor={Colors.light.textSecondary}
+            keyboardType="number-pad"
+            style={styles.input}
+          />
+        </>
+      )}
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Data

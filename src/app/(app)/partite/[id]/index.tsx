@@ -90,6 +90,11 @@ export default function PartitaDettaglioScreen() {
             {formatDateLong(match.match_date)}
             {time ? ` · ${time}` : ''}
           </ThemedText>
+          {match.match_type === 'campionato' && match.matchday && (
+            <ThemedText type="smallBold" themeColor="accent">
+              Giornata {match.matchday}
+            </ThemedText>
+          )}
 
           {match.result && (
             <ThemedView type="card" style={styles.resultCard}>

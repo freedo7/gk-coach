@@ -45,6 +45,7 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
             {match.match_type && (
               <ThemedText type="small" themeColor="textSecondary" style={styles.matchType}>
                 {match.match_type.charAt(0).toUpperCase() + match.match_type.slice(1)}
+                {match.match_type === 'campionato' && match.matchday ? ` · G${match.matchday}` : ''}
               </ThemedText>
             )}
           </View>

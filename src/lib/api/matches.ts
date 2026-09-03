@@ -23,6 +23,7 @@ export interface MatchInput {
   match_date: string;
   match_time: string | null;
   match_type: 'amichevole' | 'campionato' | 'coppa';
+  matchday: number | null;
   result: string | null;
   result_notes: string | null;
   notes: string | null;

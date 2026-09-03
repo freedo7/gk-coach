@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/empty-state';
@@ -15,6 +16,13 @@ import { deleteMatch, listMatches } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
+const MATCH_TYPES = ['amichevole', 'campionato', 'coppa'] as const;
+const TYPE_LABEL: Record<string, string> = {
+  amichevole: 'Amichevole',
+  campionato: 'Campionato',
+  coppa: 'Coppa',
+};
+
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -27,6 +35,10 @@ export default function PartiteScreen() {
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [upcomingLimit, setUpcomingLimit] = useState(3);
+  const [pastLimit, setPastLimit] = useState(3);
 
   const loadData = useCallback(() => {
     if (!currentTeam) return;
@@ -56,8 +68,17 @@ export default function PartiteScreen() {
   }
 
   const today = todayISO();
-  const upcoming = (matches ?? []).filter((m) => m.match_date >= today);
-  const past = (matches ?? [])
+  const trimmed = query.trim().toLowerCase();
+
+  const filtered = useMemo(() => {
+    let list = matches ?? [];
+    if (trimmed) list = list.filter((m) => m.opponent.toLowerCase().includes(trimmed));
+    if (typeFilter) list = list.filter((m) => m.match_type === typeFilter);
+    return list;
+  }, [matches, trimmed, typeFilter]);
+
+  const upcoming = filtered.filter((m) => m.match_date >= today);
+  const past = filtered
     .filter((m) => m.match_date < today)
     .sort((a, b) => b.match_date.localeCompare(a.match_date));
 
@@ -73,6 +94,35 @@ export default function PartiteScreen() {
               <ThemedText style={styles.addBtnText}>+ Nuova</ThemedText>
             </Pressable>
           )}
+        </View>
+
+        <View style={styles.searchWrapper}>
+          <ThemedView type="backgroundElement" style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color={Colors.light.textSecondary} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Cerca avversario..."
+              placeholderTextColor={Colors.light.textSecondary}
+              style={styles.searchInput}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </ThemedView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            {MATCH_TYPES.map((type) => (
+              <Pressable
+                key={type}
+                onPress={() => setTypeFilter(typeFilter === type ? null : type)}
+                style={[styles.chip, typeFilter === type && styles.chipActive]}>
+                <ThemedText
+                  type="small"
+                  style={typeFilter === type ? styles.chipTextActive : styles.chipText}>
+                  {TYPE_LABEL[type]}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
 
         {error && (
@@ -91,15 +141,25 @@ export default function PartiteScreen() {
           {matches !== null && matches.length === 0 && (
             <EmptyState icon="football-outline" title="Nessuna partita" subtitle="Aggiungi la prima partita con il pulsante + Nuova." />
           )}
+          {matches !== null && matches.length > 0 && filtered.length === 0 && (
+            <EmptyState icon="search-outline" title="Nessun risultato" subtitle="Prova a cambiare la ricerca o i filtri." />
+          )}
 
           {upcoming.length > 0 && (
             <View style={styles.section}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 PROSSIME PARTITE
               </ThemedText>
-              {upcoming.map((match) => (
+              {upcoming.slice(0, upcomingLimit).map((match) => (
                 <MatchRow key={match.id} match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
               ))}
+              {upcoming.length > upcomingLimit && (
+                <Pressable
+                  onPress={() => setUpcomingLimit((l) => l + 5)}
+                  style={({ pressed }) => [styles.loadMoreBtn, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
+                </Pressable>
+              )}
             </View>
           )}
 
@@ -108,9 +168,16 @@ export default function PartiteScreen() {
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 PARTITE PASSATE
               </ThemedText>
-              {past.map((match) => (
+              {past.slice(0, pastLimit).map((match) => (
                 <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
               ))}
+              {past.length > pastLimit && (
+                <Pressable
+                  onPress={() => setPastLimit((l) => l + 5)}
+                  style={({ pressed }) => [styles.loadMoreBtn, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
+                </Pressable>
+              )}
             </View>
           )}
         </ScrollView>
@@ -145,6 +212,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  searchWrapper: {
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+    paddingBottom: Spacing.two,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    gap: Spacing.two,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  chips: {
+    gap: Spacing.two,
+  },
+  chip: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    backgroundColor: Colors.light.backgroundElement,
+  },
+  chipActive: {
+    backgroundColor: Colors.light.accent,
+  },
+  chipText: {
+    color: Colors.light.textSecondary,
+  },
+  chipTextActive: {
+    color: Colors.light.accentText,
+    fontWeight: '600',
+  },
   padding: {
     padding: Spacing.four,
   },
@@ -158,6 +262,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     letterSpacing: 0.5,
+  },
+  loadMoreBtn: {
+    alignItems: 'center',
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.control,
+    backgroundColor: Colors.light.accentSoft,
   },
   pressed: {
     opacity: 0.7,
