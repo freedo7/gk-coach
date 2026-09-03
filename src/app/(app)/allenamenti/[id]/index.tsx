@@ -12,11 +12,13 @@ import { deleteTraining, getTraining, type TrainingWithExercises } from '@/lib/a
 import { generateTrainingPdf } from '@/lib/pdf';
 import { formatDateLong, formatTime } from '@/lib/format';
 import { haptic } from '@/hooks/use-haptic';
+import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function AllenamentoDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const { show: showToast } = useToast();
   const router = useRouter();
   const [training, setTraining] = useState<TrainingWithExercises | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +48,10 @@ export default function AllenamentoDettaglioScreen() {
       {
         text: 'Elimina',
         style: 'destructive',
-        onPress: async () => {
-          await deleteTraining(id);
+        onPress: () => {
+          showToast('Allenamento eliminato');
           router.back();
+          deleteTraining(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
         },
       },
     ]);

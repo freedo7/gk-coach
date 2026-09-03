@@ -12,12 +12,14 @@ import { useAuth } from '@/context/auth-context';
 import { usePlan } from '@/hooks/use-plan';
 import { deleteExercise, getExercise, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { haptic } from '@/hooks/use-haptic';
+import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function EsercizioDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const { canViewVideo, canViewRichContent } = usePlan();
+  const { show: showToast } = useToast();
   const router = useRouter();
   const [exercise, setExercise] = useState<ExerciseWithCategory | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +47,10 @@ export default function EsercizioDettaglioScreen() {
       {
         text: 'Elimina',
         style: 'destructive',
-        onPress: async () => {
-          await deleteExercise(id);
+        onPress: () => {
+          showToast('Esercizio eliminato');
           router.back();
+          deleteExercise(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
         },
       },
     ]);

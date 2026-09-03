@@ -56,16 +56,14 @@ export default function ProfiloScreen() {
     haptic('medium');
     setProfileError(null);
     setProfileNotice(null);
-    setSaving(true);
+    haptic('success');
+    setProfileNotice('Salvato.');
     const { error } = await supabase
       .from('profiles')
       .update({ full_name: fullName.trim() })
       .eq('id', profile!.id);
-    setSaving(false);
-    if (error) { haptic('error'); setProfileError(error.message); return; }
-    haptic('success');
-    await refreshProfile();
-    setProfileNotice('Salvato.');
+    if (error) { haptic('error'); setProfileNotice(null); setProfileError(error.message); return; }
+    refreshProfile();
   }
 
   async function handleChangePassword() {

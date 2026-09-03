@@ -10,6 +10,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/context/toast-context';
 import { deleteMatch, listMatches } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
@@ -22,6 +23,7 @@ function todayISO() {
 export default function PartiteScreen() {
   const { isAdmin, currentTeam } = useAuth();
   const router = useRouter();
+  const { show: showToast } = useToast();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,6 +41,18 @@ export default function PartiteScreen() {
     setRefreshing(true);
     loadData();
     setTimeout(() => setRefreshing(false), 600);
+  }
+
+  async function handleDelete(matchId: string) {
+    const prev = matches;
+    setMatches((m) => m?.filter((x) => x.id !== matchId) ?? null);
+    showToast('Partita eliminata');
+    try {
+      await deleteMatch(matchId);
+    } catch {
+      setMatches(prev);
+      showToast('Errore durante l\'eliminazione', 'error');
+    }
   }
 
   const today = todayISO();
@@ -84,7 +98,7 @@ export default function PartiteScreen() {
                 PROSSIME PARTITE
               </ThemedText>
               {upcoming.map((match) => (
-                <MatchRow key={match.id} match={match} onDelete={isAdmin ? async () => { await deleteMatch(match.id); loadData(); } : undefined} />
+                <MatchRow key={match.id} match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
               ))}
             </View>
           )}
@@ -95,7 +109,7 @@ export default function PartiteScreen() {
                 PARTITE PASSATE
               </ThemedText>
               {past.map((match) => (
-                <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? async () => { await deleteMatch(match.id); loadData(); } : undefined} />
+                <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
               ))}
             </View>
           )}

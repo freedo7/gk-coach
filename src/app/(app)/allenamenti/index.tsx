@@ -11,6 +11,7 @@ import { SwipeableRow } from '@/components/swipeable-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/context/toast-context';
 import { listMatches } from '@/lib/api/matches';
 import { deleteTraining, getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
 import { formatTime } from '@/lib/format';
@@ -36,6 +37,7 @@ const DOT_MATCH = { key: 'match', color: Colors.light.danger };
 
 export default function AllenamentiScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const { show: showToast } = useToast();
   const today = todayISO();
 
   const [trainings, setTrainings] = useState<Training[] | null>(null);
@@ -143,7 +145,14 @@ export default function AllenamentiScreen() {
           ) : selectedTraining ? (
             <SwipeableRow
               enabled={isAdmin}
-              onDelete={async () => { await deleteTraining(selectedTraining.id); loadData(); }}
+              onDelete={async () => {
+                const prev = trainings;
+                const prevSelected = selectedTraining;
+                setTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
+                setSelectedTraining(null);
+                showToast('Allenamento eliminato');
+                try { await deleteTraining(selectedTraining.id); } catch { setTrainings(prev); setSelectedTraining(prevSelected); showToast('Errore durante l\'eliminazione', 'error'); }
+              }}
               confirmTitle="Eliminare l'allenamento?"
               confirmMessage={selectedTraining.title}
             >

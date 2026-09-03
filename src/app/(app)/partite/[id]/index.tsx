@@ -12,11 +12,13 @@ import { deleteMatch, getMatch } from '@/lib/api/matches';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
+import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function PartitaDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const { show: showToast } = useToast();
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +46,10 @@ export default function PartitaDettaglioScreen() {
       {
         text: 'Elimina',
         style: 'destructive',
-        onPress: async () => {
-          await deleteMatch(id);
+        onPress: () => {
+          showToast('Partita eliminata');
           router.back();
+          deleteMatch(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
         },
       },
     ]);
