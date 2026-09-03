@@ -24,6 +24,9 @@ export interface MatchInput {
   match_time: string | null;
   match_type: 'amichevole' | 'campionato' | 'coppa';
   matchday: number | null;
+  goals_scored: number | null;
+  goals_conceded: number | null;
+  rating: number | null;
   result: string | null;
   result_notes: string | null;
   notes: string | null;

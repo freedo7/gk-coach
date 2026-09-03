@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { ThemedText } from '@/components/themed-text';
@@ -24,6 +24,9 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [matchday, setMatchday] = useState(initial?.matchday?.toString() ?? '');
   const [matchDate, setMatchDate] = useState<string | null>(initial?.match_date ?? null);
   const [matchTime, setMatchTime] = useState(initial?.match_time ?? '');
+  const [goalsScored, setGoalsScored] = useState(initial?.goals_scored?.toString() ?? '');
+  const [goalsConceded, setGoalsConceded] = useState(initial?.goals_conceded?.toString() ?? '');
+  const [rating, setRating] = useState(initial?.rating ?? 0);
   const [result, setResult] = useState(initial?.result ?? '');
   const [resultNotes, setResultNotes] = useState(initial?.result_notes ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -44,6 +47,9 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         match_time: matchTime.trim() || null,
         match_type: matchType,
         matchday: matchType === 'campionato' && matchday.trim() ? parseInt(matchday.trim(), 10) : null,
+        goals_scored: goalsScored.trim() ? parseInt(goalsScored.trim(), 10) : null,
+        goals_conceded: goalsConceded.trim() ? parseInt(goalsConceded.trim(), 10) : null,
+        rating: rating > 0 ? rating : null,
         result: result.trim() || null,
         result_notes: resultNotes.trim() || null,
         notes: notes.trim() || null,
@@ -165,6 +171,55 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Risultato (opzionale)
       </ThemedText>
+      <View style={styles.chipRow}>
+        <View style={{ flex: 1 }}>
+          <ThemedText type="small" themeColor="textSecondary">Gol fatti</ThemedText>
+          <TextInput
+            value={goalsScored}
+            onChangeText={setGoalsScored}
+            placeholder="0"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="number-pad"
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <ThemedText type="small" themeColor="textSecondary">Gol subiti</ThemedText>
+          <TextInput
+            value={goalsConceded}
+            onChangeText={setGoalsConceded}
+            placeholder="0"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="number-pad"
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+          />
+        </View>
+      </View>
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Voto portiere (opzionale)
+      </ThemedText>
+      <View style={styles.ratingRow}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+          <Pressable
+            key={n}
+            onPress={() => { haptic('light'); setRating(rating === n ? 0 : n); }}
+            style={[
+              styles.ratingDot,
+              { backgroundColor: n <= rating ? colors.accent : colors.backgroundElement },
+            ]}>
+            <ThemedText
+              type="small"
+              style={{ color: n <= rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+              {n}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </View>
+
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        Risultato testuale (opzionale)
+      </ThemedText>
       <TextInput
         value={result}
         onChangeText={setResult}
@@ -261,6 +316,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+    marginTop: Spacing.two,
+  },
+  ratingDot: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: Radius.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxWidth: 36,
   },
   button: {
     marginTop: Spacing.five,

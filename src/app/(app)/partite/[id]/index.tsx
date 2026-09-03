@@ -98,15 +98,38 @@ export default function PartitaDettaglioScreen() {
             </ThemedText>
           )}
 
-          {match.result && (
+          {(match.goals_scored != null || match.result) && (
             <ThemedView type="card" style={[styles.resultCard, { borderColor: colors.accent }]}>
               <ThemedText type="smallBold" themeColor="textSecondary">RISULTATO</ThemedText>
-              <ThemedText style={styles.resultText}>{match.result}</ThemedText>
+              {match.goals_scored != null && match.goals_conceded != null ? (
+                <View style={styles.scoreRow}>
+                  <ThemedText style={styles.resultText}>{match.goals_scored}</ThemedText>
+                  <ThemedText style={[styles.resultText, { opacity: 0.4 }]}>-</ThemedText>
+                  <ThemedText style={styles.resultText}>{match.goals_conceded}</ThemedText>
+                  {match.goals_conceded === 0 && (
+                    <View style={[styles.cleanSheetBadge, { backgroundColor: colors.accentSoft }]}>
+                      <ThemedText type="small" style={{ color: colors.accent, fontWeight: '700' }}>Clean sheet</ThemedText>
+                    </View>
+                  )}
+                </View>
+              ) : match.result ? (
+                <ThemedText style={styles.resultText}>{match.result}</ThemedText>
+              ) : null}
               {isAdmin && match.result_notes && (
                 <ThemedText type="small" themeColor="textSecondary" style={styles.notesText}>
                   {match.result_notes}
                 </ThemedText>
               )}
+            </ThemedView>
+          )}
+
+          {match.rating != null && (
+            <ThemedView type="card" style={styles.notesCard}>
+              <ThemedText type="smallBold" themeColor="textSecondary">VOTO PORTIERE</ThemedText>
+              <View style={styles.ratingDisplay}>
+                <ThemedText style={[styles.ratingNumber, { color: colors.accent }]}>{match.rating}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+              </View>
             </ThemedView>
           )}
 
@@ -167,10 +190,30 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     borderWidth: 2,
   },
+  scoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
   resultText: {
     fontSize: 32,
     fontWeight: '800',
     lineHeight: 38,
+  },
+  cleanSheetBadge: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+    marginLeft: Spacing.two,
+  },
+  ratingDisplay: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.half,
+  },
+  ratingNumber: {
+    fontSize: 28,
+    fontWeight: '800',
   },
   notesCard: {
     marginTop: Spacing.three,

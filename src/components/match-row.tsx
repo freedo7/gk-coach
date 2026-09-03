@@ -29,7 +29,11 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
             )}
           </View>
           <View style={styles.rowRight}>
-            {match.result ? (
+            {match.goals_scored != null && match.goals_conceded != null ? (
+              <ThemedView type="backgroundElement" style={styles.resultBadge}>
+                <ThemedText type="smallBold">{match.goals_scored} - {match.goals_conceded}</ThemedText>
+              </ThemedView>
+            ) : match.result ? (
               <ThemedView type="backgroundElement" style={styles.resultBadge}>
                 <ThemedText type="smallBold">{match.result}</ThemedText>
               </ThemedView>
