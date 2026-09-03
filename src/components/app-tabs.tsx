@@ -17,8 +17,8 @@ export default function AppTabs() {
           borderTopColor: 'transparent',
           elevation: 0,
           height: 70,
-          paddingBottom: 8,
-          paddingTop: 6,
+          paddingBottom: 16,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
