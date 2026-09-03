@@ -104,12 +104,6 @@ export default function AllenamentiScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.pageHeader}>
           <ThemedText type="title">Allenamenti</ThemedText>
-          <Pressable
-            onPress={() => router.push('/esercizi')}
-            style={({ pressed }) => [styles.libraryBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.7 }]}>
-            <Ionicons name="book-outline" size={16} color={colors.accent} />
-            <ThemedText type="smallBold" style={{ color: colors.accent }}>Libreria</ThemedText>
-          </Pressable>
         </View>
 
         <ScrollView
@@ -197,6 +191,14 @@ export default function AllenamentiScreen() {
             <EmptyState icon="calendar-outline" title="Nessun evento" subtitle="Non ci sono allenamenti per questo giorno." />
           )}
 
+          {/* Libreria esercizi */}
+          <Pressable
+            onPress={() => router.push('/esercizi')}
+            style={({ pressed }) => [styles.libraryBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.7 }]}>
+            <Ionicons name="book-outline" size={20} color={colors.accentText} />
+            <ThemedText type="smallBold" style={{ color: colors.accentText }}>Libreria esercizi</ThemedText>
+          </Pressable>
+
           {/* Partite del giorno */}
           {dayMatches.length > 0 && (
             <View style={styles.matchSection}>
@@ -222,9 +224,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
@@ -232,10 +231,10 @@ const styles = StyleSheet.create({
   libraryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one + 2,
+    justifyContent: 'center',
+    gap: Spacing.two,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
   },
   scrollContent: {
     padding: Spacing.four,
