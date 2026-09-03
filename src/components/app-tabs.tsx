@@ -1,7 +1,18 @@
 import { Tabs } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/hooks/use-theme';
+
+function TabIcon({ name, color, focused }: { name: string; color: string; focused: boolean }) {
+  const colors = useTheme();
+  return (
+    <View style={styles.tabIconWrapper}>
+      <Ionicons name={name as any} size={28} color={color} />
+      <View style={[styles.dot, { backgroundColor: focused ? colors.accent : 'transparent' }]} />
+    </View>
+  );
+}
 
 export default function AppTabs() {
   const colors = useTheme();
@@ -28,48 +39,50 @@ export default function AppTabs() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={30} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) => <TabIcon name="home-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="allenamenti"
         options={{
           title: 'Allenamenti',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="calendar-outline" size={30} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) => <TabIcon name="calendar-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="partite"
         options={{
           title: 'Partite',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="football-outline" size={30} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) => <TabIcon name="football-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="statistiche"
         options={{
           title: 'Statistiche',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="bar-chart-outline" size={30} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) => <TabIcon name="bar-chart-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profilo"
         options={{
           title: 'Impostazioni',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-outline" size={30} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) => <TabIcon name="settings-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen name="esercizi" options={{ href: null }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIconWrapper: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+});
