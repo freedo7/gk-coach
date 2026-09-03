@@ -41,8 +41,8 @@ export default function PortieriScreen() {
       setNewName('');
       haptic('success');
       showToast(`${gk.name} aggiunto`);
-    } catch {
-      showToast('Errore durante la creazione', 'error');
+    } catch (err) {
+      showToast(`Errore: ${(err as any)?.message ?? JSON.stringify(err)}`, 'error');
     } finally {
       setAdding(false);
     }
