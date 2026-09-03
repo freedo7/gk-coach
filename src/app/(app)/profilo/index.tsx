@@ -16,6 +16,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { usePlan } from '@/hooks/use-plan';
 import { supabase } from '@/lib/supabase';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
 
@@ -52,6 +53,7 @@ export default function ProfiloScreen() {
   const dirty = fullName.trim() !== (profile.full_name ?? '');
 
   async function handleSave() {
+    haptic('medium');
     setProfileError(null);
     setProfileNotice(null);
     setSaving(true);
@@ -60,7 +62,8 @@ export default function ProfiloScreen() {
       .update({ full_name: fullName.trim() })
       .eq('id', profile!.id);
     setSaving(false);
-    if (error) { setProfileError(error.message); return; }
+    if (error) { haptic('error'); setProfileError(error.message); return; }
+    haptic('success');
     await refreshProfile();
     setProfileNotice('Salvato.');
   }
@@ -73,7 +76,8 @@ export default function ProfiloScreen() {
     setChangingPw(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPw(false);
-    if (error) { setPwError(error.message); return; }
+    if (error) { haptic('error'); setPwError(error.message); return; }
+    haptic('success');
     setPwNotice('Password aggiornata!');
     setNewPassword('');
     setConfirmPassword('');
@@ -92,6 +96,7 @@ export default function ProfiloScreen() {
   }
 
   function handleSwitchTeam(team: Team) {
+    haptic('light');
     setCurrentTeam(team);
     setSwitcherVisible(false);
   }

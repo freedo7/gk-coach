@@ -6,6 +6,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-na
 
 import { GlowIcon } from '@/components/glow-icon';
 import { ThemedText } from '@/components/themed-text';
+import { haptic } from '@/hooks/use-haptic';
 import { Colors, Spacing } from '@/constants/theme';
 
 interface Props {
@@ -25,7 +26,7 @@ export function QuickAction({ href, icon, label }: Props) {
     <Link href={href} asChild>
       <Pressable
         style={styles.wrapper}
-        onPressIn={() => { scale.value = withSpring(1.3, { damping: 10, stiffness: 300 }); }}
+        onPressIn={() => { haptic('light'); scale.value = withSpring(1.3, { damping: 10, stiffness: 300 }); }}
         onPressOut={() => { scale.value = withSpring(1, { damping: 10, stiffness: 300 }); }}
       >
         <Animated.View style={[styles.inner, animatedStyle]}>

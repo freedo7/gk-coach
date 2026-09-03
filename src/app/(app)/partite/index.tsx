@@ -4,12 +4,13 @@ import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
-import { listMatches } from '@/lib/api/matches';
+import { deleteMatch, listMatches } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
@@ -74,9 +75,7 @@ export default function PartiteScreen() {
             <SkeletonList count={3} type="match" />
           )}
           {matches !== null && matches.length === 0 && (
-            <ThemedText themeColor="textSecondary" style={styles.padding}>
-              Nessuna partita in calendario ancora.
-            </ThemedText>
+            <EmptyState icon="football-outline" title="Nessuna partita" subtitle="Aggiungi la prima partita con il pulsante + Nuova." />
           )}
 
           {upcoming.length > 0 && (
@@ -85,7 +84,7 @@ export default function PartiteScreen() {
                 PROSSIME PARTITE
               </ThemedText>
               {upcoming.map((match) => (
-                <MatchRow key={match.id} match={match} />
+                <MatchRow key={match.id} match={match} onDelete={isAdmin ? async () => { await deleteMatch(match.id); loadData(); } : undefined} />
               ))}
             </View>
           )}
@@ -96,7 +95,7 @@ export default function PartiteScreen() {
                 PARTITE PASSATE
               </ThemedText>
               {past.map((match) => (
-                <MatchRow key={match.id} match={match} muted />
+                <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? async () => { await deleteMatch(match.id); loadData(); } : undefined} />
               ))}
             </View>
           )}

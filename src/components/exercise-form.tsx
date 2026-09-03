@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/themed-view';
 import { listCategories } from '@/lib/api/categories';
 import type { ExerciseInput } from '@/lib/api/exercises';
 import type { ExerciseCategory } from '@/types/database';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
@@ -39,6 +40,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   const valid = title.trim().length > 0 && description.trim().length > 0 && categoryId.length > 0;
 
   async function handleSubmit() {
+    haptic('medium');
     setError(null);
     setSubmitting(true);
     try {
@@ -84,7 +86,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           {categories.map((category) => {
             const selected = category.id === categoryId;
             return (
-              <Pressable key={category.id} onPress={() => setCategoryId(category.id)}>
+              <Pressable key={category.id} onPress={() => { haptic('light'); setCategoryId(category.id); }}>
                 <ThemedView
                   style={[styles.chip, selected && styles.chipSelected]}
                   type={selected ? undefined : 'backgroundElement'}>
@@ -107,7 +109,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           return (
             <Pressable
               key={level}
-              onPress={() => setDifficulty(selected ? null : level)}>
+              onPress={() => { haptic('light'); setDifficulty(selected ? null : level); }}>
               <ThemedView
                 style={[styles.chip, selected && styles.chipSelected]}
                 type={selected ? undefined : 'backgroundElement'}>

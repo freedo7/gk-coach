@@ -6,6 +6,7 @@ import { DateField } from '@/components/date-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import type { MatchInput } from '@/lib/api/matches';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
@@ -29,6 +30,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const valid = opponent.trim().length > 0 && !!matchDate;
 
   async function handleSubmit() {
+    haptic('medium');
     setError(null);
     setSubmitting(true);
     try {
@@ -74,7 +76,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         ).map((option) => {
           const selected = isHome === option.value;
           return (
-            <Pressable key={String(option.value)} onPress={() => setIsHome(option.value)} style={styles.chipFlex}>
+            <Pressable key={String(option.value)} onPress={() => { haptic('light'); setIsHome(option.value); }} style={styles.chipFlex}>
               <ThemedView
                 style={[styles.chip, selected && styles.chipSelected]}
                 type={selected ? undefined : 'backgroundElement'}>
@@ -102,7 +104,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         ).map((option) => {
           const selected = matchType === option.value;
           return (
-            <Pressable key={option.value} onPress={() => setMatchType(option.value)} style={styles.chipFlex}>
+            <Pressable key={option.value} onPress={() => { haptic('light'); setMatchType(option.value); }} style={styles.chipFlex}>
               <ThemedView
                 style={[styles.chip, selected && styles.chipSelected]}
                 type={selected ? undefined : 'backgroundElement'}>

@@ -5,10 +5,12 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { listExercisesByCategory, type ExerciseWithCategory } from '@/lib/api/exercises';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 type DifficultyFilter = 'tutti' | 'base' | 'intermedio' | 'avanzato';
@@ -67,7 +69,7 @@ export default function CategoriaScreen() {
             {DIFFICULTY_LABELS.map((item) => {
               const selected = difficulty === item.value;
               return (
-                <Pressable key={item.value} onPress={() => setDifficulty(item.value)}>
+                <Pressable key={item.value} onPress={() => { haptic('light'); setDifficulty(item.value); }}>
                   <ThemedView
                     style={[styles.chip, selected && styles.chipSelected]}
                     type={selected ? undefined : 'backgroundElement'}>
@@ -93,13 +95,15 @@ export default function CategoriaScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {filtered !== null && filtered.length === 0 && (
-            <ThemedText themeColor="textSecondary">
-              {exercises?.length === 0
+            <EmptyState
+              icon="book-outline"
+              title="Nessun esercizio"
+              subtitle={exercises?.length === 0
                 ? isAdmin
-                  ? 'Nessun esercizio in questa categoria. Aggiungine uno con il pulsante qui sotto.'
+                  ? 'Aggiungine uno con il pulsante + in basso.'
                   : 'Nessun esercizio in questa categoria.'
-                : 'Nessun esercizio con questo livello.'}
-            </ThemedText>
+                : 'Nessun esercizio con questo livello di difficoltà.'}
+            />
           )}
 
           {filtered?.map((exercise) => (

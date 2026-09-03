@@ -9,6 +9,7 @@ export default function PartiteLayout() {
         contentStyle: { backgroundColor: 'transparent' },
         headerStyle: { backgroundColor: 'transparent' },
         headerShadowVisible: false,
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="new" options={{ title: 'Nuova partita', presentation: 'modal' }} />

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
 import { QuickAction } from '@/components/quick-action';
 import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';

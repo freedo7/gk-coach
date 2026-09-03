@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/empty-state';
 import { IconTecnicaBase } from '@/components/icons/icon-tecnica-base';
 import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
 import { ThemedText } from '@/components/themed-text';
@@ -96,7 +97,7 @@ export default function EserciziScreen() {
         {searchResults !== null ? (
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {searchResults.length === 0 ? (
-              <ThemedText themeColor="textSecondary">Nessun esercizio trovato.</ThemedText>
+              <EmptyState icon="search-outline" title="Nessun risultato" subtitle={`Nessun esercizio trovato per "${trimmed}".`} />
             ) : (
               searchResults.map((exercise) => (
                 <Pressable

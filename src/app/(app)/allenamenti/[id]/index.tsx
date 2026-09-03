@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth-context';
 import { deleteTraining, getTraining, type TrainingWithExercises } from '@/lib/api/trainings';
 import { generateTrainingPdf } from '@/lib/pdf';
 import { formatDateLong, formatTime } from '@/lib/format';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function AllenamentoDettaglioScreen() {
@@ -39,6 +40,7 @@ export default function AllenamentoDettaglioScreen() {
   );
 
   function handleDelete() {
+    haptic('warning');
     Alert.alert('Eliminare l\'allenamento?', training?.title, [
       { text: 'Annulla', style: 'cancel' },
       {

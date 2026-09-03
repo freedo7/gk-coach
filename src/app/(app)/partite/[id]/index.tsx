@@ -11,6 +11,7 @@ import { useAuth } from '@/context/auth-context';
 import { deleteMatch, getMatch } from '@/lib/api/matches';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match } from '@/types/database';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function PartitaDettaglioScreen() {
@@ -37,6 +38,7 @@ export default function PartitaDettaglioScreen() {
   );
 
   function handleDelete() {
+    haptic('warning');
     Alert.alert('Eliminare la partita?', match?.opponent, [
       { text: 'Annulla', style: 'cancel' },
       {

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { haptic } from '@/hooks/use-haptic';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
@@ -16,11 +17,12 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit() {
+    haptic('medium');
     setError(null);
     setSubmitting(true);
     const { error: signInError } = await signIn(email.trim(), password);
     setSubmitting(false);
-    if (signInError) setError(signInError);
+    if (signInError) { haptic('error'); setError(signInError); }
   }
 
   return (

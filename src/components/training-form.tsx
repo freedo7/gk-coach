@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
 import type { TrainingInput } from '@/lib/api/trainings';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
@@ -36,6 +37,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
   }
 
   async function handleSubmit() {
+    haptic('medium');
     setError(null);
     setSubmitting(true);
     try {
@@ -113,7 +115,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
           {exercises.map((exercise) => {
             const selected = selectedIds.includes(exercise.id);
             return (
-              <Pressable key={exercise.id} onPress={() => toggleExercise(exercise.id)}>
+              <Pressable key={exercise.id} onPress={() => { haptic('light'); toggleExercise(exercise.id); }}>
                 <ThemedView
                   type={selected ? undefined : 'backgroundElement'}
                   style={[styles.exerciseRow, selected && styles.exerciseRowSelected]}>

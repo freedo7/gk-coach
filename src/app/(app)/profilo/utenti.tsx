@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { Redirect } from 'expo-router';
 import { useRouter } from 'expo-router';
 
+import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -40,7 +41,7 @@ export default function UtentiScreen() {
           <ActivityIndicator color={Colors.light.accent} style={styles.loader} />
         )}
         {members !== null && members.length === 0 && (
-          <ThemedText themeColor="textSecondary">Nessun membro nella squadra.</ThemedText>
+          <EmptyState icon="people-outline" title="Nessun membro" subtitle="Invita i portieri dalla sezione Invita portieri." />
         )}
         {members?.map((member) => (
           <ThemedView key={member.id} type="card" style={styles.userCard}>

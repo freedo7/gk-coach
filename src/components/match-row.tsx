@@ -2,15 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { SwipeableRow } from '@/components/swipeable-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match } from '@/types/database';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
-export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
+export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boolean; onDelete?: () => void | Promise<void> }) {
   const time = formatTime(match.match_time);
-  return (
+  const content = (
     <Link href={`/partite/${match.id}`} asChild>
       <Pressable style={({ pressed }) => pressed && styles.pressed}>
         <ThemedView type="card" style={[styles.row, muted && styles.rowMuted]}>
@@ -50,6 +51,17 @@ export function MatchRow({ match, muted }: { match: Match; muted?: boolean }) {
         </ThemedView>
       </Pressable>
     </Link>
+  );
+
+  return (
+    <SwipeableRow
+      enabled={!!onDelete}
+      onDelete={onDelete ?? (() => {})}
+      confirmTitle="Eliminare la partita?"
+      confirmMessage={match.opponent}
+    >
+      {content}
+    </SwipeableRow>
   );
 }
 

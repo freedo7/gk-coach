@@ -1,6 +1,7 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
@@ -12,16 +13,18 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <AuthProvider>
-        <PurchasesProvider>
-          <ToastProvider>
-            <AnimatedSplashOverlay />
-            <PushRegistrar />
-            <Slot />
-          </ToastProvider>
-        </PurchasesProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={DefaultTheme}>
+        <AuthProvider>
+          <PurchasesProvider>
+            <ToastProvider>
+              <AnimatedSplashOverlay />
+              <PushRegistrar />
+              <Slot />
+            </ToastProvider>
+          </PurchasesProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -9,5 +9,5 @@ export default function AuthLayout() {
   if (loading) return <ThemedView style={{ flex: 1 }} />;
   if (session) return <Redirect href="/(app)" />;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />;
 }

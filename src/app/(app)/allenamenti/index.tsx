@@ -5,12 +5,14 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, V
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
+import { SwipeableRow } from '@/components/swipeable-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { listMatches } from '@/lib/api/matches';
-import { getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
+import { deleteTraining, getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
 import { formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
@@ -139,21 +141,28 @@ export default function AllenamentiScreen() {
           {loadingTraining ? (
             <ActivityIndicator color={Colors.light.accent} style={styles.trainingLoader} />
           ) : selectedTraining ? (
-            <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
-              <Pressable>
-                <ThemedView type="card" style={styles.trainingCard}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    ALLENAMENTO
-                  </ThemedText>
-                  <ThemedText type="subtitle">{selectedTraining.title}</ThemedText>
-                  {formatTime(selectedTraining.training_time) && (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {formatTime(selectedTraining.training_time)}
+            <SwipeableRow
+              enabled={isAdmin}
+              onDelete={async () => { await deleteTraining(selectedTraining.id); loadData(); }}
+              confirmTitle="Eliminare l'allenamento?"
+              confirmMessage={selectedTraining.title}
+            >
+              <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
+                <Pressable>
+                  <ThemedView type="card" style={styles.trainingCard}>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      ALLENAMENTO
                     </ThemedText>
-                  )}
-                </ThemedView>
-              </Pressable>
-            </Link>
+                    <ThemedText type="subtitle">{selectedTraining.title}</ThemedText>
+                    {formatTime(selectedTraining.training_time) && (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {formatTime(selectedTraining.training_time)}
+                      </ThemedText>
+                    )}
+                  </ThemedView>
+                </Pressable>
+              </Link>
+            </SwipeableRow>
           ) : isAdmin ? (
             <Link href={`/allenamenti/new?date=${selectedDate}`} asChild>
               <Pressable>
@@ -165,9 +174,7 @@ export default function AllenamentiScreen() {
               </Pressable>
             </Link>
           ) : (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-              Nessun allenamento in programma per questo giorno.
-            </ThemedText>
+            <EmptyState icon="calendar-outline" title="Nessun evento" subtitle="Non ci sono allenamenti per questo giorno." />
           )}
 
           {/* Partite del giorno */}

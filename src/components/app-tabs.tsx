@@ -16,6 +16,7 @@ export default function AppTabs() {
           elevation: 0,
         },
         sceneStyle: { backgroundColor: 'transparent' },
+        animation: 'shift',
       }}>
       <Tabs.Screen
         name="index"

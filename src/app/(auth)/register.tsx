@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { haptic } from '@/hooks/use-haptic';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function RegisterScreen() {
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
   const [done, setDone] = useState(false);
 
   async function handleSubmit() {
+    haptic('medium');
     setError(null);
     setSubmitting(true);
     const { error: signUpError } = await signUp(
@@ -30,8 +32,8 @@ export default function RegisterScreen() {
       role === 'portiere' && inviteCode.trim() ? inviteCode.trim() : undefined
     );
     setSubmitting(false);
-    if (signUpError) setError(signUpError);
-    else setDone(true);
+    if (signUpError) { haptic('error'); setError(signUpError); }
+    else { haptic('success'); setDone(true); }
   }
 
   return (
@@ -83,7 +85,7 @@ export default function RegisterScreen() {
               </ThemedText>
               <View style={styles.roleRow}>
                 <Pressable
-                  onPress={() => setRole('preparatore')}
+                  onPress={() => { haptic('light'); setRole('preparatore'); }}
                   style={[styles.roleButton, role === 'preparatore' && styles.roleButtonActive]}>
                   <ThemedText
                     type="smallBold"
@@ -92,7 +94,7 @@ export default function RegisterScreen() {
                   </ThemedText>
                 </Pressable>
                 <Pressable
-                  onPress={() => setRole('portiere')}
+                  onPress={() => { haptic('light'); setRole('portiere'); }}
                   style={[styles.roleButton, role === 'portiere' && styles.roleButtonActive]}>
                   <ThemedText
                     type="smallBold"

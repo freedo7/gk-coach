@@ -9,6 +9,7 @@ export default function ProfiloLayout() {
         contentStyle: { backgroundColor: 'transparent' },
         headerStyle: { backgroundColor: 'transparent' },
         headerShadowVisible: false,
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="utenti" options={{ title: 'Membri squadra' }} />

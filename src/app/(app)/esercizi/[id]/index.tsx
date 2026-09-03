@@ -11,6 +11,7 @@ import { UpgradeBanner } from '@/components/upgrade-banner';
 import { useAuth } from '@/context/auth-context';
 import { usePlan } from '@/hooks/use-plan';
 import { deleteExercise, getExercise, type ExerciseWithCategory } from '@/lib/api/exercises';
+import { haptic } from '@/hooks/use-haptic';
 import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
 
 export default function EsercizioDettaglioScreen() {
@@ -38,6 +39,7 @@ export default function EsercizioDettaglioScreen() {
   );
 
   function handleDelete() {
+    haptic('warning');
     Alert.alert('Eliminare l\'esercizio?', exercise?.title, [
       { text: 'Annulla', style: 'cancel' },
       {
