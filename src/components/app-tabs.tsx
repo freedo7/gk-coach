@@ -20,10 +20,7 @@ export default function AppTabs() {
           paddingBottom: 24,
           paddingTop: 8,
         },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
+        tabBarShowLabel: false,
         sceneStyle: { backgroundColor: 'transparent' },
         animation: 'shift',
       }}>
@@ -32,7 +29,7 @@ export default function AppTabs() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={26} color={color} />
+            <Ionicons name="home-outline" size={30} color={color} />
           ),
         }}
       />
@@ -41,7 +38,7 @@ export default function AppTabs() {
         options={{
           title: 'Allenamenti',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="calendar-outline" size={26} color={color} />
+            <Ionicons name="calendar-outline" size={30} color={color} />
           ),
         }}
       />
@@ -50,7 +47,7 @@ export default function AppTabs() {
         options={{
           title: 'Partite',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="football-outline" size={26} color={color} />
+            <Ionicons name="football-outline" size={30} color={color} />
           ),
         }}
       />
@@ -59,7 +56,7 @@ export default function AppTabs() {
         options={{
           title: 'Statistiche',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="bar-chart-outline" size={26} color={color} />
+            <Ionicons name="bar-chart-outline" size={30} color={color} />
           ),
         }}
       />
@@ -68,7 +65,7 @@ export default function AppTabs() {
         options={{
           title: 'Impostazioni',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-outline" size={26} color={color} />
+            <Ionicons name="settings-outline" size={30} color={color} />
           ),
         }}
       />
