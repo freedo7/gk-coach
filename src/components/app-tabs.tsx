@@ -38,7 +38,7 @@ export default function AppTabs() {
         options={{
           title: 'Statistiche',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="stats-chart-outline" size={24} color={color} />
+            <Ionicons name="bar-chart-outline" size={24} color={color} />
           ),
         }}
       />
