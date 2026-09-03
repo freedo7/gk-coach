@@ -2,7 +2,8 @@ import { Calendar } from 'react-native-calendars';
 import { StyleSheet } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
-import { Colors, Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Radius } from '@/constants/theme';
 
 interface Props {
   value: string | null;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function DateField({ value, onChange }: Props) {
+  const colors = useTheme();
   return (
     <ThemedView type="backgroundElement" style={styles.wrapper}>
       <Calendar
@@ -20,13 +22,13 @@ export function DateField({ value, onChange }: Props) {
         theme={{
           backgroundColor: 'transparent',
           calendarBackground: 'transparent',
-          textSectionTitleColor: Colors.light.textSecondary,
-          dayTextColor: Colors.light.text,
-          todayTextColor: Colors.light.accent,
-          monthTextColor: Colors.light.text,
-          arrowColor: Colors.light.accent,
-          selectedDayBackgroundColor: Colors.light.accent,
-          selectedDayTextColor: Colors.light.accentText,
+          textSectionTitleColor: colors.textSecondary,
+          dayTextColor: colors.text,
+          todayTextColor: colors.accent,
+          monthTextColor: colors.text,
+          arrowColor: colors.accent,
+          selectedDayBackgroundColor: colors.accent,
+          selectedDayTextColor: colors.accentText,
           textDayFontWeight: '500',
           textMonthFontWeight: '700',
         }}

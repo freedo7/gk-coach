@@ -12,9 +12,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
+import { useTheme } from '@/hooks/use-theme';
 import { deleteMatch, listMatches } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 const MATCH_TYPES = ['amichevole', 'campionato', 'coppa'] as const;
 const TYPE_LABEL: Record<string, string> = {
@@ -30,6 +31,7 @@ function todayISO() {
 
 export default function PartiteScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
   const [matches, setMatches] = useState<Match[] | null>(null);
@@ -90,21 +92,21 @@ export default function PartiteScreen() {
           {isAdmin && (
             <Pressable
               onPress={() => router.push('/partite/new')}
-              style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}>
-              <ThemedText style={styles.addBtnText}>+ Nuova</ThemedText>
+              style={({ pressed }) => [styles.addBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
+              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>+ Nuova</ThemedText>
             </Pressable>
           )}
         </View>
 
         <View style={styles.searchWrapper}>
           <ThemedView type="backgroundElement" style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color={Colors.light.textSecondary} />
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Cerca avversario..."
-              placeholderTextColor={Colors.light.textSecondary}
-              style={styles.searchInput}
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.searchInput, { color: colors.text }]}
               returnKeyType="search"
               clearButtonMode="while-editing"
             />
@@ -114,10 +116,10 @@ export default function PartiteScreen() {
               <Pressable
                 key={type}
                 onPress={() => setTypeFilter(typeFilter === type ? null : type)}
-                style={[styles.chip, typeFilter === type && styles.chipActive]}>
+                style={[styles.chip, { backgroundColor: typeFilter === type ? colors.accent : colors.backgroundElement }]}>
                 <ThemedText
                   type="small"
-                  style={typeFilter === type ? styles.chipTextActive : styles.chipText}>
+                  style={{ color: typeFilter === type ? colors.accentText : colors.textSecondary, fontWeight: typeFilter === type ? '600' : undefined }}>
                   {TYPE_LABEL[type]}
                 </ThemedText>
               </Pressable>
@@ -133,7 +135,7 @@ export default function PartiteScreen() {
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
           {matches === null && !error && (
             <SkeletonList count={3} type="match" />
@@ -156,7 +158,7 @@ export default function PartiteScreen() {
               {upcoming.length > upcomingLimit && (
                 <Pressable
                   onPress={() => setUpcomingLimit((l) => l + 5)}
-                  style={({ pressed }) => [styles.loadMoreBtn, pressed && styles.pressed]}>
+                  style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
                 </Pressable>
               )}
@@ -174,7 +176,7 @@ export default function PartiteScreen() {
               {past.length > pastLimit && (
                 <Pressable
                   onPress={() => setPastLimit((l) => l + 5)}
-                  style={({ pressed }) => [styles.loadMoreBtn, pressed && styles.pressed]}>
+                  style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
                 </Pressable>
               )}
@@ -202,13 +204,11 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
   },
   addBtn: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },
   addBtnText: {
-    color: Colors.light.accentText,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: Colors.light.text,
   },
   chips: {
     gap: Spacing.two,
@@ -237,17 +236,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
-  },
-  chipActive: {
-    backgroundColor: Colors.light.accent,
-  },
-  chipText: {
-    color: Colors.light.textSecondary,
-  },
-  chipTextActive: {
-    color: Colors.light.accentText,
-    fontWeight: '600',
   },
   padding: {
     padding: Spacing.four,
@@ -267,7 +255,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.three,
     borderRadius: Radius.control,
-    backgroundColor: Colors.light.accentSoft,
   },
   pressed: {
     opacity: 0.7,

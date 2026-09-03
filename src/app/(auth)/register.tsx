@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { haptic } from '@/hooks/use-haptic';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
+  const colors = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,27 +59,27 @@ export default function RegisterScreen() {
             <>
               <TextInput
                 placeholder="Nome e cognome"
-                placeholderTextColor={Colors.light.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={fullName}
                 onChangeText={setFullName}
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
               />
               <TextInput
                 placeholder="Email"
-                placeholderTextColor={Colors.light.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
               />
               <TextInput
                 placeholder="Password"
-                placeholderTextColor={Colors.light.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
               />
 
               <ThemedText type="smallBold" themeColor="textSecondary">
@@ -86,19 +88,19 @@ export default function RegisterScreen() {
               <View style={styles.roleRow}>
                 <Pressable
                   onPress={() => { haptic('light'); setRole('preparatore'); }}
-                  style={[styles.roleButton, role === 'preparatore' && styles.roleButtonActive]}>
+                  style={[styles.roleButton, { backgroundColor: role === 'preparatore' ? colors.accent : colors.backgroundElement }]}>
                   <ThemedText
                     type="smallBold"
-                    style={role === 'preparatore' ? styles.roleTextActive : styles.roleTextInactive}>
+                    style={{ color: role === 'preparatore' ? colors.accentText : colors.textSecondary }}>
                     Preparatore
                   </ThemedText>
                 </Pressable>
                 <Pressable
                   onPress={() => { haptic('light'); setRole('portiere'); }}
-                  style={[styles.roleButton, role === 'portiere' && styles.roleButtonActive]}>
+                  style={[styles.roleButton, { backgroundColor: role === 'portiere' ? colors.accent : colors.backgroundElement }]}>
                   <ThemedText
                     type="smallBold"
-                    style={role === 'portiere' ? styles.roleTextActive : styles.roleTextInactive}>
+                    style={{ color: role === 'portiere' ? colors.accentText : colors.textSecondary }}>
                     Portiere
                   </ThemedText>
                 </Pressable>
@@ -107,11 +109,11 @@ export default function RegisterScreen() {
               {role === 'portiere' && (
                 <TextInput
                   placeholder="Codice squadra (es. GK-ABC123)"
-                  placeholderTextColor={Colors.light.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   autoCapitalize="characters"
                   value={inviteCode}
                   onChangeText={setInviteCode}
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
                 />
               )}
 
@@ -126,13 +128,14 @@ export default function RegisterScreen() {
                 disabled={submitting || !email || !password}
                 style={({ pressed }) => [
                   styles.button,
+                  { backgroundColor: colors.accent },
                   (submitting || !email || !password) && styles.buttonDisabled,
                   pressed && styles.pressed,
                 ]}>
                 {submitting ? (
-                  <ActivityIndicator color={Colors.light.accentText} />
+                  <ActivityIndicator color={colors.accentText} />
                 ) : (
-                  <ThemedText type="smallBold" style={styles.buttonText}>
+                  <ThemedText type="smallBold" style={{ color: colors.accentText }}>
                     Registrati
                   </ThemedText>
                 )}
@@ -182,7 +185,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   roleRow: {
@@ -194,19 +196,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingVertical: Spacing.two,
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-  },
-  roleButtonActive: {
-    backgroundColor: Colors.light.accent,
-  },
-  roleTextActive: {
-    color: Colors.light.accentText,
-  },
-  roleTextInactive: {
-    color: Colors.light.textSecondary,
   },
   button: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
@@ -214,9 +205,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
-  },
-  buttonText: {
-    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.85,

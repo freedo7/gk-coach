@@ -6,12 +6,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { generateInviteCode, listTeamMembers } from '@/lib/api/teams';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 export default function InviteScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const { canAddContent, maxPortieri } = usePlan();
   const [code, setCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,8 +72,8 @@ export default function InviteScreen() {
             </ThemedText>
             <Pressable
               onPress={handleShare}
-              style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.8 }]}>
-              <ThemedText type="smallBold" style={styles.copyBtnText}>
+              style={({ pressed }) => [styles.copyBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.8 }]}>
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>
                 Condividi codice
               </ThemedText>
             </Pressable>
@@ -87,11 +89,11 @@ export default function InviteScreen() {
         <Pressable
           onPress={handleGenerate}
           disabled={loading || atLimit}
-          style={({ pressed }) => [styles.generateBtn, (loading || atLimit) && styles.disabled, pressed && { opacity: 0.8 }]}>
+          style={({ pressed }) => [styles.generateBtn, { backgroundColor: colors.accent }, (loading || atLimit) && styles.disabled, pressed && { opacity: 0.8 }]}>
           {loading ? (
-            <ActivityIndicator color={Colors.light.accentText} />
+            <ActivityIndicator color={colors.accentText} />
           ) : (
-            <ThemedText type="smallBold" style={styles.generateBtnText}>
+            <ThemedText type="smallBold" style={{ color: colors.accentText }}>
               {code ? 'Genera nuovo codice' : 'Genera codice invito'}
             </ThemedText>
           )}
@@ -121,24 +123,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   copyBtn: {
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
   },
-  copyBtnText: {
-    color: Colors.light.accent,
-  },
   generateBtn: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   disabled: {
     opacity: 0.5,
-  },
-  generateBtnText: {
-    color: Colors.light.accentText,
   },
 });

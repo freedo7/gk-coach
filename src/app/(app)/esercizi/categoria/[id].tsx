@@ -9,9 +9,10 @@ import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { listExercisesByCategory, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { haptic } from '@/hooks/use-haptic';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 type DifficultyFilter = 'tutti' | 'base' | 'intermedio' | 'avanzato';
 
@@ -25,6 +26,7 @@ const DIFFICULTY_LABELS: { value: DifficultyFilter; label: string }[] = [
 export default function CategoriaScreen() {
   const { id, title } = useLocalSearchParams<{ id: string; title: string }>();
   const { isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
   const [exercises, setExercises] = useState<ExerciseWithCategory[] | null>(null);
@@ -71,7 +73,7 @@ export default function CategoriaScreen() {
               return (
                 <Pressable key={item.value} onPress={() => { haptic('light'); setDifficulty(item.value); }}>
                   <ThemedView
-                    style={[styles.chip, selected && styles.chipSelected]}
+                    style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                     type={selected ? undefined : 'backgroundElement'}>
                     <ThemedText type="small" themeColor={selected ? 'accentText' : 'text'}>
                       {item.label}
@@ -84,7 +86,7 @@ export default function CategoriaScreen() {
         </View>
 
         {exercises === null && !error && (
-          <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
+          <ActivityIndicator style={styles.loader} color={colors.accent} />
         )}
 
         {error && (
@@ -127,7 +129,7 @@ export default function CategoriaScreen() {
                 <View style={styles.rowMeta}>
                   {exercise.duration_minutes && (
                     <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={14} color={Colors.light.textSecondary} />
+                      <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
                       <ThemedText type="small" themeColor="textSecondary">
                         {exercise.duration_minutes} min
                       </ThemedText>
@@ -135,7 +137,7 @@ export default function CategoriaScreen() {
                   )}
                   {exercise.equipment && (
                     <View style={styles.metaItem}>
-                      <Ionicons name="barbell-outline" size={14} color={Colors.light.textSecondary} />
+                      <Ionicons name="barbell-outline" size={14} color={colors.textSecondary} />
                       <ThemedText type="small" themeColor="textSecondary">
                         {exercise.equipment}
                       </ThemedText>
@@ -143,7 +145,7 @@ export default function CategoriaScreen() {
                   )}
                   {exercise.video_url && (
                     <View style={styles.metaItem}>
-                      <Ionicons name="play-circle-outline" size={14} color={Colors.light.accent} />
+                      <Ionicons name="play-circle-outline" size={14} color={colors.accent} />
                       <ThemedText type="small" themeColor="accent">
                         Video
                       </ThemedText>
@@ -158,8 +160,8 @@ export default function CategoriaScreen() {
         {isAdmin && (
           <Pressable
             onPress={() => router.push({ pathname: '/esercizi/new', params: { categoryId: id } })}
-            style={({ pressed }) => [styles.fab, pressed && styles.pressed]}>
-            <Ionicons name="add" size={24} color={Colors.light.accentText} />
+            style={({ pressed }) => [styles.fab, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
+            <Ionicons name="add" size={24} color={colors.accentText} />
           </Pressable>
         )}
       </SafeAreaView>
@@ -186,9 +188,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-  },
-  chipSelected: {
-    backgroundColor: Colors.light.accent,
   },
   loader: {
     marginTop: Spacing.five,
@@ -238,7 +237,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacing.four,
     bottom: Spacing.four,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.pill,
     width: 52,
     height: 52,

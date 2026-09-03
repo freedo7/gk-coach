@@ -7,7 +7,8 @@ import { listCategories } from '@/lib/api/categories';
 import type { ExerciseInput } from '@/lib/api/exercises';
 import type { ExerciseCategory } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   initial?: Partial<ExerciseInput>;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
+  const colors = useTheme();
   const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
@@ -72,15 +74,15 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={title}
         onChangeText={setTitle}
         placeholder="Es. Presa alta in tuffo"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Categoria
       </ThemedText>
       {categories === null ? (
-        <ActivityIndicator color={Colors.light.accent} style={styles.spacing} />
+        <ActivityIndicator color={colors.accent} style={styles.spacing} />
       ) : (
         <ThemedView style={styles.chipRow}>
           {categories.map((category) => {
@@ -88,7 +90,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
             return (
               <Pressable key={category.id} onPress={() => { haptic('light'); setCategoryId(category.id); }}>
                 <ThemedView
-                  style={[styles.chip, selected && styles.chipSelected]}
+                  style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                   type={selected ? undefined : 'backgroundElement'}>
                   <ThemedText type="small" themeColor={selected ? 'accentText' : 'text'}>
                     {category.name}
@@ -111,7 +113,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
               key={level}
               onPress={() => { haptic('light'); setDifficulty(selected ? null : level); }}>
               <ThemedView
-                style={[styles.chip, selected && styles.chipSelected]}
+                style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                 type={selected ? undefined : 'backgroundElement'}>
                 <ThemedText type="small" themeColor={selected ? 'accentText' : 'text'}>
                   {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -129,9 +131,9 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={durationMinutes}
         onChangeText={setDurationMinutes}
         placeholder="Es. 15"
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         keyboardType="number-pad"
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -142,18 +144,18 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           value={sets}
           onChangeText={setSets}
           placeholder="Serie"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           keyboardType="number-pad"
-          style={[styles.input, styles.setsInput]}
+          style={[styles.input, styles.setsInput, { backgroundColor: colors.backgroundElement, color: colors.text }]}
         />
-        <ThemedText style={styles.setsSeparator}>×</ThemedText>
+        <ThemedText style={[styles.setsSeparator, { color: colors.textSecondary }]}>×</ThemedText>
         <TextInput
           value={reps}
           onChangeText={setReps}
           placeholder="Ripetizioni"
-          placeholderTextColor={Colors.light.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           keyboardType="number-pad"
-          style={[styles.input, styles.setsInput]}
+          style={[styles.input, styles.setsInput, { backgroundColor: colors.backgroundElement, color: colors.text }]}
         />
       </ThemedView>
 
@@ -164,8 +166,8 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={equipment}
         onChangeText={setEquipment}
         placeholder="Es. Pallone, coni, ostacoli"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -175,10 +177,10 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={description}
         onChangeText={setDescription}
         placeholder="Descrivi l'esercizio, i passaggi, le variabili..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={6}
-        style={[styles.input, styles.multiline]}
+        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -188,10 +190,10 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={videoUrl}
         onChangeText={setVideoUrl}
         placeholder="https://youtube.com/..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="url"
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -201,10 +203,10 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         value={contentUrl}
         onChangeText={setContentUrl}
         placeholder="https://...supabase.co/storage/..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="url"
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       {error && (
@@ -218,13 +220,14 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         disabled={!valid || submitting}
         style={({ pressed }) => [
           styles.button,
+          { backgroundColor: colors.accent },
           (!valid || submitting) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}>
         {submitting ? (
-          <ActivityIndicator color={Colors.light.accentText} />
+          <ActivityIndicator color={colors.accentText} />
         ) : (
-          <ThemedText type="smallBold" style={styles.buttonText}>
+          <ThemedText type="smallBold" style={{ color: colors.accentText }}>
             {submitLabel}
           </ThemedText>
         )}
@@ -243,7 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     marginTop: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   multiline: {
@@ -266,7 +268,6 @@ const styles = StyleSheet.create({
   setsSeparator: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.light.textSecondary,
   },
   chipRow: {
     flexDirection: 'row',
@@ -279,21 +280,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },
-  chipSelected: {
-    backgroundColor: Colors.light.accent,
-  },
   button: {
     marginTop: Spacing.five,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.4,
-  },
-  buttonText: {
-    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.8,

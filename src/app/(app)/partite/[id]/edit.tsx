@@ -5,13 +5,14 @@ import { ActivityIndicator } from 'react-native';
 import { MatchForm } from '@/components/match-form';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { getMatch, updateMatch } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
-import { Colors } from '@/constants/theme';
 
 export default function ModificaPartitaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const colors = useTheme();
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
 
@@ -24,7 +25,7 @@ export default function ModificaPartitaScreen() {
   if (!match) {
     return (
       <ThemedView style={{ flex: 1, justifyContent: 'center' }}>
-        <ActivityIndicator color={Colors.light.accent} />
+        <ActivityIndicator color={colors.accent} />
       </ThemedView>
     );
   }

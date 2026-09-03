@@ -6,10 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
 import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function SchedaScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
+  const colors = useTheme();
   const [html, setHtml] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [webViewKey, setWebViewKey] = useState(0);
@@ -33,7 +34,7 @@ export default function SchedaScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         {!html && !error && (
-          <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
+          <ActivityIndicator style={styles.loader} color={colors.accent} />
         )}
         {html && (
           <WebView

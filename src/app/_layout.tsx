@@ -1,4 +1,4 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,13 +8,19 @@ import { AuthProvider } from '@/context/auth-context';
 import { PurchasesProvider } from '@/context/purchases-context';
 import { PushRegistrar } from '@/components/push-registrar';
 import { ToastProvider } from '@/context/toast-context';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 SplashScreen.preventAutoHideAsync();
 
+const LightNav = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: 'transparent' } };
+const DarkNav = { ...DarkTheme, colors: { ...DarkTheme.colors, background: 'transparent' } };
+
 export default function RootLayout() {
+  const scheme = useColorScheme();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={DefaultTheme}>
+      <ThemeProvider value={scheme === 'dark' ? DarkNav : LightNav}>
         <AuthProvider>
           <PurchasesProvider>
             <ToastProvider>

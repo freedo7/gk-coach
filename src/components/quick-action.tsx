@@ -7,7 +7,8 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-na
 import { GlowIcon } from '@/components/glow-icon';
 import { ThemedText } from '@/components/themed-text';
 import { haptic } from '@/hooks/use-haptic';
-import { Colors, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
 
 interface Props {
   href: ComponentProps<typeof Link>['href'];
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function QuickAction({ href, icon, label }: Props) {
+  const colors = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -31,7 +33,7 @@ export function QuickAction({ href, icon, label }: Props) {
       >
         <Animated.View style={[styles.inner, animatedStyle]}>
           <GlowIcon>
-            <Ionicons name={icon} size={30} color={Colors.light.accent} />
+            <Ionicons name={icon} size={30} color={colors.accent} />
           </GlowIcon>
           <ThemedText type="small" style={styles.label}>
             {label}

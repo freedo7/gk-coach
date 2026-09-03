@@ -11,9 +11,10 @@ import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { listCategories } from '@/lib/api/categories';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import type { ExerciseCategory } from '@/types/database';
 
 function CategoryIcon({ icon, size, color }: { icon: string | null; size: number; color: string }) {
@@ -24,6 +25,7 @@ function CategoryIcon({ icon, size, color }: { icon: string | null; size: number
 
 export default function EserciziScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const router = useRouter();
   const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
   const [allExercises, setAllExercises] = useState<ExerciseWithCategory[] | null>(null);
@@ -65,28 +67,28 @@ export default function EserciziScreen() {
           {isAdmin && (
             <Pressable
               onPress={() => router.push('/esercizi/new')}
-              style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}>
-              <ThemedText style={styles.addBtnText}>+ Nuovo</ThemedText>
+              style={({ pressed }) => [styles.addBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
+              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>+ Nuovo</ThemedText>
             </Pressable>
           )}
         </View>
 
         <View style={styles.searchWrapper}>
           <ThemedView type="backgroundElement" style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color={Colors.light.textSecondary} />
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Cerca esercizi..."
-              placeholderTextColor={Colors.light.textSecondary}
-              style={styles.searchInput}
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.searchInput, { color: colors.text }]}
               returnKeyType="search"
               clearButtonMode="while-editing"
             />
           </ThemedView>
         </View>
 
-        {loading && <ActivityIndicator style={styles.loader} color={Colors.light.accent} />}
+        {loading && <ActivityIndicator style={styles.loader} color={colors.accent} />}
 
         {error && (
           <ThemedText type="small" themeColor="accent" style={styles.padding}>
@@ -128,16 +130,16 @@ export default function EserciziScreen() {
                         params: { id: category.id, title: category.name },
                       })
                     }>
-                    <View style={styles.categoryCard}>
+                    <View style={[styles.categoryCard, { backgroundColor: colors.accentSoft }]}>
                       {allExercises !== null && (
-                        <View style={styles.countBadge}>
-                          <ThemedText type="small" style={styles.countText}>
+                        <View style={[styles.countBadge, { backgroundColor: colors.accent }]}>
+                          <ThemedText type="small" style={[styles.countText, { color: colors.accentText }]}>
                             {allExercises.filter((e) => e.category_id === category.id).length}
                           </ThemedText>
                         </View>
                       )}
-                      <View style={styles.iconCircle}>
-                        <CategoryIcon icon={category.icon} size={28} color={Colors.light.accent} />
+                      <View style={[styles.iconCircle, { backgroundColor: colors.card }]}>
+                        <CategoryIcon icon={category.icon} size={28} color={colors.accent} />
                       </View>
                       <ThemedText type="smallBold" style={styles.categoryName}>
                         {category.name}
@@ -170,13 +172,11 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
   },
   addBtn: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },
   addBtnText: {
-    color: Colors.light.accentText,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: Colors.light.text,
   },
   loader: {
     marginTop: Spacing.five,
@@ -216,7 +215,6 @@ const styles = StyleSheet.create({
     width: '47%',
   },
   categoryCard: {
-    backgroundColor: Colors.light.accentSoft,
     borderRadius: Radius.card,
     padding: Spacing.three,
     alignItems: 'center',
@@ -228,7 +226,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Spacing.two,
     right: Spacing.two,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.pill,
     minWidth: 22,
     height: 22,
@@ -237,7 +234,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.one,
   },
   countText: {
-    color: Colors.light.accentText,
     fontWeight: '700',
     fontSize: 12,
   },
@@ -245,7 +241,6 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.light.card,
     alignItems: 'center',
     justifyContent: 'center',
   },

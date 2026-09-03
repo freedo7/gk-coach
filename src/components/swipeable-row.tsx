@@ -3,7 +3,8 @@ import { Alert, Pressable, StyleSheet, Text } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { haptic } from '@/hooks/use-haptic';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function SwipeableRow({ children, onDelete, confirmTitle = 'Eliminare?', confirmMessage, enabled = true }: Props) {
+  const colors = useTheme();
   const swipeableRef = useRef<Swipeable>(null);
 
   function handleDeletePress() {
@@ -33,7 +35,7 @@ export function SwipeableRow({ children, onDelete, confirmTitle = 'Eliminare?', 
 
   function renderRightActions() {
     return (
-      <Pressable onPress={handleDeletePress} style={styles.deleteAction}>
+      <Pressable onPress={handleDeletePress} style={[styles.deleteAction, { backgroundColor: colors.danger }]}>
         <Ionicons name="trash-outline" size={22} color="#fff" />
         <Text style={styles.deleteText}>Elimina</Text>
       </Pressable>
@@ -55,7 +57,6 @@ export function SwipeableRow({ children, onDelete, confirmTitle = 'Eliminare?', 
 
 const styles = StyleSheet.create({
   deleteAction: {
-    backgroundColor: Colors.light.danger,
     borderRadius: Radius.card,
     justifyContent: 'center',
     alignItems: 'center',

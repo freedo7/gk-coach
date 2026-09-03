@@ -8,16 +8,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { deleteTraining, getTraining, type TrainingWithExercises } from '@/lib/api/trainings';
 import { generateTrainingPdf } from '@/lib/pdf';
 import { formatDateLong, formatTime } from '@/lib/format';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function AllenamentoDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const colors = useTheme();
   const { show: showToast } = useToast();
   const router = useRouter();
   const [training, setTraining] = useState<TrainingWithExercises | null>(null);
@@ -70,7 +72,7 @@ export default function AllenamentoDettaglioScreen() {
   if (!training) {
     return (
       <ThemedView style={styles.container}>
-        <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
+        <ActivityIndicator style={styles.loader} color={colors.accent} />
       </ThemedView>
     );
   }
@@ -82,7 +84,7 @@ export default function AllenamentoDettaglioScreen() {
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Pressable onPress={() => isAdmin && setShowActions((v) => !v)}>
-          <ThemedView type="card" style={styles.headerCard}>
+          <ThemedView type="card" style={[styles.headerCard, { borderColor: colors.accent }]}>
             <ThemedText type="default" themeColor="textSecondary" style={styles.dateText}>
               {formatDateLong(training.training_date)}
               {time ? ` · ${time}` : ''}
@@ -99,16 +101,16 @@ export default function AllenamentoDettaglioScreen() {
           {isAdmin && showActions && (
             <View style={styles.adminActions}>
               <Link href={`/allenamenti/${training.id}/edit`} asChild>
-                <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
+                <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={colors.text} />
                   <ThemedText type="smallBold">Modifica</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
-                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
-                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
+                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
               </Pressable>
             </View>
           )}
@@ -154,13 +156,13 @@ export default function AllenamentoDettaglioScreen() {
               setExporting(false);
             }}
             disabled={exporting}
-            style={({ pressed }) => [styles.pdfButton, pressed && styles.pressed, exporting && { opacity: 0.5 }]}>
+            style={({ pressed }) => [styles.pdfButton, { backgroundColor: colors.accentSoft }, pressed && styles.pressed, exporting && { opacity: 0.5 }]}>
             {exporting ? (
-              <ActivityIndicator color={Colors.light.accent} />
+              <ActivityIndicator color={colors.accent} />
             ) : (
               <>
-                <Ionicons name="document-outline" size={18} color={Colors.light.accent} />
-                <ThemedText type="smallBold" style={{ color: Colors.light.accent }}>Esporta PDF</ThemedText>
+                <Ionicons name="document-outline" size={18} color={colors.accent} />
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>Esporta PDF</ThemedText>
               </>
             )}
           </Pressable>
@@ -191,7 +193,6 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.one,
     borderWidth: 2,
-    borderColor: Colors.light.accent,
   },
   dateText: {
     fontWeight: '500',
@@ -224,12 +225,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-  },
-  actionButtonDelete: {
-    backgroundColor: Colors.light.dangerSoft,
   },
   pdfButton: {
     flexDirection: 'row',
@@ -237,7 +234,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.one,
     marginTop: Spacing.two,
-    backgroundColor: Colors.light.accentSoft,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
   },

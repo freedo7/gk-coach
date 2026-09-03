@@ -7,9 +7,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match } from '@/types/database';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boolean; onDelete?: () => void | Promise<void> }) {
+  const colors = useTheme();
   const time = formatTime(match.match_time);
   const content = (
     <Link href={`/partite/${match.id}`} asChild>
@@ -34,11 +36,11 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
             ) : (
               <ThemedView
                 type="backgroundElement"
-                style={[styles.homeBadge, match.is_home && styles.homeBadgeActive]}>
+                style={[styles.homeBadge, match.is_home && { backgroundColor: colors.accentSoft }]}>
                 <Ionicons
                   name={match.is_home ? 'home' : 'airplane'}
                   size={16}
-                  color={match.is_home ? Colors.light.accentText : Colors.light.textSecondary}
+                  color={match.is_home ? colors.accentText : colors.textSecondary}
                 />
               </ThemedView>
             )}
@@ -96,9 +98,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.two,
     paddingVertical: 2,
-  },
-  homeBadgeActive: {
-    backgroundColor: Colors.light.accentSoft,
   },
   matchType: {
     textAlign: 'right',

@@ -12,11 +12,12 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
+import { useTheme } from '@/hooks/use-theme';
 import { listMatches } from '@/lib/api/matches';
 import { deleteTraining, getTrainingByDate, listTrainings, type TrainingWithExercises } from '@/lib/api/trainings';
 import { formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 LocaleConfig.locales['it'] = {
   monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
@@ -32,11 +33,9 @@ function todayISO() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-const DOT_TRAINING = { key: 'training', color: Colors.light.accent };
-const DOT_MATCH = { key: 'match', color: Colors.light.danger };
-
 export default function AllenamentiScreen() {
   const { isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const { show: showToast } = useToast();
   const today = todayISO();
 
@@ -46,6 +45,9 @@ export default function AllenamentiScreen() {
   const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
   const [loadingTraining, setLoadingTraining] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  const DOT_TRAINING = useMemo(() => ({ key: 'training', color: colors.accent }), [colors.accent]);
+  const DOT_MATCH = useMemo(() => ({ key: 'match', color: colors.danger }), [colors.danger]);
 
   const loadData = useCallback(() => {
     if (!currentTeam) return;
@@ -91,7 +93,7 @@ export default function AllenamentiScreen() {
   markedDates[selectedDate] = {
     ...(markedDates[selectedDate] ?? {}),
     selected: true,
-    selectedColor: Colors.light.accent,
+    selectedColor: colors.accent,
   };
 
   return (
@@ -103,7 +105,7 @@ export default function AllenamentiScreen() {
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
           <ThemedView type="card" style={styles.calendarCard}>
             <Calendar
@@ -115,25 +117,25 @@ export default function AllenamentiScreen() {
               theme={{
                 backgroundColor: 'transparent',
                 calendarBackground: 'transparent',
-                textSectionTitleColor: Colors.light.textSecondary,
-                dayTextColor: Colors.light.text,
-                todayTextColor: Colors.light.accent,
-                monthTextColor: Colors.light.text,
-                arrowColor: Colors.light.accent,
-                selectedDayBackgroundColor: Colors.light.accent,
-                selectedDayTextColor: Colors.light.accentText,
-                dotColor: Colors.light.accent,
+                textSectionTitleColor: colors.textSecondary,
+                dayTextColor: colors.text,
+                todayTextColor: colors.accent,
+                monthTextColor: colors.text,
+                arrowColor: colors.accent,
+                selectedDayBackgroundColor: colors.accent,
+                selectedDayTextColor: colors.accentText,
+                dotColor: colors.accent,
                 textDayFontWeight: '500',
                 textMonthFontWeight: '700',
               }}
             />
             <View style={styles.legend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.light.accent }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
                 <ThemedText type="small" themeColor="textSecondary">Allenamento</ThemedText>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.light.danger }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
                 <ThemedText type="small" themeColor="textSecondary">Partita</ThemedText>
               </View>
             </View>
@@ -141,7 +143,7 @@ export default function AllenamentiScreen() {
 
           {/* Allenamento del giorno */}
           {loadingTraining ? (
-            <ActivityIndicator color={Colors.light.accent} style={styles.trainingLoader} />
+            <ActivityIndicator color={colors.accent} style={styles.trainingLoader} />
           ) : selectedTraining ? (
             <SwipeableRow
               enabled={isAdmin}

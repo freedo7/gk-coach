@@ -9,15 +9,17 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { deleteExercise, getExercise, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function EsercizioDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const colors = useTheme();
   const { canViewVideo, canViewRichContent } = usePlan();
   const { show: showToast } = useToast();
   const router = useRouter();
@@ -69,7 +71,7 @@ export default function EsercizioDettaglioScreen() {
   if (!exercise) {
     return (
       <ThemedView style={styles.container}>
-        <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
+        <ActivityIndicator style={styles.loader} color={colors.accent} />
       </ThemedView>
     );
   }
@@ -99,8 +101,8 @@ export default function EsercizioDettaglioScreen() {
             canViewVideo ? (
               <Pressable
                 onPress={() => Linking.openURL(exercise.video_url!)}
-                style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" style={styles.actionLinkText}>
+                style={({ pressed }) => [styles.actionLink, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>
                   ▶ Guarda il video
                 </ThemedText>
               </Pressable>
@@ -113,8 +115,8 @@ export default function EsercizioDettaglioScreen() {
             canViewRichContent ? (
               <Pressable
                 onPress={() => router.push({ pathname: '/esercizi/scheda', params: { url: exercise.content_url! } })}
-                style={({ pressed }) => [styles.actionLink, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" style={styles.actionLinkText}>
+                style={({ pressed }) => [styles.actionLink, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>
                   📄 Apri scheda esercizio
                 </ThemedText>
               </Pressable>
@@ -126,16 +128,16 @@ export default function EsercizioDettaglioScreen() {
           {isAdmin && (
             <ThemedView style={styles.adminActions}>
               <Link href={`/esercizi/${exercise.id}/edit`} asChild>
-                <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
+                <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={colors.text} />
                   <ThemedText type="smallBold">Modifica</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
-                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
-                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
+                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
               </Pressable>
             </ThemedView>
           )}
@@ -170,13 +172,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   actionLink: {
-    backgroundColor: Colors.light.accentSoft,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
-  },
-  actionLinkText: {
-    color: Colors.light.accent,
   },
   adminActions: {
     flexDirection: 'row',
@@ -189,12 +187,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-  },
-  actionButtonDelete: {
-    backgroundColor: Colors.light.dangerSoft,
   },
   pressed: {
     opacity: 0.7,

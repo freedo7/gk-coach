@@ -14,10 +14,11 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { supabase } from '@/lib/supabase';
 import { haptic } from '@/hooks/use-haptic';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -28,6 +29,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function ProfiloScreen() {
   const { profile, isAdmin, signOut, refreshProfile, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
+  const colors = useTheme();
   const plan = usePlan();
   const router = useRouter();
 
@@ -115,8 +117,8 @@ export default function ProfiloScreen() {
               {teams.length > 0 && (
                 <Pressable
                   onPress={() => setSwitcherVisible(true)}
-                  style={({ pressed }) => [styles.switchBtn, pressed && styles.pressed]}>
-                  <ThemedText type="small" style={styles.switchBtnText}>
+                  style={({ pressed }) => [styles.switchBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
+                  <ThemedText type="small" style={[styles.switchBtnText, { color: colors.accentText }]}>
                     {teams.length > 1 ? 'Cambia' : 'Gestisci'}
                   </ThemedText>
                 </Pressable>
@@ -125,12 +127,14 @@ export default function ProfiloScreen() {
 
             <Pressable
               onPress={() => router.push('/profilo/paywall')}
-              style={({ pressed }) => [styles.planBadge, pressed && styles.pressed,
-                plan.tier === 'pro' && styles.planBadgePro,
-                plan.isTrialActive && styles.planBadgeTrial,
-                !plan.isTrialActive && plan.tier !== 'pro' && styles.planBadgeBase,
+              style={({ pressed }) => [styles.planBadge,
+                { backgroundColor: colors.backgroundElement },
+                pressed && styles.pressed,
+                plan.tier === 'pro' && { backgroundColor: colors.accent },
+                plan.isTrialActive && { backgroundColor: colors.accentSoft },
+                !plan.isTrialActive && plan.tier !== 'pro' && { backgroundColor: colors.dangerSoft },
               ]}>
-              <ThemedText type="small" style={styles.planBadgeText}>
+              <ThemedText type="small" style={[styles.planBadgeText, { color: colors.text }]}>
                 {plan.tier === 'pro'
                   ? '★ Pro'
                   : plan.isTrialActive
@@ -147,8 +151,8 @@ export default function ProfiloScreen() {
               value={fullName}
               onChangeText={setFullName}
               placeholder="Nome e cognome"
-              placeholderTextColor={Colors.light.textSecondary}
-              style={styles.input}
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
 
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Email</ThemedText>
@@ -174,10 +178,10 @@ export default function ProfiloScreen() {
             <Pressable
               onPress={handleSave}
               disabled={!dirty || saving}
-              style={({ pressed }) => [styles.saveButton, (!dirty || saving) && styles.saveButtonDisabled, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.accent }, (!dirty || saving) && styles.saveButtonDisabled, pressed && styles.pressed]}>
               {saving
-                ? <ActivityIndicator color={Colors.light.accentText} />
-                : <ThemedText type="smallBold" style={styles.saveButtonText}>Salva modifiche</ThemedText>}
+                ? <ActivityIndicator color={colors.accentText} />
+                : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Salva modifiche</ThemedText>}
             </Pressable>
           </ThemedView>
 
@@ -191,8 +195,8 @@ export default function ProfiloScreen() {
               onChangeText={setNewPassword}
               secureTextEntry
               placeholder="Minimo 6 caratteri"
-              placeholderTextColor={Colors.light.textSecondary}
-              style={styles.input}
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
 
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.fieldSpacing}>Conferma password</ThemedText>
@@ -200,7 +204,7 @@ export default function ProfiloScreen() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
 
             {pwError && (
@@ -213,10 +217,10 @@ export default function ProfiloScreen() {
             <Pressable
               onPress={handleChangePassword}
               disabled={changingPw}
-              style={({ pressed }) => [styles.saveButton, changingPw && styles.saveButtonDisabled, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.accent }, changingPw && styles.saveButtonDisabled, pressed && styles.pressed]}>
               {changingPw
-                ? <ActivityIndicator color={Colors.light.accentText} />
-                : <ThemedText type="smallBold" style={styles.saveButtonText}>Aggiorna password</ThemedText>}
+                ? <ActivityIndicator color={colors.accentText} />
+                : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Aggiorna password</ThemedText>}
             </Pressable>
           </ThemedView>
 
@@ -225,12 +229,12 @@ export default function ProfiloScreen() {
             <>
               <Pressable
                 onPress={() => router.push('/profilo/utenti')}
-                style={({ pressed }) => [styles.adminButton, pressed && styles.pressed]}>
+                style={({ pressed }) => [styles.adminButton, { backgroundColor: colors.card }, pressed && styles.pressed]}>
                 <ThemedText type="smallBold">Membri squadra</ThemedText>
               </Pressable>
               <Pressable
                 onPress={() => router.push('/profilo/invite')}
-                style={({ pressed }) => [styles.adminButton, pressed && styles.pressed]}>
+                style={({ pressed }) => [styles.adminButton, { backgroundColor: colors.card }, pressed && styles.pressed]}>
                 <ThemedText type="smallBold">Invita portieri</ThemedText>
               </Pressable>
             </>
@@ -239,7 +243,7 @@ export default function ProfiloScreen() {
           {/* Logout */}
           <Pressable
             onPress={signOut}
-            style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
+            style={({ pressed }) => [styles.logoutButton, { backgroundColor: colors.danger }, pressed && styles.pressed]}>
             <ThemedText type="smallBold" style={styles.logoutButtonText}>Esci</ThemedText>
           </Pressable>
         </ScrollView>
@@ -248,7 +252,7 @@ export default function ProfiloScreen() {
       {/* Modal squadre */}
       <Modal visible={switcherVisible} transparent animationType="slide" onRequestClose={() => setSwitcherVisible(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSwitcherVisible(false)} />
-        <View style={styles.modalSheet}>
+        <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
           <ThemedText type="subtitle" style={styles.modalTitle}>Le tue squadre</ThemedText>
 
           {teams.map((team) => (
@@ -257,12 +261,13 @@ export default function ProfiloScreen() {
               onPress={() => handleSwitchTeam(team)}
               style={({ pressed }) => [
                 styles.teamItem,
-                team.id === currentTeam?.id && styles.teamItemActive,
+                { backgroundColor: colors.backgroundElement },
+                team.id === currentTeam?.id && { backgroundColor: colors.accentSoft },
                 pressed && styles.pressed,
               ]}>
               <ThemedText type="smallBold">{team.name}</ThemedText>
               {team.id === currentTeam?.id && (
-                <ThemedText type="small" style={styles.activeLabel}>Attiva</ThemedText>
+                <ThemedText type="small" style={{ color: colors.accent, fontWeight: '600' }}>Attiva</ThemedText>
               )}
             </Pressable>
           ))}
@@ -270,8 +275,8 @@ export default function ProfiloScreen() {
           {isAdmin && !showCreateForm && (
             <Pressable
               onPress={() => setShowCreateForm(true)}
-              style={({ pressed }) => [styles.newTeamBtn, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={styles.newTeamBtnText}>+ Nuova squadra</ThemedText>
+              style={({ pressed }) => [styles.newTeamBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>+ Nuova squadra</ThemedText>
             </Pressable>
           )}
 
@@ -279,10 +284,10 @@ export default function ProfiloScreen() {
             <View style={styles.createForm}>
               <TextInput
                 placeholder="Nome squadra"
-                placeholderTextColor={Colors.light.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={newTeamName}
                 onChangeText={setNewTeamName}
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
                 autoFocus
               />
               {createTeamError && (
@@ -295,13 +300,14 @@ export default function ProfiloScreen() {
                 disabled={creatingTeam || !newTeamName.trim()}
                 style={({ pressed }) => [
                   styles.saveButton,
+                  { backgroundColor: colors.accent },
                   (creatingTeam || !newTeamName.trim()) && styles.saveButtonDisabled,
                   pressed && styles.pressed,
                   { marginTop: Spacing.two },
                 ]}>
                 {creatingTeam
-                  ? <ActivityIndicator color={Colors.light.accentText} />
-                  : <ThemedText type="smallBold" style={styles.saveButtonText}>Crea</ThemedText>}
+                  ? <ActivityIndicator color={colors.accentText} />
+                  : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Crea</ThemedText>}
               </Pressable>
             </View>
           )}
@@ -340,13 +346,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   switchBtn: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
   },
   switchBtnText: {
-    color: Colors.light.accentText,
     fontWeight: '600',
   },
   planBadge: {
@@ -355,27 +359,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
-  },
-  planBadgePro: {
-    backgroundColor: Colors.light.accent,
-  },
-  planBadgeTrial: {
-    backgroundColor: Colors.light.accentSoft,
-  },
-  planBadgeBase: {
-    backgroundColor: Colors.light.dangerSoft,
   },
   planBadgeText: {
     fontWeight: '600',
-    color: Colors.light.text,
   },
   input: {
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     marginTop: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   displayValue: {
@@ -393,21 +385,17 @@ const styles = StyleSheet.create({
   roleHint: { marginTop: Spacing.one },
   saveButton: {
     marginTop: Spacing.four,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   saveButtonDisabled: { opacity: 0.4 },
-  saveButtonText: { color: Colors.light.accentText },
   adminButton: {
-    backgroundColor: Colors.light.card,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   logoutButton: {
-    backgroundColor: Colors.light.danger,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
@@ -419,7 +407,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalSheet: {
-    backgroundColor: Colors.light.card,
     borderTopLeftRadius: Radius.card,
     borderTopRightRadius: Radius.card,
     padding: Spacing.four,
@@ -437,14 +424,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.three,
-    backgroundColor: Colors.light.backgroundElement,
-  },
-  teamItemActive: {
-    backgroundColor: Colors.light.accentSoft,
-  },
-  activeLabel: {
-    color: Colors.light.accent,
-    fontWeight: '600',
   },
   newTeamBtn: {
     marginTop: Spacing.two,
@@ -452,10 +431,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.light.accent,
-  },
-  newTeamBtnText: {
-    color: Colors.light.accent,
   },
   createForm: {
     marginTop: Spacing.one,

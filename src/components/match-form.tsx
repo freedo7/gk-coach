@@ -7,7 +7,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import type { MatchInput } from '@/lib/api/matches';
 import { haptic } from '@/hooks/use-haptic';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   initial?: Partial<MatchInput>;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
+  const colors = useTheme();
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [isHome, setIsHome] = useState(initial?.is_home ?? true);
   const [matchType, setMatchType] = useState<'amichevole' | 'campionato' | 'coppa'>(initial?.match_type ?? 'campionato');
@@ -62,8 +64,8 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         value={opponent}
         onChangeText={setOpponent}
         placeholder="Nome squadra avversaria"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -80,12 +82,12 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
           return (
             <Pressable key={String(option.value)} onPress={() => { haptic('light'); setIsHome(option.value); }} style={styles.chipFlex}>
               <ThemedView
-                style={[styles.chip, selected && styles.chipSelected]}
+                style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                 type={selected ? undefined : 'backgroundElement'}>
                 <Ionicons
                   name={option.icon}
                   size={22}
-                  color={selected ? Colors.light.accentText : Colors.light.textSecondary}
+                  color={selected ? colors.accentText : colors.textSecondary}
                 />
               </ThemedView>
             </Pressable>
@@ -108,16 +110,16 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
           return (
             <Pressable key={option.value} onPress={() => { haptic('light'); setMatchType(option.value); }} style={styles.chipFlex}>
               <ThemedView
-                style={[styles.chip, selected && styles.chipSelected]}
+                style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                 type={selected ? undefined : 'backgroundElement'}>
                 <Ionicons
                   name={option.icon}
                   size={22}
-                  color={selected ? Colors.light.accentText : Colors.light.textSecondary}
+                  color={selected ? colors.accentText : colors.textSecondary}
                 />
                 <ThemedText
                   type="small"
-                  style={{ color: selected ? Colors.light.accentText : Colors.light.textSecondary }}>
+                  style={{ color: selected ? colors.accentText : colors.textSecondary }}>
                   {option.label}
                 </ThemedText>
               </ThemedView>
@@ -135,9 +137,9 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
             value={matchday}
             onChangeText={setMatchday}
             placeholder="Es. 1"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
         </>
       )}
@@ -156,8 +158,8 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         value={matchTime ?? ''}
         onChangeText={setMatchTime}
         placeholder="18:30"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -167,8 +169,8 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         value={result}
         onChangeText={setResult}
         placeholder="Es. 2-1"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -178,10 +180,10 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         value={resultNotes}
         onChangeText={setResultNotes}
         placeholder="Parate, gol subiti, prestazione..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={4}
-        style={[styles.input, styles.multiline]}
+        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -191,10 +193,10 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         value={notes ?? ''}
         onChangeText={setNotes}
         placeholder="Luogo esatto, convocazione, altre info..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={4}
-        style={[styles.input, styles.multiline]}
+        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       {error && (
@@ -208,13 +210,14 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         disabled={!valid || submitting}
         style={({ pressed }) => [
           styles.button,
+          { backgroundColor: colors.accent },
           (!valid || submitting) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}>
         {submitting ? (
-          <ActivityIndicator color={Colors.light.accentText} />
+          <ActivityIndicator color={colors.accentText} />
         ) : (
-          <ThemedText type="smallBold" style={styles.buttonText}>
+          <ThemedText type="smallBold" style={{ color: colors.accentText }}>
             {submitLabel}
           </ThemedText>
         )}
@@ -233,7 +236,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     marginTop: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   multiline: {
@@ -260,21 +262,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
-  chipSelected: {
-    backgroundColor: Colors.light.accent,
-  },
   button: {
     marginTop: Spacing.five,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.4,
-  },
-  buttonText: {
-    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.8,

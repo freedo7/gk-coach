@@ -5,17 +5,18 @@ import { ActivityIndicator } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { TrainingForm } from '@/components/training-form';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import {
   getTraining,
   setTrainingExercises,
   updateTraining,
   type TrainingWithExercises,
 } from '@/lib/api/trainings';
-import { Colors } from '@/constants/theme';
 
 export default function ModificaAllenamentoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const colors = useTheme();
   const router = useRouter();
   const [training, setTraining] = useState<TrainingWithExercises | null>(null);
 
@@ -28,7 +29,7 @@ export default function ModificaAllenamentoScreen() {
   if (!training) {
     return (
       <ThemedView style={{ flex: 1, justifyContent: 'center' }}>
-        <ActivityIndicator color={Colors.light.accent} />
+        <ActivityIndicator color={colors.accent} />
       </ThemedView>
     );
   }

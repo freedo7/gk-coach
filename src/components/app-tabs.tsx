@@ -1,15 +1,17 @@
 import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
+  const colors = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.light.accent,
-        tabBarInactiveTintColor: '#333333',
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           backgroundColor: 'transparent',
           borderTopColor: 'transparent',
@@ -22,14 +24,10 @@ export default function AppTabs() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ color }) => (
             <Image
               source={require('@/assets/images/tabIcons/home.png')}
-              style={{
-                width: 28,
-                height: 28,
-                tintColor: focused ? Colors.light.accent : '#333333',
-              }}
+              style={{ width: 28, height: 28, tintColor: color }}
             />
           ),
         }}
@@ -38,14 +36,10 @@ export default function AppTabs() {
         name="profilo"
         options={{
           title: 'Profilo',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ color }) => (
             <Image
               source={require('@/assets/images/tabIcons/explore.png')}
-              style={{
-                width: 28,
-                height: 28,
-                tintColor: focused ? Colors.light.accent : '#333333',
-              }}
+              style={{ width: 28, height: 28, tintColor: color }}
             />
           ),
         }}

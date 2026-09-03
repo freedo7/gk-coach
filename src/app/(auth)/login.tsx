@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { haptic } from '@/hooks/use-haptic';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const colors = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -36,20 +38,20 @@ export default function LoginScreen() {
         <ThemedView type="card" style={styles.card}>
           <TextInput
             placeholder="Email"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
           <TextInput
             placeholder="Password"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
 
           {error && (
@@ -63,13 +65,14 @@ export default function LoginScreen() {
             disabled={submitting || !email || !password}
             style={({ pressed }) => [
               styles.button,
+              { backgroundColor: colors.accent },
               (submitting || !email || !password) && styles.buttonDisabled,
               pressed && styles.pressed,
             ]}>
             {submitting ? (
-              <ActivityIndicator color={Colors.light.accentText} />
+              <ActivityIndicator color={colors.accentText} />
             ) : (
-              <ThemedText type="smallBold" style={styles.buttonText}>
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>
                 Accedi
               </ThemedText>
             )}
@@ -113,11 +116,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   button: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
@@ -125,9 +126,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
-  },
-  buttonText: {
-    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.85,

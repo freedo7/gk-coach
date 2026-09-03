@@ -1,4 +1,5 @@
-// L'app usa sempre il tema chiaro, indipendentemente dal tema di sistema del telefono.
-export function useColorScheme(): 'light' {
-  return 'light';
+import { useColorScheme as useRNColorScheme } from 'react-native';
+
+export function useColorScheme() {
+  return useRNColorScheme() ?? 'light';
 }

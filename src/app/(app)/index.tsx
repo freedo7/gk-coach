@@ -10,11 +10,12 @@ import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { listMatches } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 function todayISO() {
   const now = new Date();
@@ -23,6 +24,7 @@ function todayISO() {
 
 export default function HomeScreen() {
   const { profile, isAdmin, currentTeam } = useAuth();
+  const colors = useTheme();
   const today = todayISO();
 
   const [nextTraining, setNextTraining] = useState<Training | null | undefined>(undefined);
@@ -56,7 +58,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.accent} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
           <ThemedText type="title" style={styles.greeting}>
             Ciao{name ? `, ${name.split(' ')[0]}` : ''}

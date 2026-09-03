@@ -3,7 +3,8 @@ import { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Colors, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
 
 interface Props {
   icon: ComponentProps<typeof Ionicons>['name'];
@@ -12,10 +13,12 @@ interface Props {
 }
 
 export function EmptyState({ icon, title, subtitle }: Props) {
+  const colors = useTheme();
+
   return (
     <View style={styles.container}>
-      <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={40} color={Colors.light.accent} />
+      <View style={[styles.iconCircle, { backgroundColor: colors.accentSoft }]}>
+        <Ionicons name={icon} size={40} color={colors.accent} />
       </View>
       <ThemedText type="subtitle" style={styles.title}>{title}</ThemedText>
       {subtitle && (
@@ -38,7 +41,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.light.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.one,

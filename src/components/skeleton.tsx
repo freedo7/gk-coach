@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, type ViewStyle } from 'react-native';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
 
 interface SkeletonProps {
   width?: number | string;
@@ -10,6 +11,7 @@ interface SkeletonProps {
 }
 
 function SkeletonBox({ width = '100%', height = 16, borderRadius = 8, style }: SkeletonProps) {
+  const colors = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -26,7 +28,7 @@ function SkeletonBox({ width = '100%', height = 16, borderRadius = 8, style }: S
   return (
     <Animated.View
       style={[
-        { width: width as any, height, borderRadius, backgroundColor: Colors.light.backgroundElement, opacity },
+        { width: width as any, height, borderRadius, backgroundColor: colors.backgroundElement, opacity },
         style,
       ]}
     />
@@ -34,8 +36,9 @@ function SkeletonBox({ width = '100%', height = 16, borderRadius = 8, style }: S
 }
 
 export function SkeletonCard({ style }: { style?: ViewStyle }) {
+  const colors = useTheme();
   return (
-    <View style={[styles.card, style]}>
+    <View style={[styles.card, { backgroundColor: colors.card }, style]}>
       <SkeletonBox width={80} height={10} borderRadius={4} />
       <SkeletonBox width="70%" height={20} borderRadius={6} />
       <SkeletonBox width={120} height={14} borderRadius={4} />
@@ -44,8 +47,9 @@ export function SkeletonCard({ style }: { style?: ViewStyle }) {
 }
 
 export function SkeletonMatchRow({ style }: { style?: ViewStyle }) {
+  const colors = useTheme();
   return (
-    <View style={[styles.card, styles.matchRow, style]}>
+    <View style={[styles.card, { backgroundColor: colors.card }, styles.matchRow, style]}>
       <View style={{ flex: 1, gap: Spacing.two }}>
         <SkeletonBox width={100} height={10} borderRadius={4} />
         <SkeletonBox width="60%" height={20} borderRadius={6} />
@@ -69,7 +73,6 @@ export function SkeletonList({ count = 3, type = 'card' }: { count?: number; typ
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.light.card,
     borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.two,

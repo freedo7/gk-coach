@@ -7,7 +7,8 @@ import { ThemedView } from '@/components/themed-view';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
 import type { TrainingInput } from '@/lib/api/trainings';
 import { haptic } from '@/hooks/use-haptic';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   initial?: Partial<TrainingInput>;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmit }: Props) {
+  const colors = useTheme();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [date, setDate] = useState<string | null>(initial?.training_date ?? null);
   const [time, setTime] = useState(initial?.training_time ?? '');
@@ -66,8 +68,8 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
         value={title}
         onChangeText={setTitle}
         placeholder="Es. Seduta portieri"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -84,8 +86,8 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
         value={time ?? ''}
         onChangeText={setTime}
         placeholder="18:00"
-        placeholderTextColor={Colors.light.textSecondary}
-        style={styles.input}
+        placeholderTextColor={colors.textSecondary}
+        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
@@ -95,17 +97,17 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
         value={notes ?? ''}
         onChangeText={setNotes}
         placeholder="Indicazioni generali sulla seduta..."
-        placeholderTextColor={Colors.light.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={3}
-        style={[styles.input, styles.multiline]}
+        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         Esercizi della seduta
       </ThemedText>
       {exercises === null ? (
-        <ActivityIndicator color={Colors.light.accent} style={styles.spacing} />
+        <ActivityIndicator color={colors.accent} style={styles.spacing} />
       ) : exercises.length === 0 ? (
         <ThemedText type="small" themeColor="textSecondary" style={styles.spacingSmall}>
           Nessun esercizio in libreria ancora.
@@ -118,7 +120,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
               <Pressable key={exercise.id} onPress={() => { haptic('light'); toggleExercise(exercise.id); }}>
                 <ThemedView
                   type={selected ? undefined : 'backgroundElement'}
-                  style={[styles.exerciseRow, selected && styles.exerciseRowSelected]}>
+                  style={[styles.exerciseRow, selected && { backgroundColor: colors.accent }]}>
                   <View style={styles.exerciseRowText}>
                     <ThemedText type="smallBold" themeColor={selected ? 'accentText' : 'text'}>
                       {exercise.title}
@@ -150,13 +152,14 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
         disabled={!valid || submitting}
         style={({ pressed }) => [
           styles.button,
+          { backgroundColor: colors.accent },
           (!valid || submitting) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}>
         {submitting ? (
-          <ActivityIndicator color={Colors.light.accentText} />
+          <ActivityIndicator color={colors.accentText} />
         ) : (
-          <ThemedText type="smallBold" style={styles.buttonText}>
+          <ThemedText type="smallBold" style={{ color: colors.accentText }}>
             {submitLabel}
           </ThemedText>
         )}
@@ -175,7 +178,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     marginTop: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   multiline: {
@@ -199,25 +201,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  exerciseRowSelected: {
-    backgroundColor: Colors.light.accent,
-  },
   exerciseRowText: {
     gap: 2,
     flexShrink: 1,
   },
   button: {
     marginTop: Spacing.five,
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.4,
-  },
-  buttonText: {
-    color: Colors.light.accentText,
   },
   pressed: {
     opacity: 0.8,

@@ -7,10 +7,16 @@ import AppTabs from '@/components/app-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+
+const BG_LIGHT = require('@/assets/images/sfondo.jpg');
+const BG_DARK = require('@/assets/images/sfondo-dark.png');
 
 function CreateTeamSetup() {
   const { createTeam } = useAuth();
+  const colors = useTheme();
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +40,10 @@ function CreateTeamSetup() {
         <ThemedView type="card" style={styles.gateCard}>
           <TextInput
             placeholder="Nome squadra"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={name}
             onChangeText={setName}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
           {error && <ThemedText type="small" themeColor="accent">{error}</ThemedText>}
           <Pressable
@@ -45,13 +51,14 @@ function CreateTeamSetup() {
             disabled={submitting || !name.trim()}
             style={({ pressed }) => [
               styles.button,
+              { backgroundColor: colors.accent },
               (submitting || !name.trim()) && styles.buttonDisabled,
               pressed && styles.pressed,
             ]}>
             {submitting ? (
-              <ActivityIndicator color={Colors.light.accentText} />
+              <ActivityIndicator color={colors.accentText} />
             ) : (
-              <ThemedText type="smallBold" style={styles.buttonText}>Crea squadra</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>Crea squadra</ThemedText>
             )}
           </Pressable>
         </ThemedView>
@@ -62,6 +69,7 @@ function CreateTeamSetup() {
 
 function JoinTeamSetup() {
   const { joinTeam } = useAuth();
+  const colors = useTheme();
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,11 +93,11 @@ function JoinTeamSetup() {
         <ThemedView type="card" style={styles.gateCard}>
           <TextInput
             placeholder="Codice squadra (es. GK-ABC123)"
-            placeholderTextColor={Colors.light.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             autoCapitalize="characters"
             value={code}
             onChangeText={setCode}
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
           {error && <ThemedText type="small" themeColor="accent">{error}</ThemedText>}
           <Pressable
@@ -97,13 +105,14 @@ function JoinTeamSetup() {
             disabled={submitting || !code.trim()}
             style={({ pressed }) => [
               styles.button,
+              { backgroundColor: colors.accent },
               (submitting || !code.trim()) && styles.buttonDisabled,
               pressed && styles.pressed,
             ]}>
             {submitting ? (
-              <ActivityIndicator color={Colors.light.accentText} />
+              <ActivityIndicator color={colors.accentText} />
             ) : (
-              <ThemedText type="smallBold" style={styles.buttonText}>Entra nella squadra</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>Entra nella squadra</ThemedText>
             )}
           </Pressable>
         </ThemedView>
@@ -114,6 +123,7 @@ function JoinTeamSetup() {
 
 export default function AppLayout() {
   const { session, loading, profile, isAdmin, currentTeam } = useAuth();
+  const scheme = useColorScheme();
 
   if (loading) return <ThemedView style={{ flex: 1 }} />;
   if (!session) return <Redirect href="/(auth)/login" />;
@@ -125,7 +135,7 @@ export default function AppLayout() {
 
   return (
     <ImageBackground
-      source={require('@/assets/images/sfondo.jpg')}
+      source={scheme === 'dark' ? BG_DARK : BG_LIGHT}
       style={styles.background}
       resizeMode="cover">
       <AppTabs />
@@ -162,11 +172,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.control,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    backgroundColor: Colors.light.backgroundElement,
     fontSize: 16,
   },
   button: {
-    backgroundColor: Colors.light.accent,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',
@@ -175,9 +183,7 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-  buttonText: {
-    color: Colors.light.accentText,
-  },
+  buttonText: {},
   pressed: {
     opacity: 0.85,
   },

@@ -8,16 +8,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { deleteMatch, getMatch } from '@/lib/api/matches';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
-import { BottomTabInset, Colors, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function PartitaDettaglioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
+  const colors = useTheme();
   const { show: showToast } = useToast();
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
@@ -68,7 +70,7 @@ export default function PartitaDettaglioScreen() {
   if (!match) {
     return (
       <ThemedView style={styles.container}>
-        <ActivityIndicator style={styles.loader} color={Colors.light.accent} />
+        <ActivityIndicator style={styles.loader} color={colors.accent} />
       </ThemedView>
     );
   }
@@ -97,7 +99,7 @@ export default function PartitaDettaglioScreen() {
           )}
 
           {match.result && (
-            <ThemedView type="card" style={styles.resultCard}>
+            <ThemedView type="card" style={[styles.resultCard, { borderColor: colors.accent }]}>
               <ThemedText type="smallBold" themeColor="textSecondary">RISULTATO</ThemedText>
               <ThemedText style={styles.resultText}>{match.result}</ThemedText>
               {isAdmin && match.result_notes && (
@@ -118,16 +120,16 @@ export default function PartitaDettaglioScreen() {
           {isAdmin && (
             <View style={styles.adminActions}>
               <Link href={`/partite/${match.id}/edit`} asChild>
-                <Pressable style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}>
-                  <Ionicons name="pencil-outline" size={18} color={Colors.light.text} />
+                <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
+                  <Ionicons name="pencil-outline" size={18} color={colors.text} />
                   <ThemedText type="smallBold">Modifica</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, styles.actionButtonDelete, pressed && styles.pressed]}>
-                <Ionicons name="trash-outline" size={18} color={Colors.light.danger} />
-                <ThemedText type="smallBold" style={{ color: Colors.light.danger }}>Elimina</ThemedText>
+                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
               </Pressable>
             </View>
           )}
@@ -164,7 +166,6 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.one,
     borderWidth: 2,
-    borderColor: Colors.light.accent,
   },
   resultText: {
     fontSize: 32,
@@ -191,12 +192,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.one,
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
-  },
-  actionButtonDelete: {
-    backgroundColor: Colors.light.dangerSoft,
   },
   pressed: {
     opacity: 0.7,
