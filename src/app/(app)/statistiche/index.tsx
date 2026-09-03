@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   statCard: {
     borderRadius: Radius.card,
     padding: Spacing.three,
-    gap: Spacing.half,
+    gap: Spacing.one,
     width: '48%',
     flexGrow: 1,
   },
@@ -418,8 +418,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.one,
   },
   statValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
+    lineHeight: 28,
   },
   card: {
     borderRadius: Radius.card,
