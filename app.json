@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "gkcoach",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.freedo7.gkcoach",
       "buildNumber": "1",
@@ -31,9 +31,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#f2f2f7",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "backgroundColor": "#000000",
+          "image": "./assets/images/gk-coach-logo.jpeg",
+          "imageWidth": 250,
           "resizeMode": "contain"
         }
       ],
