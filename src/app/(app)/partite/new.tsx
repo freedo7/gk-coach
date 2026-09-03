@@ -6,6 +6,7 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { usePlan } from '@/hooks/use-plan';
 import { createMatch } from '@/lib/api/matches';
+import { sendPushToTeam } from '@/lib/api/push';
 
 export default function NuovaPartitaScreen() {
   const { isAdmin, session, currentTeam } = useAuth();
@@ -22,6 +23,7 @@ export default function NuovaPartitaScreen() {
         submitLabel="Crea partita"
         onSubmit={async (input) => {
           await createMatch(input, session.user.id, currentTeam.id);
+          sendPushToTeam(currentTeam.id, 'Nuova partita', `vs ${input.opponent}`);
           showToast('Partita creata');
           router.back();
         }}
