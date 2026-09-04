@@ -1,4 +1,5 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
@@ -14,6 +15,7 @@ import {
 } from '@/lib/api/trainings';
 
 export default function ModificaAllenamentoScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -39,7 +41,7 @@ export default function ModificaAllenamentoScreen() {
       <TrainingForm
         initial={training}
         initialExerciseIds={training.training_exercises.map((te) => te.exercise_id)}
-        submitLabel="Salva modifiche"
+        submitLabel={t('trainings.saveChanges')}
         onSubmit={async (input, exerciseIds) => {
           await updateTraining(id, input);
           await setTrainingExercises(id, exerciseIds);

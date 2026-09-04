@@ -30,17 +30,23 @@ const LANG_OPTIONS: { value: string; label: string; flag: string }[] = [
   { value: 'en', label: 'English', flag: '🇬🇧' },
 ];
 
-const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
-  { value: 'auto', label: 'Automatico', icon: 'phone-portrait-outline' },
-  { value: 'light', label: 'Chiaro', icon: 'sunny-outline' },
-  { value: 'dark', label: 'Scuro', icon: 'moon-outline' },
-];
+function useThemeOptions(): { value: ThemePreference; label: string; icon: string }[] {
+  const { t } = useTranslation();
+  return [
+    { value: 'auto', label: t('settings.themeAuto'), icon: 'phone-portrait-outline' },
+    { value: 'light', label: t('settings.themeLight'), icon: 'sunny-outline' },
+    { value: 'dark', label: t('settings.themeDark'), icon: 'moon-outline' },
+  ];
+}
 
-const ROLE_LABEL: Record<string, string> = {
-  admin: 'Admin',
-  preparatore: 'Preparatore',
-  portiere: 'Portiere',
-};
+function useRoleLabel(): Record<string, string> {
+  const { t } = useTranslation();
+  return {
+    admin: 'Admin',
+    preparatore: t('settings.roleCoach'),
+    portiere: t('settings.roleGoalkeeper'),
+  };
+}
 
 /* ── Row component (iOS-style) ── */
 function SettingsRow({
@@ -100,6 +106,8 @@ function SectionHeader({ title }: { title: string }) {
 
 export default function ImpostazioniScreen() {
   const { t, i18n } = useTranslation();
+  const ROLE_LABEL = useRoleLabel();
+  const THEME_OPTIONS = useThemeOptions();
   const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
   const colors = useTheme();
   const plan = usePlan();
@@ -150,7 +158,7 @@ export default function ImpostazioniScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ThemedText type="title">Impostazioni</ThemedText>
+          <ThemedText type="title">{t('settings.title')}</ThemedText>
 
           {/* Search */}
           <ThemedView type="backgroundElement" style={styles.searchBar}>
@@ -158,7 +166,7 @@ export default function ImpostazioniScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Cerca nelle impostazioni..."
+              placeholder={t('settings.searchPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               style={[styles.searchInput, { color: colors.text }]}
               returnKeyType="search"
@@ -169,13 +177,13 @@ export default function ImpostazioniScreen() {
           {/* ─── ACCOUNT ─── */}
           {(match('account') || match('nome') || match('email') || match('ruolo') || match('password')) && (
             <>
-              <SectionHeader title="ACCOUNT" />
+              <SectionHeader title={t('settings.accountSection')} />
               <ThemedView type="card" style={styles.card}>
                 {match('nome') && (
                   <SettingsRow
                     icon="person-outline"
                     iconBg="#5AC8FA"
-                    label="Nome"
+                    label={t('settings.name')}
                     value={profile.full_name ?? '—'}
                     onPress={() => router.push('/profilo/edit-name')}
                   />
@@ -184,7 +192,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="mail-outline"
                     iconBg="#FF9500"
-                    label="Email"
+                    label={t('settings.email')}
                     value={profile.email}
                   />
                 )}
@@ -192,7 +200,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="shield-outline"
                     iconBg="#AF52DE"
-                    label="Ruolo"
+                    label={t('settings.role')}
                     value={ROLE_LABEL[profile.role]}
                   />
                 )}
@@ -200,7 +208,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="lock-closed-outline"
                     iconBg="#FF3B30"
-                    label="Cambia password"
+                    label={t('settings.changePassword')}
                     onPress={() => router.push('/profilo/edit-password')}
                     last
                   />
@@ -212,13 +220,13 @@ export default function ImpostazioniScreen() {
           {/* ─── SQUADRA ─── */}
           {(match('squadra') || match('team') || match('membri') || match('invita') || match('portieri')) && (
             <>
-              <SectionHeader title="SQUADRA" />
+              <SectionHeader title={t('settings.teamSection')} />
               <ThemedView type="card" style={styles.card}>
                 {match('squadra') && (
                   <SettingsRow
                     icon="people-outline"
                     iconBg="#34C759"
-                    label="Squadra attiva"
+                    label={t('settings.activeTeam')}
                     value={currentTeam?.name ?? '—'}
                     onPress={() => setSwitcherVisible(true)}
                   />
@@ -227,7 +235,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="person-add-outline"
                     iconBg="#007AFF"
-                    label="Membri squadra"
+                    label={t('settings.teamMembers')}
                     onPress={() => router.push('/profilo/utenti')}
                   />
                 )}
@@ -235,7 +243,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="body-outline"
                     iconBg="#FF9500"
-                    label="Portieri"
+                    label={t('settings.goalkeepers')}
                     onPress={() => router.push('/profilo/portieri')}
                   />
                 )}
@@ -243,7 +251,7 @@ export default function ImpostazioniScreen() {
                   <SettingsRow
                     icon="link-outline"
                     iconBg="#5856D6"
-                    label="Invita portieri"
+                    label={t('settings.inviteGoalkeepers')}
                     onPress={() => router.push('/profilo/invite')}
                     last
                   />
@@ -255,13 +263,13 @@ export default function ImpostazioniScreen() {
           {/* ─── ABBONAMENTO ─── */}
           {(match('abbonamento') || match('pro') || match('piano') || match('upgrade')) && (
             <>
-              <SectionHeader title="ABBONAMENTO" />
+              <SectionHeader title={t('settings.subscriptionSection')} />
               <ThemedView type="card" style={styles.card}>
                 <SettingsRow
                   icon="star-outline"
                   iconBg={plan.tier === 'pro' ? '#FFD60A' : '#FF9500'}
                   iconColor={plan.tier === 'pro' ? '#000' : '#fff'}
-                  label="Piano attuale"
+                  label={t('settings.currentPlan')}
                   value={planLabel}
                   onPress={() => router.push('/profilo/paywall')}
                   last
@@ -273,12 +281,12 @@ export default function ImpostazioniScreen() {
           {/* ─── NOTIFICHE ─── */}
           {match('notifiche') && (
             <>
-              <SectionHeader title="NOTIFICHE" />
+              <SectionHeader title={t('settings.notificationsSection')} />
               <ThemedView type="card" style={styles.card}>
                 <SettingsRow
                   icon="notifications-outline"
                   iconBg="#FF3B30"
-                  label="Notifiche push"
+                  label={t('settings.pushNotifications')}
                   trailing={
                     <Switch
                       value={notificheEnabled}
@@ -296,7 +304,7 @@ export default function ImpostazioniScreen() {
           {/* ─── ASPETTO ─── */}
           {(match('aspetto') || match('tema')) && (
             <>
-              <SectionHeader title="ASPETTO" />
+              <SectionHeader title={t('settings.appearanceSection')} />
               <ThemedView type="card" style={styles.card}>
                 {THEME_OPTIONS.map((opt, idx) => (
                   <Pressable
@@ -354,7 +362,7 @@ export default function ImpostazioniScreen() {
                 onPress={() => { haptic('warning'); signOut(); }}
                 style={({ pressed }) => [styles.logoutRow, pressed && styles.pressed]}>
                 <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-                <ThemedText type="default" style={{ color: colors.danger }}>Esci</ThemedText>
+                <ThemedText type="default" style={{ color: colors.danger }}>{t('settings.logout')}</ThemedText>
               </Pressable>
             </ThemedView>
           </View>
@@ -370,7 +378,7 @@ export default function ImpostazioniScreen() {
       <Modal visible={switcherVisible} transparent animationType="slide" onRequestClose={() => setSwitcherVisible(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSwitcherVisible(false)} />
         <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
-          <ThemedText type="subtitle" style={styles.modalTitle}>Le tue squadre</ThemedText>
+          <ThemedText type="subtitle" style={styles.modalTitle}>{t('settings.yourTeams')}</ThemedText>
 
           {teams.map((team) => (
             <Pressable
@@ -393,14 +401,14 @@ export default function ImpostazioniScreen() {
             <Pressable
               onPress={() => setShowCreateForm(true)}
               style={({ pressed }) => [styles.newTeamBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={{ color: colors.accent }}>+ Nuova squadra</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('settings.newTeam')}</ThemedText>
             </Pressable>
           )}
 
           {isAdmin && showCreateForm && (
             <View style={styles.createForm}>
               <TextInput
-                placeholder="Nome squadra"
+                placeholder={t('settings.teamNamePlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 value={newTeamName}
                 onChangeText={setNewTeamName}
@@ -423,7 +431,7 @@ export default function ImpostazioniScreen() {
                 ]}>
                 {creatingTeam
                   ? <ActivityIndicator color={colors.accentText} />
-                  : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Crea</ThemedText>}
+                  : <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('common.create')}</ThemedText>}
               </Pressable>
             </View>
           )}

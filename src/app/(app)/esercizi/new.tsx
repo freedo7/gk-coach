@@ -1,4 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ExerciseForm } from '@/components/exercise-form';
 import { ThemedView } from '@/components/themed-view';
@@ -7,6 +8,7 @@ import { usePlan } from '@/hooks/use-plan';
 import { createExercise } from '@/lib/api/exercises';
 
 export default function NuovoEsercizioScreen() {
+  const { t } = useTranslation();
   const { isAdmin, session, currentTeam } = useAuth();
   const { canAddContent } = usePlan();
   const router = useRouter();
@@ -17,7 +19,7 @@ export default function NuovoEsercizioScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
       <ExerciseForm
-        submitLabel="Crea esercizio"
+        submitLabel={t('exercises.createExercise')}
         onSubmit={async (input) => {
           await createExercise(input, session.user.id, currentTeam.id);
           router.back();

@@ -347,6 +347,35 @@ export default {
     notAuthenticated: 'Not authenticated',
   },
 
+  // Navigation
+  nav: {
+    back: 'Back',
+    newTraining: 'New training',
+    training: 'Training',
+    editTraining: 'Edit training',
+    newExercise: 'New exercise',
+    exercise: 'Exercise',
+    editExercise: 'Edit exercise',
+    exerciseSheet: 'Exercise sheet',
+    newMatch: 'New match',
+    match: 'Match',
+    editMatch: 'Edit match',
+    editName: 'Edit name',
+    changePassword: 'Change password',
+    teamMembers: 'Team members',
+    inviteGoalkeepers: 'Invite goalkeepers',
+    goalkeepers: 'Goalkeepers',
+    goalkeeperProfile: 'Goalkeeper profile',
+  },
+
+  // Purchases
+  purchases: {
+    notAvailable: 'Not available',
+    notAvailableVersion: 'Purchases not available in this version.',
+    purchaseError: 'Error during purchase.',
+    restoreError: 'Error during restore.',
+  },
+
   // Team setup
   teamSetup: {
     createTitle: 'Create your team',

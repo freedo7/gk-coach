@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTranslation } from 'react-i18next';
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UpgradeBanner } from '@/components/upgrade-banner';
@@ -16,6 +18,7 @@ import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function EsercizioDettaglioScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -43,15 +46,15 @@ export default function EsercizioDettaglioScreen() {
 
   function handleDelete() {
     haptic('warning');
-    Alert.alert('Eliminare l\'esercizio?', exercise?.title, [
-      { text: 'Annulla', style: 'cancel' },
+    Alert.alert(t('exercises.deleteExerciseConfirm'), exercise?.title, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Elimina',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          showToast('Esercizio eliminato');
+          showToast(t('exercises.exerciseDeleted'));
           router.back();
-          deleteExercise(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
+          deleteExercise(id).catch(() => showToast(t('exercises.deleteError'), 'error'));
         },
       },
     ]);
@@ -102,11 +105,11 @@ export default function EsercizioDettaglioScreen() {
                 onPress={() => Linking.openURL(exercise.video_url!)}
                 style={({ pressed }) => [styles.actionLink, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
                 <ThemedText type="smallBold" style={{ color: colors.accent }}>
-                  ▶ Guarda il video
+                  {t('exercises.watchVideo')}
                 </ThemedText>
               </Pressable>
             ) : (
-              <UpgradeBanner message="Video disponibile nel piano Pro" />
+              <UpgradeBanner message={t('exercises.videoProOnly')} />
             )
           )}
 
@@ -116,11 +119,11 @@ export default function EsercizioDettaglioScreen() {
                 onPress={() => router.push({ pathname: '/esercizi/scheda', params: { url: exercise.content_url! } })}
                 style={({ pressed }) => [styles.actionLink, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
                 <ThemedText type="smallBold" style={{ color: colors.accent }}>
-                  📄 Apri scheda esercizio
+                  {t('exercises.openSheet')}
                 </ThemedText>
               </Pressable>
             ) : (
-              <UpgradeBanner message="Scheda PDF disponibile nel piano Pro" />
+              <UpgradeBanner message={t('exercises.sheetProOnly')} />
             )
           )}
 
@@ -129,14 +132,14 @@ export default function EsercizioDettaglioScreen() {
               <Link href={`/esercizi/${exercise.id}/edit`} asChild>
                 <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
                   <Ionicons name="pencil-outline" size={18} color={colors.text} />
-                  <ThemedText type="smallBold">Modifica</ThemedText>
+                  <ThemedText type="smallBold">{t('common.edit')}</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
                 style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
                 <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
+                <ThemedText type="smallBold" style={{ color: colors.danger }}>{t('common.delete')}</ThemedText>
               </Pressable>
             </ThemedView>
           )}

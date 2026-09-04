@@ -4,6 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
+
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,14 +17,15 @@ import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 type DifficultyFilter = 'tutti' | 'base' | 'intermedio' | 'avanzato';
 
-const DIFFICULTY_LABELS: { value: DifficultyFilter; label: string }[] = [
-  { value: 'tutti', label: 'Tutti' },
-  { value: 'base', label: 'Base' },
-  { value: 'intermedio', label: 'Intermedio' },
-  { value: 'avanzato', label: 'Avanzato' },
-];
-
 export default function CategoriaScreen() {
+  const { t } = useTranslation();
+
+  const DIFFICULTY_LABELS: { value: DifficultyFilter; label: string }[] = [
+    { value: 'tutti', label: t('exercises.difficultyAll') },
+    { value: 'base', label: t('exercises.difficultyBase') },
+    { value: 'intermedio', label: t('exercises.difficultyIntermediate') },
+    { value: 'avanzato', label: t('exercises.difficultyAdvanced') },
+  ];
   const { id, title } = useLocalSearchParams<{ id: string; title: string }>();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
@@ -98,12 +101,12 @@ export default function CategoriaScreen() {
           {filtered !== null && filtered.length === 0 && (
             <EmptyState
               icon="book-outline"
-              title="Nessun esercizio"
+              title={t('exercises.noExercises')}
               subtitle={exercises?.length === 0
                 ? isAdmin
-                  ? 'Aggiungine uno con il pulsante + in basso.'
-                  : 'Nessun esercizio in questa categoria.'
-                : 'Nessun esercizio con questo livello di difficoltà.'}
+                  ? t('exercises.addOneAdmin')
+                  : t('exercises.noneInCategory')
+                : t('exercises.noneWithDifficulty')}
             />
           )}
 

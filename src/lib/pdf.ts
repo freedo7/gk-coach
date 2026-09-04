@@ -1,6 +1,7 @@
 import type { TrainingWithExercises } from '@/lib/api/trainings';
 import type { Match, Goalkeeper } from '@/types/database';
 import { formatDateLong, formatTime } from '@/lib/format';
+import i18n from '@/lib/i18n';
 
 const APP_URL = 'https://gk-coach.app';
 const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(APP_URL)}`;
@@ -9,17 +10,19 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-const footerHtml = `
+function getFooterHtml() {
+  return `
   <div class="footer">
     <div class="footer-inner">
       <img src="${QR_URL}" width="70" height="70" alt="QR" />
       <div>
         <div class="footer-brand">GK Coach</div>
-        <div class="footer-tagline">L'app per i preparatori dei portieri</div>
+        <div class="footer-tagline">${i18n.t('pdf.tagline')}</div>
         <div class="footer-link">${APP_URL}</div>
       </div>
     </div>
   </div>`;
+}
 
 const footerCss = `
   .footer { margin-top: 40px; border-top: 1px solid #E5E5E5; padding-top: 20px; }
@@ -55,7 +58,7 @@ export async function generateTrainingPdf(training: TrainingWithExercises): Prom
             </div>
           </div>
           <div class="ex-desc">${escapeHtml(ex.description)}</div>
-          ${te.note ? `<div class="ex-note">Nota: ${escapeHtml(te.note)}</div>` : ''}
+          ${te.note ? `<div class="ex-note">${i18n.t('pdf.note')}${escapeHtml(te.note)}</div>` : ''}
         </div>`;
     })
     .join('');
@@ -91,11 +94,11 @@ export async function generateTrainingPdf(training: TrainingWithExercises): Prom
       </div>
 
       ${training.training_exercises.length > 0 ? `
-        <div class="section-title">Esercizi (${training.training_exercises.length})</div>
+        <div class="section-title">${i18n.t('pdf.exercisesCount', { count: training.training_exercises.length })}</div>
         ${exercisesHtml}
-      ` : '<p style="color:#60646C">Nessun esercizio assegnato.</p>'}
+      ` : `<p style="color:#60646C">${i18n.t('pdf.noExercises')}</p>`}
 
-      ${footerHtml}
+      ${getFooterHtml()}
     </body>
     </html>`;
 
@@ -172,47 +175,47 @@ export async function generateGoalkeeperPdf(
     <body>
       <div class="header">
         <div class="name">${escapeHtml(goalkeeper.name)}</div>
-        <div class="date">Report generato il ${today}</div>
+        <div class="date">${i18n.t('pdf.reportDate', { date: today })}</div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-box">
           <div class="stat-value">${avgRating}</div>
-          <div class="stat-label">Media voto</div>
+          <div class="stat-label">${i18n.t('pdf.avgRating')}</div>
         </div>
         <div class="stat-box">
           <div class="stat-value" style="color:#1a1a1a">${matches.length}</div>
-          <div class="stat-label">Partite</div>
+          <div class="stat-label">${i18n.t('pdf.matches')}</div>
         </div>
         <div class="stat-box">
           <div class="stat-value" style="color:#1a1a1a">${trainingsCount}</div>
-          <div class="stat-label">Allenamenti</div>
+          <div class="stat-label">${i18n.t('pdf.trainings')}</div>
         </div>
         <div class="stat-box">
           <div class="stat-value" style="color:#5AC8FA">${cleanSheets}</div>
-          <div class="stat-label">Clean sheet</div>
+          <div class="stat-label">${i18n.t('pdf.cleanSheets')}</div>
         </div>
       </div>
 
       ${matchesWithScore.length > 0 ? `
-        <div class="section-title">Risultati</div>
+        <div class="section-title">${i18n.t('pdf.results')}</div>
         <div class="results">
-          <div class="result-item"><div class="result-num win">${wins}</div><div class="result-label">Vittorie</div></div>
-          <div class="result-item"><div class="result-num draw">${draws}</div><div class="result-label">Pareggi</div></div>
-          <div class="result-item"><div class="result-num loss">${losses}</div><div class="result-label">Sconfitte</div></div>
+          <div class="result-item"><div class="result-num win">${wins}</div><div class="result-label">${i18n.t('pdf.wins')}</div></div>
+          <div class="result-item"><div class="result-num draw">${draws}</div><div class="result-label">${i18n.t('pdf.draws')}</div></div>
+          <div class="result-item"><div class="result-num loss">${losses}</div><div class="result-label">${i18n.t('pdf.losses')}</div></div>
         </div>
-        <p style="font-size:13px; color:#60646C; margin-bottom:20px">Media gol subiti: <strong style="color:#1a1a1a">${avgConceded}</strong></p>
+        <p style="font-size:13px; color:#60646C; margin-bottom:20px">${i18n.t('pdf.avgConceded')} <strong style="color:#1a1a1a">${avgConceded}</strong></p>
       ` : ''}
 
       ${matches.length > 0 ? `
-        <div class="section-title">Storico partite</div>
+        <div class="section-title">${i18n.t('pdf.matchHistory')}</div>
         <table>
-          <thead><tr><th>Data</th><th>Avversario</th><th style="text-align:center">Risultato</th><th style="text-align:center">Voto</th></tr></thead>
+          <thead><tr><th>${i18n.t('pdf.date')}</th><th>${i18n.t('pdf.opponent')}</th><th style="text-align:center">${i18n.t('pdf.result')}</th><th style="text-align:center">${i18n.t('pdf.rating')}</th></tr></thead>
           <tbody>${matchRows}</tbody>
         </table>
-      ` : '<p style="color:#60646C">Nessuna partita registrata.</p>'}
+      ` : `<p style="color:#60646C">${i18n.t('pdf.noMatches')}</p>`}
 
-      ${footerHtml}
+      ${getFooterHtml()}
     </body>
     </html>`;
 

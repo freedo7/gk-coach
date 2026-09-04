@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router';
 import { ActivityIndicator, ImageBackground, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import AppTabs from '@/components/app-tabs';
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +16,7 @@ const BG_LIGHT = require('@/assets/images/sfondo.jpg');
 const BG_DARK = require('@/assets/images/sfondo-dark.png');
 
 function CreateTeamSetup() {
+  const { t } = useTranslation();
   const { createTeam } = useAuth();
   const colors = useTheme();
   const [name, setName] = useState('');
@@ -33,13 +35,13 @@ function CreateTeamSetup() {
   return (
     <ThemedView style={styles.gateContainer}>
       <SafeAreaView style={styles.gateSafe}>
-        <ThemedText type="title" style={styles.gateTitle}>Crea la tua squadra</ThemedText>
+        <ThemedText type="title" style={styles.gateTitle}>{t('teamSetup.createTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.gateSubtitle}>
-          Inserisci il nome della squadra per iniziare. Potrai invitare i portieri in seguito.
+          {t('teamSetup.createSubtitle')}
         </ThemedText>
         <ThemedView type="card" style={styles.gateCard}>
           <TextInput
-            placeholder="Nome squadra"
+            placeholder={t('teamSetup.teamNamePlaceholder')}
             placeholderTextColor={colors.textSecondary}
             value={name}
             onChangeText={setName}
@@ -58,7 +60,7 @@ function CreateTeamSetup() {
             {submitting ? (
               <ActivityIndicator color={colors.accentText} />
             ) : (
-              <ThemedText type="smallBold" style={{ color: colors.accentText }}>Crea squadra</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('teamSetup.createButton')}</ThemedText>
             )}
           </Pressable>
         </ThemedView>
@@ -68,6 +70,7 @@ function CreateTeamSetup() {
 }
 
 function JoinTeamSetup() {
+  const { t } = useTranslation();
   const { joinTeam } = useAuth();
   const colors = useTheme();
   const [code, setCode] = useState('');
@@ -86,13 +89,13 @@ function JoinTeamSetup() {
   return (
     <ThemedView style={styles.gateContainer}>
       <SafeAreaView style={styles.gateSafe}>
-        <ThemedText type="title" style={styles.gateTitle}>Unisciti a una squadra</ThemedText>
+        <ThemedText type="title" style={styles.gateTitle}>{t('teamSetup.joinTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.gateSubtitle}>
-          Inserisci il codice squadra ricevuto dal tuo preparatore.
+          {t('teamSetup.joinSubtitle')}
         </ThemedText>
         <ThemedView type="card" style={styles.gateCard}>
           <TextInput
-            placeholder="Codice squadra (es. GK-ABC123)"
+            placeholder={t('teamSetup.teamCodePlaceholder')}
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="characters"
             value={code}
@@ -112,7 +115,7 @@ function JoinTeamSetup() {
             {submitting ? (
               <ActivityIndicator color={colors.accentText} />
             ) : (
-              <ThemedText type="smallBold" style={{ color: colors.accentText }}>Entra nella squadra</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('teamSetup.joinButton')}</ThemedText>
             )}
           </Pressable>
         </ThemedView>

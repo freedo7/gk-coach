@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { useAuth } from '@/context/auth-context';
+import i18n from '@/lib/i18n';
 
 export const PRO_ENTITLEMENT = 'pro';
 
@@ -24,8 +25,8 @@ const PurchasesContext = createContext<PurchasesContextValue>({
   isPro: false,
   loading: false,
   packages: [],
-  purchasePackage: async () => ({ error: 'Non disponibile' }),
-  restorePurchases: async () => ({ error: 'Non disponibile' }),
+  purchasePackage: async () => ({ error: i18n.t('purchases.notAvailable') }),
+  restorePurchases: async () => ({ error: i18n.t('purchases.notAvailable') }),
 });
 
 export function PurchasesProvider({ children }: { children: React.ReactNode }) {
@@ -88,25 +89,25 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user.id, profile?.role]);
 
   async function purchasePackage(pkg: RCPackage): Promise<{ error: string | null }> {
-    if (!Purchases) return { error: 'Acquisti non disponibili in questa versione.' };
+    if (!Purchases) return { error: i18n.t('purchases.notAvailableVersion') };
     try {
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       setIsPro(customerInfo.entitlements.active[PRO_ENTITLEMENT] != null);
       return { error: null };
     } catch (e: any) {
       if (e?.userCancelled) return { error: null };
-      return { error: e?.message ?? 'Errore durante l\'acquisto.' };
+      return { error: e?.message ?? i18n.t('purchases.purchaseError') };
     }
   }
 
   async function restorePurchases(): Promise<{ error: string | null }> {
-    if (!Purchases) return { error: 'Acquisti non disponibili in questa versione.' };
+    if (!Purchases) return { error: i18n.t('purchases.notAvailableVersion') };
     try {
       const info = await Purchases.restorePurchases();
       setIsPro(info.entitlements.active[PRO_ENTITLEMENT] != null);
       return { error: null };
     } catch (e: any) {
-      return { error: e?.message ?? 'Errore durante il ripristino.' };
+      return { error: e?.message ?? i18n.t('purchases.restoreError') };
     }
   }
 

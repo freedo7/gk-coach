@@ -4,6 +4,8 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTranslation } from 'react-i18next';
+
 import { EmptyState } from '@/components/empty-state';
 import { IconTecnicaBase } from '@/components/icons/icon-tecnica-base';
 import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
@@ -23,6 +25,7 @@ function CategoryIcon({ icon, size, color }: { icon: string | null; size: number
 }
 
 export default function EserciziScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -62,12 +65,12 @@ export default function EserciziScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.pageHeader}>
-          <ThemedText type="title">Esercizi</ThemedText>
+          <ThemedText type="title">{t('exercises.title')}</ThemedText>
           {isAdmin && (
             <Pressable
               onPress={() => router.push('/esercizi/new')}
               style={({ pressed }) => [styles.addBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
-              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>+ Nuovo</ThemedText>
+              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>{t('exercises.newExercise')}</ThemedText>
             </Pressable>
           )}
         </View>
@@ -78,7 +81,7 @@ export default function EserciziScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Cerca esercizi..."
+              placeholder={t('exercises.searchPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               style={[styles.searchInput, { color: colors.text }]}
               returnKeyType="search"
@@ -98,7 +101,7 @@ export default function EserciziScreen() {
         {searchResults !== null ? (
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {searchResults.length === 0 ? (
-              <EmptyState icon="search-outline" title="Nessun risultato" subtitle={`Nessun esercizio trovato per "${trimmed}".`} />
+              <EmptyState icon="search-outline" title={t('common.noResults')} subtitle={t('exercises.noResultsFor', { query: trimmed })} />
             ) : (
               searchResults.map((exercise) => (
                 <Pressable

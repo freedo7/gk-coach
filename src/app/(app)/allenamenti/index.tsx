@@ -22,15 +22,6 @@ import { formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
-LocaleConfig.locales['it'] = {
-  monthNames: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-  monthNamesShort: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
-  dayNames: ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],
-  dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
-  today: 'Oggi',
-};
-LocaleConfig.defaultLocale = 'it';
-
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -38,6 +29,16 @@ function todayISO() {
 
 export default function AllenamentiScreen() {
   const { t } = useTranslation();
+
+  // Configure calendar locale with translated strings
+  LocaleConfig.locales['it'] = {
+    monthNames: t('calendar.monthNames', { returnObjects: true }) as string[],
+    monthNamesShort: t('calendar.monthNamesShort', { returnObjects: true }) as string[],
+    dayNames: t('calendar.dayNames', { returnObjects: true }) as string[],
+    dayNamesShort: t('calendar.dayNamesShort', { returnObjects: true }) as string[],
+    today: t('calendar.today'),
+  };
+  LocaleConfig.defaultLocale = 'it';
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();

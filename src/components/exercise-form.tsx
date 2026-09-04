@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -68,18 +70,18 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ThemedText type="smallBold" themeColor="textSecondary">
-        Titolo
+        {t('exerciseForm.titleLabel')}
       </ThemedText>
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="Es. Presa alta in tuffo"
+        placeholder={t('exerciseForm.titlePlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Categoria
+        {t('exerciseForm.category')}
       </ThemedText>
       {categories === null ? (
         <ActivityIndicator color={colors.accent} style={styles.spacing} />
@@ -103,7 +105,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
       )}
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Difficoltà (opzionale)
+        {t('exerciseForm.difficulty')}
       </ThemedText>
       <ThemedView style={styles.chipRow}>
         {(['base', 'intermedio', 'avanzato'] as const).map((level) => {
@@ -125,25 +127,25 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Durata in minuti (opzionale)
+        {t('exerciseForm.duration')}
       </ThemedText>
       <TextInput
         value={durationMinutes}
         onChangeText={setDurationMinutes}
-        placeholder="Es. 15"
+        placeholder={t('exerciseForm.durationPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         keyboardType="number-pad"
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Serie e ripetizioni (opzionale)
+        {t('exerciseForm.setsReps')}
       </ThemedText>
       <ThemedView style={styles.setsRow}>
         <TextInput
           value={sets}
           onChangeText={setSets}
-          placeholder="Serie"
+          placeholder={t('exerciseForm.setsPlaceholder')}
           placeholderTextColor={colors.textSecondary}
           keyboardType="number-pad"
           style={[styles.input, styles.setsInput, { backgroundColor: colors.backgroundElement, color: colors.text }]}
@@ -152,7 +154,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         <TextInput
           value={reps}
           onChangeText={setReps}
-          placeholder="Ripetizioni"
+          placeholder={t('exerciseForm.repsPlaceholder')}
           placeholderTextColor={colors.textSecondary}
           keyboardType="number-pad"
           style={[styles.input, styles.setsInput, { backgroundColor: colors.backgroundElement, color: colors.text }]}
@@ -160,23 +162,23 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Attrezzatura (opzionale)
+        {t('exerciseForm.equipment')}
       </ThemedText>
       <TextInput
         value={equipment}
         onChangeText={setEquipment}
-        placeholder="Es. Pallone, coni, ostacoli"
+        placeholder={t('exerciseForm.equipmentPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Istruzioni
+        {t('exerciseForm.instructions')}
       </ThemedText>
       <TextInput
         value={description}
         onChangeText={setDescription}
-        placeholder="Descrivi l'esercizio, i passaggi, le variabili..."
+        placeholder={t('exerciseForm.instructionsPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={6}
@@ -184,7 +186,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Link video (opzionale)
+        {t('exerciseForm.videoUrl')}
       </ThemedText>
       <TextInput
         value={videoUrl}
@@ -197,7 +199,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        URL scheda HTML (opzionale)
+        {t('exerciseForm.contentUrl')}
       </ThemedText>
       <TextInput
         value={contentUrl}

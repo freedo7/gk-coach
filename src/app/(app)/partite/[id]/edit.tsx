@@ -1,4 +1,5 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
@@ -10,6 +11,7 @@ import { getMatch, updateMatch } from '@/lib/api/matches';
 import type { Match } from '@/types/database';
 
 export default function ModificaPartitaScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -34,7 +36,7 @@ export default function ModificaPartitaScreen() {
     <ThemedView style={{ flex: 1 }}>
       <MatchForm
         initial={match}
-        submitLabel="Salva modifiche"
+        submitLabel={t('matches.saveChanges')}
         onSubmit={async (input) => {
           await updateMatch(id, input);
           router.back();

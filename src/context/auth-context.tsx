@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
+import i18n from '@/lib/i18n';
 import { listMyTeams, createTeam as apiCreateTeam, joinTeamByCode as apiJoinTeamByCode } from '@/lib/api/teams';
 import type { Profile, Team } from '@/types/database';
 
@@ -131,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function createTeam(name: string) {
-    if (!session) return { error: 'Non autenticato' };
+    if (!session) return { error: i18n.t('auth.notAuthenticated') };
     try {
       const team = await apiCreateTeam(name, session.user.id);
       const updated = [...teams, team];

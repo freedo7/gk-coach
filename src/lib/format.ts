@@ -1,11 +1,9 @@
-const WEEKDAYS = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-const MONTHS = [
-  'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-  'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre',
-];
+import i18n from '@/lib/i18n';
 
 // `dateStr` in formato YYYY-MM-DD (come restituito da Postgres per le colonne `date`).
 export function formatDateLong(dateStr: string): string {
+  const WEEKDAYS = i18n.t('format.weekdays', { returnObjects: true }) as string[];
+  const MONTHS = i18n.t('format.months', { returnObjects: true }) as string[];
   const [year, month, day] = dateStr.split('-').map(Number);
   const date = new Date(year, month - 1, day);
   return `${WEEKDAYS[date.getDay()]} ${day} ${MONTHS[month - 1]}`;

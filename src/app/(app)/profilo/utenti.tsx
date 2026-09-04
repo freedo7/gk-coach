@@ -12,14 +12,14 @@ import { useTheme } from '@/hooks/use-theme';
 import { listTeamMembers, removeTeamMember, type TeamMemberWithProfile } from '@/lib/api/teams';
 import { Radius, Spacing } from '@/constants/theme';
 
-const ROLE_LABEL: Record<string, string> = {
-  admin: 'Admin',
-  preparatore: 'Preparatore',
-  portiere: 'Portiere',
-};
-
 export default function UtentiScreen() {
   const { t } = useTranslation();
+
+  const ROLE_LABEL: Record<string, string> = {
+    admin: 'Admin',
+    preparatore: t('settings.roleCoach'),
+    portiere: t('settings.roleGoalkeeper'),
+  };
   const { isAdmin, currentTeam, profile } = useAuth();
   const colors = useTheme();
   const router = useRouter();

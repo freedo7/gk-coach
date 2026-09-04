@@ -347,6 +347,35 @@ export default {
     notAuthenticated: 'Non autenticato',
   },
 
+  // Navigation
+  nav: {
+    back: 'Indietro',
+    newTraining: 'Nuovo allenamento',
+    training: 'Allenamento',
+    editTraining: 'Modifica allenamento',
+    newExercise: 'Nuovo esercizio',
+    exercise: 'Esercizio',
+    editExercise: 'Modifica esercizio',
+    exerciseSheet: 'Scheda esercizio',
+    newMatch: 'Nuova partita',
+    match: 'Partita',
+    editMatch: 'Modifica partita',
+    editName: 'Modifica nome',
+    changePassword: 'Cambia password',
+    teamMembers: 'Membri squadra',
+    inviteGoalkeepers: 'Invita portieri',
+    goalkeepers: 'Portieri',
+    goalkeeperProfile: 'Scheda portiere',
+  },
+
+  // Purchases
+  purchases: {
+    notAvailable: 'Non disponibile',
+    notAvailableVersion: 'Acquisti non disponibili in questa versione.',
+    purchaseError: "Errore durante l'acquisto.",
+    restoreError: 'Errore durante il ripristino.',
+  },
+
   // Team setup
   teamSetup: {
     createTitle: 'Crea la tua squadra',

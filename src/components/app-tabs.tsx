@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,6 +16,7 @@ function TabIcon({ name, color, focused }: { name: string; color: string; focuse
 }
 
 export default function AppTabs() {
+  const { t } = useTranslation();
   const colors = useTheme();
 
   return (
@@ -45,28 +47,28 @@ export default function AppTabs() {
       <Tabs.Screen
         name="allenamenti"
         options={{
-          title: 'Allenamenti',
+          title: t('tabs.trainings'),
           tabBarIcon: ({ color, focused }) => <TabIcon name="calendar-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="partite"
         options={{
-          title: 'Partite',
+          title: t('tabs.matches'),
           tabBarIcon: ({ color, focused }) => <TabIcon name="football-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="statistiche"
         options={{
-          title: 'Statistiche',
+          title: t('tabs.stats'),
           tabBarIcon: ({ color, focused }) => <TabIcon name="bar-chart-outline" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profilo"
         options={{
-          title: 'Impostazioni',
+          title: t('tabs.settings'),
           tabBarIcon: ({ color, focused }) => <TabIcon name="settings-outline" color={color} focused={focused} />,
         }}
       />

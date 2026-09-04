@@ -1,4 +1,5 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
@@ -9,6 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { getExercise, updateExercise, type ExerciseWithCategory } from '@/lib/api/exercises';
 
 export default function ModificaEsercizioScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -33,7 +35,7 @@ export default function ModificaEsercizioScreen() {
     <ThemedView style={{ flex: 1 }}>
       <ExerciseForm
         initial={exercise}
-        submitLabel="Salva modifiche"
+        submitLabel={t('exercises.saveChanges')}
         onSubmit={async (input) => {
           await updateExercise(id, input);
           router.back();

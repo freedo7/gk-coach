@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SwipeableRow } from '@/components/swipeable-row';
@@ -11,6 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { Radius, Spacing } from '@/constants/theme';
 
 export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boolean; onDelete?: () => void | Promise<void> }) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const time = formatTime(match.match_time);
   const content = (
@@ -64,7 +66,7 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
     <SwipeableRow
       enabled={!!onDelete}
       onDelete={onDelete ?? (() => {})}
-      confirmTitle="Eliminare la partita?"
+      confirmTitle={t('matches.deleteMatchConfirm')}
       confirmMessage={match.opponent}
     >
       {content}
