@@ -90,6 +90,15 @@ export interface TrainingExercise {
   note: string | null;
 }
 
+export interface TrainingComment {
+  id: string;
+  training_id: string;
+  profile_id: string;
+  text: string;
+  created_at: string;
+  profile?: { full_name: string | null };
+}
+
 export interface Match {
   id: string;
   team_id: string | null;

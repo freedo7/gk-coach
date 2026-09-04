@@ -63,6 +63,16 @@ export default {
     notePrefix: 'Nota: ',
     exportPdf: 'Esporta PDF',
     pdfError: 'Impossibile generare il PDF.',
+    comments: 'COMMENTI',
+    noComments: 'Nessun commento ancora.',
+    commentPlaceholder: 'Scrivi un commento...',
+    sendComment: 'Invia',
+    commentAdded: 'Commento inviato',
+    commentError: "Errore nell'invio del commento",
+    commentDeleted: 'Commento eliminato',
+    deleteCommentConfirm: 'Eliminare il commento?',
+    newCommentPush: '💬 Nuovo commento',
+    newCommentBody: '{{name}} ha commentato "{{training}}"',
   },
 
   // Exercises

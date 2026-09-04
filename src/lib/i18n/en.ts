@@ -63,6 +63,16 @@ export default {
     notePrefix: 'Note: ',
     exportPdf: 'Export PDF',
     pdfError: 'Unable to generate PDF.',
+    comments: 'COMMENTS',
+    noComments: 'No comments yet.',
+    commentPlaceholder: 'Write a comment...',
+    sendComment: 'Send',
+    commentAdded: 'Comment sent',
+    commentError: 'Error sending comment',
+    commentDeleted: 'Comment deleted',
+    deleteCommentConfirm: 'Delete this comment?',
+    newCommentPush: '💬 New comment',
+    newCommentBody: '{{name}} commented on "{{training}}"',
   },
 
   // Exercises

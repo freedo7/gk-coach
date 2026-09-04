@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Training, TrainingExercise, Exercise } from '@/types/database';
+import type { Training, TrainingExercise, Exercise, TrainingComment } from '@/types/database';
 
 export interface TrainingExerciseWithExercise extends TrainingExercise {
   exercise: Exercise;
@@ -72,6 +72,31 @@ export async function toggleTrainingCompleted(id: string, completed: boolean) {
 
 export async function deleteTraining(id: string) {
   const { error } = await supabase.from('trainings').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function listComments(trainingId: string): Promise<TrainingComment[]> {
+  const { data, error } = await supabase
+    .from('training_comments')
+    .select('*, profile:profiles(full_name)')
+    .eq('training_id', trainingId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data as unknown as TrainingComment[];
+}
+
+export async function addComment(trainingId: string, profileId: string, text: string): Promise<TrainingComment> {
+  const { data, error } = await supabase
+    .from('training_comments')
+    .insert({ training_id: trainingId, profile_id: profileId, text })
+    .select('*, profile:profiles(full_name)')
+    .single();
+  if (error) throw error;
+  return data as unknown as TrainingComment;
+}
+
+export async function deleteComment(id: string) {
+  const { error } = await supabase.from('training_comments').delete().eq('id', id);
   if (error) throw error;
 }
 
