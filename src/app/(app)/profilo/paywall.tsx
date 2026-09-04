@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,10 +12,10 @@ import { usePurchases, type RCPackage } from '@/context/purchases-context';
 import { Radius, Spacing } from '@/constants/theme';
 
 const FEATURES = [
-  { icon: 'people-outline', base: '1 squadra, 2 portieri', pro: 'Squadre e portieri illimitati' },
-  { icon: 'add-circle-outline', base: 'Solo visualizzazione', pro: 'Crea allenamenti, partite, esercizi' },
-  { icon: 'play-circle-outline', base: 'Nessun video', pro: 'Video e schede PDF inclusi' },
-  { icon: 'document-text-outline', base: 'Descrizioni base', pro: 'Contenuti ricchi e dettagliati' },
+  { icon: 'people-outline', baseKey: 'paywall.features.baseTeam', proKey: 'paywall.features.proTeam' },
+  { icon: 'add-circle-outline', baseKey: 'paywall.features.baseView', proKey: 'paywall.features.proCreate' },
+  { icon: 'play-circle-outline', baseKey: 'paywall.features.baseVideo', proKey: 'paywall.features.proVideo' },
+  { icon: 'document-text-outline', baseKey: 'paywall.features.baseContent', proKey: 'paywall.features.proContent' },
 ];
 
 const PKG_ORDER: Record<string, number> = {
@@ -23,17 +24,18 @@ const PKG_ORDER: Record<string, number> = {
   $rc_lifetime: 2,
 };
 
-const PKG_LABEL: Record<string, string> = {
-  $rc_monthly: 'Mensile',
-  $rc_annual: 'Annuale',
-  $rc_lifetime: 'A vita',
+const PKG_LABEL_KEY: Record<string, string> = {
+  $rc_monthly: 'paywall.monthly',
+  $rc_annual: 'paywall.yearly',
+  $rc_lifetime: 'paywall.lifetime',
 };
 
-const PKG_BADGE: Record<string, string | undefined> = {
-  $rc_annual: 'Risparmia',
+const PKG_BADGE_KEY: Record<string, string | undefined> = {
+  $rc_annual: 'paywall.saveBadge',
 };
 
 export default function PaywallScreen() {
+  const { t } = useTranslation();
   const colors = useTheme();
   const plan = usePlan();
   const { purchasePackage, restorePurchases, packages } = usePurchases();
@@ -50,16 +52,16 @@ export default function PaywallScreen() {
   // Seleziona automaticamente l'annuale se disponibile, altrimenti il primo
   const activePkg = selectedPkg ?? sortedPkgs.find((p) => p.identifier === '$rc_annual') ?? sortedPkgs[0] ?? null;
 
-  function FeatureRow({ icon, base, pro }: { icon: string; base: string; pro: string }) {
+  function FeatureRow({ icon, baseKey, proKey }: { icon: string; baseKey: string; proKey: string }) {
     return (
       <View style={styles.featureRow}>
         <Ionicons name={icon as any} size={20} color={colors.accent} style={styles.featureIcon} />
         <View style={styles.featureCols}>
           <View style={styles.featureCol}>
-            <ThemedText type="small" themeColor="textSecondary">{base}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">{t(baseKey)}</ThemedText>
           </View>
           <View style={styles.featureCol}>
-            <ThemedText type="smallBold" style={{ color: colors.accent }}>{pro}</ThemedText>
+            <ThemedText type="smallBold" style={{ color: colors.accent }}>{t(proKey)}</ThemedText>
           </View>
         </View>
       </View>
@@ -73,7 +75,7 @@ export default function PaywallScreen() {
         {plan.isTrialActive && (
           <ThemedView type="backgroundElement" style={styles.trialBadge}>
             <ThemedText type="smallBold" style={{ color: colors.accent }}>
-              Trial attivo — {plan.trialDaysLeft} giorni rimanenti
+              {t('paywall.trialActive', { days: plan.trialDaysLeft })}
             </ThemedText>
           </ThemedView>
         )}
@@ -81,20 +83,20 @@ export default function PaywallScreen() {
         {!plan.isTrialActive && plan.tier !== 'pro' && (
           <ThemedView style={[styles.expiredBadge, { backgroundColor: colors.dangerSoft }]}>
             <ThemedText type="smallBold" style={{ color: colors.danger }}>
-              Trial scaduto — sei nel piano Base
+              {t('paywall.trialExpired')}
             </ThemedText>
           </ThemedView>
         )}
 
-        <ThemedText type="title" style={styles.title}>GK Coach Pro</ThemedText>
+        <ThemedText type="title" style={styles.title}>{t('paywall.proTitle')}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-          Sblocca tutte le funzionalità per il tuo lavoro da preparatore
+          {t('paywall.proSubtitle')}
         </ThemedText>
 
         <ThemedView type="card" style={styles.card}>
           <View style={styles.planHeader}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.planLabel}>BASE</ThemedText>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={[styles.planLabel, { color: colors.accent }]}>PRO</ThemedText>
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.planLabel}>{t('paywall.basePlan')}</ThemedText>
+            <ThemedText type="smallBold" themeColor="textSecondary" style={[styles.planLabel, { color: colors.accent }]}>{t('paywall.proPlan')}</ThemedText>
           </View>
 
           {FEATURES.map((f) => (
@@ -106,7 +108,7 @@ export default function PaywallScreen() {
           <ThemedView type="card" style={styles.priceCard}>
             <ThemedView style={[styles.activeProBadge, { backgroundColor: colors.accentSoft }]}>
               <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
-              <ThemedText type="smallBold" style={{ color: colors.accent }}>Piano Pro attivo</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('paywall.proActive')}</ThemedText>
             </ThemedView>
           </ThemedView>
         ) : (
@@ -116,7 +118,7 @@ export default function PaywallScreen() {
               <View style={styles.pkgRow}>
                 {sortedPkgs.map((pkg) => {
                   const selected = pkg.identifier === activePkg?.identifier;
-                  const badge = PKG_BADGE[pkg.identifier];
+                  const badge = PKG_BADGE_KEY[pkg.identifier];
                   return (
                     <Pressable
                       key={pkg.identifier}
@@ -128,19 +130,19 @@ export default function PaywallScreen() {
                       ]}>
                       {badge && (
                         <View style={[styles.pkgBadge, { backgroundColor: colors.accent }]}>
-                          <ThemedText type="small" style={[styles.pkgBadgeText, { color: colors.accentText }]}>{badge}</ThemedText>
+                          <ThemedText type="small" style={[styles.pkgBadgeText, { color: colors.accentText }]}>{t(badge!)}</ThemedText>
                         </View>
                       )}
                       <ThemedText type="smallBold" style={selected ? { color: colors.accent } : undefined}>
-                        {PKG_LABEL[pkg.identifier] ?? pkg.product.title}
+                        {PKG_LABEL_KEY[pkg.identifier] ? t(PKG_LABEL_KEY[pkg.identifier]) : pkg.product.title}
                       </ThemedText>
                       <ThemedText type="subtitle" style={[styles.pkgPrice, selected && { color: colors.accent }]}>
                         {pkg.product.priceString}
                       </ThemedText>
                       <ThemedText type="small" themeColor="textSecondary">
-                        {pkg.identifier === '$rc_monthly' ? '/mese'
-                          : pkg.identifier === '$rc_annual' ? '/anno'
-                          : 'una tantum'}
+                        {pkg.identifier === '$rc_monthly' ? t('paywall.perMonth')
+                          : pkg.identifier === '$rc_annual' ? t('paywall.perYear')
+                          : t('paywall.oneTime')}
                       </ThemedText>
                     </Pressable>
                   );
@@ -152,7 +154,7 @@ export default function PaywallScreen() {
             {sortedPkgs.length === 0 && (
               <ThemedView type="card" style={styles.priceCard}>
                 <ThemedText themeColor="textSecondary" style={{ textAlign: 'center' }}>
-                  Abbonamento disponibile a breve.
+                  {t('paywall.comingSoon')}
                 </ThemedText>
               </ThemedView>
             )}
@@ -176,7 +178,7 @@ export default function PaywallScreen() {
                 {buying
                   ? <ActivityIndicator color={colors.accentText} />
                   : <ThemedText type="smallBold" style={[styles.buyBtnText, { color: colors.accentText }]}>
-                      Passa a Pro — {activePkg.product.priceString}
+                      {t('paywall.upgradeButton', { price: activePkg.product.priceString })}
                     </ThemedText>}
               </Pressable>
             )}
@@ -193,7 +195,7 @@ export default function PaywallScreen() {
               style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}>
               {restoring
                 ? <ActivityIndicator color={colors.accent} />
-                : <ThemedText type="small" style={{ color: colors.textSecondary }}>Ripristina acquisti</ThemedText>}
+                : <ThemedText type="small" style={{ color: colors.textSecondary }}>{t('paywall.restorePurchases')}</ThemedText>}
             </Pressable>
           </>
         )}

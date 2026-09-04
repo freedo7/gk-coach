@@ -1,4 +1,5 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedView } from '@/components/themed-view';
 import { TrainingForm } from '@/components/training-form';
@@ -9,6 +10,7 @@ import { createTraining, setTrainingExercises } from '@/lib/api/trainings';
 import { sendPushToTeam } from '@/lib/api/push';
 
 export default function NuovoAllenamentoScreen() {
+  const { t } = useTranslation();
   const { isAdmin, session, currentTeam } = useAuth();
   const { canAddContent } = usePlan();
   const { show: showToast } = useToast();
@@ -42,12 +44,12 @@ export default function NuovoAllenamentoScreen() {
       <TrainingForm
         initial={Object.keys(initial).length > 0 ? initial : undefined}
         initialExerciseIds={initialExerciseIds}
-        submitLabel="Crea allenamento"
+        submitLabel={t('trainings.createTraining')}
         onSubmit={async (input, exerciseIds) => {
           const id = await createTraining(input, session.user.id, currentTeam.id);
           await setTrainingExercises(id, exerciseIds);
-          sendPushToTeam(currentTeam.id, 'Nuovo allenamento', input.title);
-          showToast('Allenamento creato');
+          sendPushToTeam(currentTeam.id, t('trainings.newTrainingPush'), input.title);
+          showToast(t('trainings.trainingCreated'));
           router.back();
         }}
       />

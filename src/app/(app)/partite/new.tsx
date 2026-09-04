@@ -1,4 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { MatchForm } from '@/components/match-form';
 import { ThemedView } from '@/components/themed-view';
@@ -9,6 +10,7 @@ import { createMatch } from '@/lib/api/matches';
 import { sendPushToTeam } from '@/lib/api/push';
 
 export default function NuovaPartitaScreen() {
+  const { t } = useTranslation();
   const { isAdmin, session, currentTeam } = useAuth();
   const { canAddContent } = usePlan();
   const { show: showToast } = useToast();
@@ -20,11 +22,11 @@ export default function NuovaPartitaScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
       <MatchForm
-        submitLabel="Crea partita"
+        submitLabel={t('matches.createMatch')}
         onSubmit={async (input) => {
           await createMatch(input, session.user.id, currentTeam.id);
-          sendPushToTeam(currentTeam.id, 'Nuova partita', `vs ${input.opponent}`);
-          showToast('Partita creata');
+          sendPushToTeam(currentTeam.id, t('matches.newMatchPush'), `vs ${input.opponent}`);
+          showToast(t('matches.matchCreated'));
           router.back();
         }}
       />

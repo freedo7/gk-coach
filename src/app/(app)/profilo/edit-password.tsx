@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,6 +12,7 @@ import { haptic } from '@/hooks/use-haptic';
 import { Radius, Spacing } from '@/constants/theme';
 
 export default function EditPasswordScreen() {
+  const { t } = useTranslation();
   const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
@@ -23,39 +25,39 @@ export default function EditPasswordScreen() {
 
   async function handleSave() {
     setError(null);
-    if (newPassword.length < 6) { setError('Minimo 6 caratteri.'); return; }
-    if (newPassword !== confirmPassword) { setError('Le password non coincidono.'); return; }
+    if (newPassword.length < 6) { setError(t('editPassword.tooShort')); return; }
+    if (newPassword !== confirmPassword) { setError(t('editPassword.mismatch')); return; }
     setSaving(true);
     const { error: err } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (err) { haptic('error'); setError(err.message); return; }
     haptic('success');
-    showToast('Password aggiornata');
+    showToast(t('editPassword.updated'));
     router.back();
   }
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ThemedText type="smallBold" themeColor="textSecondary">NUOVA PASSWORD</ThemedText>
+        <ThemedText type="smallBold" themeColor="textSecondary">{t('editPassword.newPasswordLabel')}</ThemedText>
         <TextInput
           value={newPassword}
           onChangeText={setNewPassword}
           secureTextEntry
-          placeholder="Minimo 6 caratteri"
+          placeholder={t('editPassword.newPasswordPlaceholder')}
           placeholderTextColor={colors.textSecondary}
           autoFocus
           style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
         />
 
         <ThemedText type="smallBold" themeColor="textSecondary" style={{ marginTop: Spacing.three }}>
-          CONFERMA PASSWORD
+          {t('editPassword.confirmLabel')}
         </ThemedText>
         <TextInput
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
-          placeholder="Ripeti la password"
+          placeholder={t('editPassword.confirmPlaceholder')}
           placeholderTextColor={colors.textSecondary}
           style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
         />
@@ -75,7 +77,7 @@ export default function EditPasswordScreen() {
           ]}>
           {saving
             ? <ActivityIndicator color={colors.accentText} />
-            : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Aggiorna password</ThemedText>}
+            : <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('editPassword.updateButton')}</ThemedText>}
         </Pressable>
       </View>
     </ThemedView>

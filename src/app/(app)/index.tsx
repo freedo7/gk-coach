@@ -1,5 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,6 +69,7 @@ function MiniStat({ icon, iconBg, value, label }: { icon: string; iconBg: string
 }
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const { profile, isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const today = todayISO();
@@ -124,15 +126,15 @@ export default function HomeScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
           <ThemedText type="title" style={styles.greeting}>
-            Ciao{name ? `, ${name.split(' ')[0]}` : ''}
+            {t('home.greeting')}{name ? `, ${name.split(' ')[0]}` : ''}
           </ThemedText>
 
           {/* ── Mini stats ── */}
           <FadeIn delay={100}>
           <View style={styles.miniStatsRow}>
-            <MiniStat icon="calendar-outline" iconBg="#5AC8FA" value={trainingsThisMonth} label="Allenamenti" />
-            <MiniStat icon="football-outline" iconBg="#FF9500" value={matchesThisMonth} label="Partite" />
-            <MiniStat icon="flame-outline" iconBg="#FF3B30" value={streak > 0 ? `${streak}w` : '—'} label="Streak" />
+            <MiniStat icon="calendar-outline" iconBg="#5AC8FA" value={trainingsThisMonth} label={t('home.trainingsLabel')} />
+            <MiniStat icon="football-outline" iconBg="#FF9500" value={matchesThisMonth} label={t('home.matchesLabel')} />
+            <MiniStat icon="flame-outline" iconBg="#FF3B30" value={streak > 0 ? `${streak}w` : '—'} label={t('home.streakLabel')} />
           </View>
           </FadeIn>
 
@@ -140,11 +142,11 @@ export default function HomeScreen() {
           <FadeIn delay={200}>
           <View style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              PROSSIMO ALLENAMENTO
+              {t('home.nextTraining')}
             </ThemedText>
             {nextTraining === undefined ? <SkeletonCard /> : nextTraining === null ? (
               <ThemedText type="small" themeColor="textSecondary">
-                Nessun allenamento in programma.
+                {t('home.noTrainingScheduled')}
               </ThemedText>
             ) : (
               <ThemedView type="card" style={styles.summaryCard}>
@@ -166,11 +168,11 @@ export default function HomeScreen() {
           <FadeIn delay={300}>
           <View style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              PROSSIMA PARTITA
+              {t('home.nextMatch')}
             </ThemedText>
             {nextMatch === undefined ? <SkeletonMatchRow /> : nextMatch === null ? (
               <ThemedText type="small" themeColor="textSecondary">
-                Nessuna partita in programma.
+                {t('home.noMatchScheduled')}
               </ThemedText>
             ) : (
               <MatchRow match={nextMatch} />
@@ -183,7 +185,7 @@ export default function HomeScreen() {
             <FadeIn delay={400}>
             <View style={styles.section}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                ULTIMA PARTITA
+                {t('home.lastMatch')}
               </ThemedText>
               <MatchRow match={lastMatch} />
             </View>

@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,6 +12,7 @@ import { haptic } from '@/hooks/use-haptic';
 import { Radius, Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { signIn } = useAuth();
   const colors = useTheme();
   const [email, setEmail] = useState('');
@@ -32,12 +34,12 @@ export default function LoginScreen() {
       <SafeAreaView style={styles.safeArea}>
         <Image source={require('@/assets/images/gk-coach-logo.jpeg')} style={styles.logo} />
         <ThemedText type="subtitle" themeColor="textSecondary" style={styles.subtitle}>
-          Accedi per vedere allenamenti, esercizi e partite
+          {t('auth.loginSubtitle')}
         </ThemedText>
 
         <ThemedView type="card" style={styles.card}>
           <TextInput
-            placeholder="Email"
+            placeholder={t('auth.emailPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -46,7 +48,7 @@ export default function LoginScreen() {
             style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
           />
           <TextInput
-            placeholder="Password"
+            placeholder={t('auth.passwordPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
             value={password}
@@ -73,14 +75,14 @@ export default function LoginScreen() {
               <ActivityIndicator color={colors.accentText} />
             ) : (
               <ThemedText type="smallBold" style={{ color: colors.accentText }}>
-                Accedi
+                {t('auth.loginButton')}
               </ThemedText>
             )}
           </Pressable>
         </ThemedView>
 
         <Link href="/(auth)/register" style={styles.link}>
-          <ThemedText type="link">Non hai un account? Registrati</ThemedText>
+          <ThemedText type="link">{t('auth.noAccount')}</ThemedText>
         </Link>
       </SafeAreaView>
     </ThemedView>

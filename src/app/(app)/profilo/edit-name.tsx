@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,6 +13,7 @@ import { haptic } from '@/hooks/use-haptic';
 import { Radius, Spacing } from '@/constants/theme';
 
 export default function EditNameScreen() {
+  const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -33,7 +35,7 @@ export default function EditNameScreen() {
     setSaving(false);
     if (error) { haptic('error'); showToast(error.message, 'error'); return; }
     haptic('success');
-    showToast('Nome aggiornato');
+    showToast(t('editName.nameUpdated'));
     refreshProfile();
     router.back();
   }
@@ -41,11 +43,11 @@ export default function EditNameScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ThemedText type="smallBold" themeColor="textSecondary">NOME</ThemedText>
+        <ThemedText type="smallBold" themeColor="textSecondary">{t('editName.nameLabel')}</ThemedText>
         <TextInput
           value={fullName}
           onChangeText={setFullName}
-          placeholder="Nome e cognome"
+          placeholder={t('editName.namePlaceholder')}
           placeholderTextColor={colors.textSecondary}
           autoFocus
           style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
@@ -61,7 +63,7 @@ export default function EditNameScreen() {
           ]}>
           {saving
             ? <ActivityIndicator color={colors.accentText} />
-            : <ThemedText type="smallBold" style={{ color: colors.accentText }}>Salva</ThemedText>}
+            : <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('common.save')}</ThemedText>}
         </Pressable>
       </View>
     </ThemedView>

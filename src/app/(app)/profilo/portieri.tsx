@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Alert, ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -14,6 +15,7 @@ import type { Goalkeeper } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function PortieriScreen() {
+  const { t } = useTranslation();
   const { profile, currentTeam } = useAuth();
   const colors = useTheme();
   const { show: showToast } = useToast();
@@ -40,9 +42,9 @@ export default function PortieriScreen() {
       setGoalkeepers((prev) => [...prev, gk].sort((a, b) => a.name.localeCompare(b.name)));
       setNewName('');
       haptic('success');
-      showToast(`${gk.name} aggiunto`);
+      showToast(t('goalkeepersManagement.added', { name: gk.name }));
     } catch (err) {
-      showToast(`Errore: ${(err as any)?.message ?? JSON.stringify(err)}`, 'error');
+      showToast(`${t('common.error')}: ${(err as any)?.message ?? JSON.stringify(err)}`, 'error');
     } finally {
       setAdding(false);
     }
@@ -50,18 +52,18 @@ export default function PortieriScreen() {
 
   function handleDelete(gk: Goalkeeper) {
     haptic('warning');
-    Alert.alert('Rimuovere il portiere?', gk.name, [
-      { text: 'Annulla', style: 'cancel' },
+    Alert.alert(t('goalkeepersManagement.removeConfirm'), gk.name, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Rimuovi',
+        text: t('common.remove'),
         style: 'destructive',
         onPress: async () => {
           setGoalkeepers((prev) => prev.filter((g) => g.id !== gk.id));
-          showToast(`${gk.name} rimosso`);
+          showToast(t('goalkeepersManagement.removed', { name: gk.name }));
           try {
             await deleteGoalkeeper(gk.id);
           } catch {
-            showToast('Errore durante la rimozione', 'error');
+            showToast(t('goalkeepersManagement.removeError'), 'error');
             load();
           }
         },
@@ -77,7 +79,7 @@ export default function PortieriScreen() {
           <TextInput
             value={newName}
             onChangeText={setNewName}
-            placeholder="Nome portiere"
+            placeholder={t('goalkeepersManagement.namePlaceholder')}
             placeholderTextColor={colors.textSecondary}
             style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text, flex: 1 }]}
             onSubmitEditing={handleAdd}
@@ -105,7 +107,7 @@ export default function PortieriScreen() {
           <ThemedView type="card" style={styles.emptyCard}>
             <Ionicons name="person-outline" size={36} color={colors.textSecondary} />
             <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
-              Aggiungi i portieri della tua squadra per tracciare le loro statistiche.
+              {t('goalkeepersManagement.emptyState')}
             </ThemedText>
           </ThemedView>
         ) : (

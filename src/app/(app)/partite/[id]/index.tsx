@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,6 +18,7 @@ import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function PartitaDettaglioScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -43,15 +45,15 @@ export default function PartitaDettaglioScreen() {
 
   function handleDelete() {
     haptic('warning');
-    Alert.alert('Eliminare la partita?', match?.opponent, [
-      { text: 'Annulla', style: 'cancel' },
+    Alert.alert(t('matches.deleteMatchConfirm'), match?.opponent, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Elimina',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          showToast('Partita eliminata');
+          showToast(t('matches.matchDeleted'));
           router.back();
-          deleteMatch(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
+          deleteMatch(id).catch(() => showToast(t('matches.deleteError'), 'error'));
         },
       },
     ]);
@@ -83,7 +85,7 @@ export default function PartitaDettaglioScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <ThemedView type="backgroundElement" style={styles.badge}>
             <ThemedText type="small" themeColor="textSecondary">
-              {match.is_home ? 'In casa' : 'Fuori casa'}
+              {match.is_home ? t('matches.homeLabel') : t('matches.awayLabel')}
             </ThemedText>
           </ThemedView>
 
@@ -94,13 +96,13 @@ export default function PartitaDettaglioScreen() {
           </ThemedText>
           {match.match_type === 'campionato' && match.matchday && (
             <ThemedText type="smallBold" themeColor="accent">
-              Giornata {match.matchday}
+              {t('matches.matchday')} {match.matchday}
             </ThemedText>
           )}
 
           {(match.goals_scored != null || match.result) && (
             <ThemedView type="card" style={[styles.resultCard, { borderColor: colors.accent }]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">RISULTATO</ThemedText>
+              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.result')}</ThemedText>
               {match.goals_scored != null && match.goals_conceded != null ? (
                 <View style={styles.scoreRow}>
                   <ThemedText style={styles.resultText}>{match.goals_scored}</ThemedText>
@@ -108,7 +110,7 @@ export default function PartitaDettaglioScreen() {
                   <ThemedText style={styles.resultText}>{match.goals_conceded}</ThemedText>
                   {match.goals_conceded === 0 && (
                     <View style={[styles.cleanSheetBadge, { backgroundColor: colors.accentSoft }]}>
-                      <ThemedText type="small" style={{ color: colors.accent, fontWeight: '700' }}>Clean sheet</ThemedText>
+                      <ThemedText type="small" style={{ color: colors.accent, fontWeight: '700' }}>{t('matches.cleanSheet')}</ThemedText>
                     </View>
                   )}
                 </View>
@@ -125,7 +127,7 @@ export default function PartitaDettaglioScreen() {
 
           {match.rating != null && (
             <ThemedView type="card" style={styles.notesCard}>
-              <ThemedText type="smallBold" themeColor="textSecondary">VOTO PORTIERE</ThemedText>
+              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.goalkeeperRating')}</ThemedText>
               <View style={styles.ratingDisplay}>
                 <ThemedText style={[styles.ratingNumber, { color: colors.accent }]}>{match.rating}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
@@ -135,7 +137,7 @@ export default function PartitaDettaglioScreen() {
 
           {isAdmin && match.notes && (
             <ThemedView type="card" style={styles.notesCard}>
-              <ThemedText type="smallBold" themeColor="textSecondary">NOTE</ThemedText>
+              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.notes')}</ThemedText>
               <ThemedText style={styles.notesText}>{match.notes}</ThemedText>
             </ThemedView>
           )}
@@ -145,14 +147,14 @@ export default function PartitaDettaglioScreen() {
               <Link href={`/partite/${match.id}/edit`} asChild>
                 <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
                   <Ionicons name="pencil-outline" size={18} color={colors.text} />
-                  <ThemedText type="smallBold">Modifica</ThemedText>
+                  <ThemedText type="smallBold">{t('common.edit')}</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
                 onPress={handleDelete}
                 style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
                 <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
+                <ThemedText type="smallBold" style={{ color: colors.danger }}>{t('common.delete')}</ThemedText>
               </Pressable>
             </View>
           )}

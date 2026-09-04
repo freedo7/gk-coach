@@ -4,6 +4,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -106,6 +107,7 @@ function MiniBarChart({ data, accentColor }: { data: { label: string; value: num
 
 /* ── Main screen ── */
 export default function StatisticheScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -224,7 +226,7 @@ export default function StatisticheScreen() {
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
           <View style={styles.loadingContainer}>
-            <ThemedText type="small" themeColor="textSecondary">Caricamento statistiche...</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">{t('stats.loadingStats')}</ThemedText>
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -238,7 +240,7 @@ export default function StatisticheScreen() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
-          <ThemedText type="title">Statistiche</ThemedText>
+          <ThemedText type="title">{t('stats.title')}</ThemedText>
 
           {/* ── Filtro portiere ── */}
           {goalkeepers.length > 0 && (
@@ -252,7 +254,7 @@ export default function StatisticheScreen() {
                   <ThemedText
                     type="small"
                     style={{ color: selectedGk === null ? colors.accentText : colors.textSecondary, fontWeight: '600' }}>
-                    Tutti
+                    {t('common.all')}
                   </ThemedText>
                 </ThemedView>
               </Pressable>
@@ -281,10 +283,10 @@ export default function StatisticheScreen() {
           {/* ── Filtro periodo ── */}
           <View style={styles.gkFilter}>
             {([
-              { value: 'all' as const, label: 'Tutto' },
-              { value: 'season' as const, label: 'Stagione' },
-              { value: '3m' as const, label: '3 mesi' },
-              { value: '1m' as const, label: 'Mese' },
+              { value: 'all' as const, label: t('stats.periodAll') },
+              { value: 'season' as const, label: t('stats.periodSeason') },
+              { value: '3m' as const, label: t('stats.period3m') },
+              { value: '1m' as const, label: t('stats.period1m') },
             ]).map(({ value, label }) => {
               const sel = timePeriod === value;
               return (
@@ -311,43 +313,43 @@ export default function StatisticheScreen() {
               onPress={() => router.push(`/statistiche/portiere/${selectedGk}` as any)}
               style={({ pressed }) => [styles.schedaBtn, { borderColor: colors.accent }, pressed && { opacity: 0.7 }]}>
               <Ionicons name="person-outline" size={16} color={colors.accent} />
-              <ThemedText type="smallBold" style={{ color: colors.accent }}>Vedi scheda completa</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('stats.viewFullProfile')}</ThemedText>
               <Ionicons name="chevron-forward" size={14} color={colors.accent} />
             </Pressable>
           )}
 
           {/* ── Riepilogo ── */}
           <View style={styles.statsGrid}>
-            <StatCard icon="football-outline" iconBg="#FF9500" label="Partite" value={matches.length} sub={`${matchesThisMonth.length} questo mese`} />
-            <StatCard icon="calendar-outline" iconBg="#5AC8FA" label="Allenamenti" value={trainings.length} sub={`${trainingsThisMonth.length} questo mese`} />
-            <StatCard icon="star-outline" iconBg="#FFD60A" label="Media voto" value={avgRating} sub={`${rated.length} valutate`} />
-            <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label="Clean sheet" value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
+            <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
+            <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
+            <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${rated.length} ${t('stats.rated')}`} />
+            <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
           </View>
 
           {/* ── Risultati ── */}
           {matchesWithScore.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                RISULTATI
+                {t('stats.results')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 <View style={styles.resultRow}>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#34C759' }]}>{wins}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">Vittorie</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.wins')}</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: colors.textSecondary }]}>{draws}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">Pareggi</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.draws')}</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#FF3B30' }]}>{losses}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">Sconfitte</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.losses')}</ThemedText>
                   </View>
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.avgRow}>
-                  <ThemedText type="small" themeColor="textSecondary">Media gol subiti</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">{t('stats.avgConceded')}</ThemedText>
                   <ThemedText type="smallBold">{avgConceded}</ThemedText>
                 </View>
               </ThemedView>
@@ -356,7 +358,7 @@ export default function StatisticheScreen() {
 
           {/* ── Attività settimanale ── */}
           <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-            ALLENAMENTI PER SETTIMANA
+            {t('stats.weeklyTrainings')}
           </ThemedText>
           <ThemedView type="card" style={styles.card}>
             <MiniBarChart data={weeklyData} accentColor={colors.accent} />
@@ -366,13 +368,13 @@ export default function StatisticheScreen() {
           {matches.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                PARTITE PER TIPO
+                {t('stats.matchesByType')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 {([
-                  { key: 'campionato' as const, label: 'Campionato', color: '#FF9500' },
-                  { key: 'coppa' as const, label: 'Coppa', color: '#AF52DE' },
-                  { key: 'amichevole' as const, label: 'Amichevole', color: '#5AC8FA' },
+                  { key: 'campionato' as const, label: t('matches.league'), color: '#FF9500' },
+                  { key: 'coppa' as const, label: t('matches.cup'), color: '#AF52DE' },
+                  { key: 'amichevole' as const, label: t('matches.friendly'), color: '#5AC8FA' },
                 ]).map(({ key, label, color }) => (
                   <View key={key} style={styles.typeRow}>
                     <View style={[styles.typeDot, { backgroundColor: color }]} />
@@ -399,7 +401,7 @@ export default function StatisticheScreen() {
           {categories.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                CATEGORIE PIU' ALLENATE
+                {t('stats.topCategories')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 {categories.slice(0, 5).map((cat, i) => (
@@ -418,7 +420,7 @@ export default function StatisticheScreen() {
             <ThemedView type="card" style={[styles.card, styles.emptyCard]}>
               <Ionicons name="bar-chart-outline" size={40} color={colors.textSecondary} />
               <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
-                Aggiungi partite e allenamenti per vedere le tue statistiche.
+                {t('stats.emptyStats')}
               </ThemedText>
             </ThemedView>
           )}

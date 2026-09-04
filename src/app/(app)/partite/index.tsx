@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,11 +19,6 @@ import type { Match } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 const MATCH_TYPES = ['amichevole', 'campionato', 'coppa'] as const;
-const TYPE_LABEL: Record<string, string> = {
-  amichevole: 'Amichevole',
-  campionato: 'Campionato',
-  coppa: 'Coppa',
-};
 
 function todayISO() {
   const now = new Date();
@@ -30,6 +26,7 @@ function todayISO() {
 }
 
 export default function PartiteScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -60,12 +57,12 @@ export default function PartiteScreen() {
   async function handleDelete(matchId: string) {
     const prev = matches;
     setMatches((m) => m?.filter((x) => x.id !== matchId) ?? null);
-    showToast('Partita eliminata');
+    showToast(t('matches.matchDeleted'));
     try {
       await deleteMatch(matchId);
     } catch {
       setMatches(prev);
-      showToast('Errore durante l\'eliminazione', 'error');
+      showToast(t('matches.deleteError'), 'error');
     }
   }
 
@@ -88,12 +85,12 @@ export default function PartiteScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.pageHeader}>
-          <ThemedText type="title">Partite</ThemedText>
+          <ThemedText type="title">{t('matches.title')}</ThemedText>
           {isAdmin && (
             <Pressable
               onPress={() => router.push('/partite/new')}
               style={({ pressed }) => [styles.addBtn, { backgroundColor: colors.accent }, pressed && styles.pressed]}>
-              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>+ Nuova</ThemedText>
+              <ThemedText style={[styles.addBtnText, { color: colors.accentText }]}>{t('matches.newMatch')}</ThemedText>
             </Pressable>
           )}
         </View>
@@ -104,7 +101,7 @@ export default function PartiteScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Cerca avversario..."
+              placeholder={t('matches.searchPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               style={[styles.searchInput, { color: colors.text }]}
               returnKeyType="search"
@@ -120,7 +117,7 @@ export default function PartiteScreen() {
                 <ThemedText
                   type="small"
                   style={{ color: typeFilter === type ? colors.accentText : colors.textSecondary, fontWeight: typeFilter === type ? '600' : undefined }}>
-                  {TYPE_LABEL[type]}
+                  {type === 'amichevole' ? t('matches.friendly') : type === 'campionato' ? t('matches.league') : t('matches.cup')}
                 </ThemedText>
               </Pressable>
             ))}
@@ -141,16 +138,16 @@ export default function PartiteScreen() {
             <SkeletonList count={3} type="match" />
           )}
           {matches !== null && matches.length === 0 && (
-            <EmptyState icon="football-outline" title="Nessuna partita" subtitle="Aggiungi la prima partita con il pulsante + Nuova." />
+            <EmptyState icon="football-outline" title={t('matches.noMatches')} subtitle={t('matches.addFirstMatch')} />
           )}
           {matches !== null && matches.length > 0 && filtered.length === 0 && (
-            <EmptyState icon="search-outline" title="Nessun risultato" subtitle="Prova a cambiare la ricerca o i filtri." />
+            <EmptyState icon="search-outline" title={t('matches.noResults')} subtitle={t('matches.tryChangingFilters')} />
           )}
 
           {upcoming.length > 0 && (
             <View style={styles.section}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                PROSSIME PARTITE
+                {t('matches.upcomingMatches')}
               </ThemedText>
               {upcoming.slice(0, upcomingLimit).map((match) => (
                 <MatchRow key={match.id} match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
@@ -159,7 +156,7 @@ export default function PartiteScreen() {
                 <Pressable
                   onPress={() => setUpcomingLimit((l) => l + 5)}
                   style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
+                  <ThemedText type="smallBold" themeColor="accent">{t('matches.loadMore')}</ThemedText>
                 </Pressable>
               )}
             </View>
@@ -168,7 +165,7 @@ export default function PartiteScreen() {
           {past.length > 0 && (
             <View style={styles.section}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                PARTITE PASSATE
+                {t('matches.pastMatches')}
               </ThemedText>
               {past.slice(0, pastLimit).map((match) => (
                 <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
@@ -177,7 +174,7 @@ export default function PartiteScreen() {
                 <Pressable
                   onPress={() => setPastLimit((l) => l + 5)}
                   style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" themeColor="accent">Carica altre partite</ThemedText>
+                  <ThemedText type="smallBold" themeColor="accent">{t('matches.loadMore')}</ThemedText>
                 </Pressable>
               )}
             </View>

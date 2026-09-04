@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
@@ -18,6 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function UtentiScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam, profile } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -43,13 +45,13 @@ export default function UtentiScreen() {
           <ActivityIndicator color={colors.accent} style={styles.loader} />
         )}
         {members !== null && members.length === 0 && (
-          <EmptyState icon="people-outline" title="Nessun membro" subtitle="Invita i portieri dalla sezione Invita portieri." />
+          <EmptyState icon="people-outline" title={t('teamMembers.noMembers')} subtitle={t('teamMembers.inviteSubtitle')} />
         )}
         {members?.map((member) => (
           <ThemedView key={member.id} type="card" style={styles.userCard}>
             <View style={styles.userLeft}>
               <ThemedText type="smallBold">
-                {member.profile.full_name || 'Senza nome'}
+                {member.profile.full_name || t('teamMembers.noName')}
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {member.profile.email}
@@ -77,7 +79,7 @@ export default function UtentiScreen() {
                   onPress={() => handleRemove(member.id, member.profile.id)}
                   style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.6 }]}>
                   <ThemedText type="small" style={[styles.removeBtnText, { color: colors.danger }]}>
-                    Rimuovi
+                    {t('teamMembers.remove')}
                   </ThemedText>
                 </Pressable>
               )}
@@ -89,7 +91,7 @@ export default function UtentiScreen() {
           onPress={() => router.push('/profilo/invite')}
           style={({ pressed }) => [styles.inviteBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.8 }]}>
           <ThemedText type="smallBold" style={{ color: colors.accentText }}>
-            + Genera codice invito
+            {t('teamMembers.generateInvite')}
           </ThemedText>
         </Pressable>
       </ScrollView>

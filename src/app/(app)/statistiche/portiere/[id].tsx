@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,6 +20,7 @@ import type { Match, Training, Goalkeeper } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function SchedaPortiereScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
@@ -67,7 +69,7 @@ export default function SchedaPortiereScreen() {
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.safeArea}>
-          <ThemedText themeColor="accent" style={{ padding: Spacing.four }}>Portiere non trovato</ThemedText>
+          <ThemedText themeColor="accent" style={{ padding: Spacing.four }}>{t('goalkeeperProfile.notFound')}</ThemedText>
         </SafeAreaView>
       </ThemedView>
     );
@@ -117,7 +119,7 @@ export default function SchedaPortiereScreen() {
                 const Sharing = await import('expo-sharing');
                 await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `Report ${goalkeeper.name}` });
               } catch {
-                showToast('Errore nella generazione del PDF', 'error');
+                showToast(t('goalkeeperProfile.pdfError'), 'error');
               } finally {
                 setSharing(false);
               }
@@ -126,22 +128,22 @@ export default function SchedaPortiereScreen() {
             style={({ pressed }) => [styles.shareBtn, { borderColor: colors.accent }, pressed && { opacity: 0.7 }]}>
             {sharing
               ? <ActivityIndicator size="small" color={colors.accent} />
-              : <><Ionicons name="share-outline" size={16} color={colors.accent} /><ThemedText type="smallBold" style={{ color: colors.accent }}>Condividi report</ThemedText></>}
+              : <><Ionicons name="share-outline" size={16} color={colors.accent} /><ThemedText type="smallBold" style={{ color: colors.accent }}>{t('goalkeeperProfile.shareReport')}</ThemedText></>}
           </Pressable>
 
           {/* Quick stats */}
           <View style={styles.quickStats}>
             <ThemedView type="card" style={styles.quickStat}>
               <ThemedText style={[styles.quickStatValue, { color: colors.accent }]}>{avgRating}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">Media voto</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">{t('stats.avgRating')}</ThemedText>
             </ThemedView>
             <ThemedView type="card" style={styles.quickStat}>
               <ThemedText style={styles.quickStatValue}>{matches.length}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">Partite</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">{t('stats.matchesLabel')}</ThemedText>
             </ThemedView>
             <ThemedView type="card" style={styles.quickStat}>
               <ThemedText style={styles.quickStatValue}>{trainings.length}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">Allenamenti</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">{t('stats.trainingsLabel')}</ThemedText>
             </ThemedView>
           </View>
 
@@ -149,7 +151,7 @@ export default function SchedaPortiereScreen() {
           {matchesWithScore.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                RISULTATI
+                {t('stats.results')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 <View style={styles.resultRow}>
@@ -172,7 +174,7 @@ export default function SchedaPortiereScreen() {
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.avgRow}>
-                  <ThemedText type="small" themeColor="textSecondary">Media gol subiti</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">{t('stats.avgConceded')}</ThemedText>
                   <ThemedText type="smallBold">{avgConceded}</ThemedText>
                 </View>
               </ThemedView>
@@ -183,7 +185,7 @@ export default function SchedaPortiereScreen() {
           {ratingTrend.length > 1 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                TREND VOTO (ULTIME {ratingTrend.length})
+                {t('goalkeeperProfile.ratingTrend', { count: ratingTrend.length })}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 <View style={styles.trendRow}>
@@ -202,7 +204,7 @@ export default function SchedaPortiereScreen() {
           {matches.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                STORICO PARTITE
+                {t('goalkeeperProfile.matchHistory')}
               </ThemedText>
               {[...matches].reverse().slice(0, 10).map((m) => (
                 <MatchRow key={m.id} match={m} />
@@ -215,7 +217,7 @@ export default function SchedaPortiereScreen() {
             <ThemedView type="card" style={styles.emptyCard}>
               <Ionicons name="person-outline" size={40} color={colors.textSecondary} />
               <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
-                Nessun dato ancora per questo portiere.
+                {t('goalkeeperProfile.noData')}
               </ThemedText>
             </ThemedView>
           )}

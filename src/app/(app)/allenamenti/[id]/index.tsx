@@ -3,6 +3,7 @@ import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +18,7 @@ import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function AllenamentoDettaglioScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isAdmin } = useAuth();
   const colors = useTheme();
@@ -45,15 +47,15 @@ export default function AllenamentoDettaglioScreen() {
 
   function handleDelete() {
     haptic('warning');
-    Alert.alert('Eliminare l\'allenamento?', training?.title, [
-      { text: 'Annulla', style: 'cancel' },
+    Alert.alert(t('trainings.deleteTrainingConfirm'), training?.title, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Elimina',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: () => {
-          showToast('Allenamento eliminato');
+          showToast(t('trainings.trainingDeleted'));
           router.back();
-          deleteTraining(id).catch(() => showToast('Errore durante l\'eliminazione', 'error'));
+          deleteTraining(id).catch(() => showToast(t('trainings.deleteError'), 'error'));
         },
       },
     ]);
@@ -103,7 +105,7 @@ export default function AllenamentoDettaglioScreen() {
               <Link href={`/allenamenti/${training.id}/edit`} asChild>
                 <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
                   <Ionicons name="pencil-outline" size={18} color={colors.text} />
-                  <ThemedText type="smallBold">Modifica</ThemedText>
+                  <ThemedText type="smallBold">{t('common.edit')}</ThemedText>
                 </Pressable>
               </Link>
               <Pressable
@@ -114,7 +116,7 @@ export default function AllenamentoDettaglioScreen() {
                 }}
                 style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
                 <Ionicons name="copy-outline" size={18} color={colors.accent} />
-                <ThemedText type="smallBold" style={{ color: colors.accent }}>Duplica</ThemedText>
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('common.duplicate')}</ThemedText>
               </Pressable>
             </View>
           )}
@@ -123,14 +125,14 @@ export default function AllenamentoDettaglioScreen() {
               onPress={handleDelete}
               style={({ pressed }) => [styles.deleteButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
               <Ionicons name="trash-outline" size={18} color={colors.danger} />
-              <ThemedText type="smallBold" style={{ color: colors.danger }}>Elimina</ThemedText>
+              <ThemedText type="smallBold" style={{ color: colors.danger }}>{t('common.delete')}</ThemedText>
             </Pressable>
           )}
 
           {training.training_exercises.length > 0 && (
             <View style={styles.exerciseSection}>
               <ThemedText type="smallBold" themeColor="textSecondary">
-                ESERCIZI
+                {t('trainings.exercises')}
               </ThemedText>
               {training.training_exercises.map((te) => (
                 <ThemedView key={te.id} type="card" style={styles.exerciseCard}>
@@ -141,13 +143,13 @@ export default function AllenamentoDettaglioScreen() {
                   {te.exercise.video_url && (
                     <Pressable onPress={() => Linking.openURL(te.exercise.video_url!)}>
                       <ThemedText type="small" themeColor="accent">
-                        ▶ Guarda il video
+                        {t('trainings.watchVideo')}
                       </ThemedText>
                     </Pressable>
                   )}
                   {te.note && (
                     <ThemedText type="small" themeColor="textSecondary">
-                      Nota: {te.note}
+                      {t('trainings.notePrefix')}{te.note}
                     </ThemedText>
                   )}
                 </ThemedView>
@@ -163,7 +165,7 @@ export default function AllenamentoDettaglioScreen() {
                 const uri = await generateTrainingPdf(training);
                 await Share.share({ url: uri, title: `${training.title}.pdf` });
               } catch {
-                Alert.alert('Errore', 'Impossibile generare il PDF.');
+                Alert.alert(t('common.error'), t('trainings.pdfError'));
               }
               setExporting(false);
             }}
@@ -174,7 +176,7 @@ export default function AllenamentoDettaglioScreen() {
             ) : (
               <>
                 <Ionicons name="document-outline" size={18} color={colors.accent} />
-                <ThemedText type="smallBold" style={{ color: colors.accent }}>Esporta PDF</ThemedText>
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('trainings.exportPdf')}</ThemedText>
               </>
             )}
           </Pressable>

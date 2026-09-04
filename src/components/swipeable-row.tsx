@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
 import { Radius, Spacing } from '@/constants/theme';
@@ -14,16 +15,18 @@ interface Props {
   enabled?: boolean;
 }
 
-export function SwipeableRow({ children, onDelete, confirmTitle = 'Eliminare?', confirmMessage, enabled = true }: Props) {
+export function SwipeableRow({ children, onDelete, confirmTitle, confirmMessage, enabled = true }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const swipeableRef = useRef<Swipeable>(null);
+  const resolvedConfirmTitle = confirmTitle ?? t('components.deleteConfirmDefault');
 
   function handleDeletePress() {
     haptic('warning');
-    Alert.alert(confirmTitle, confirmMessage, [
-      { text: 'Annulla', style: 'cancel', onPress: () => swipeableRef.current?.close() },
+    Alert.alert(resolvedConfirmTitle, confirmMessage, [
+      { text: t('common.cancel'), style: 'cancel', onPress: () => swipeableRef.current?.close() },
       {
-        text: 'Elimina',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           swipeableRef.current?.close();
@@ -37,7 +40,7 @@ export function SwipeableRow({ children, onDelete, confirmTitle = 'Eliminare?', 
     return (
       <Pressable onPress={handleDeletePress} style={[styles.deleteAction, { backgroundColor: colors.danger }]}>
         <Ionicons name="trash-outline" size={22} color="#fff" />
-        <Text style={styles.deleteText}>Elimina</Text>
+        <Text style={styles.deleteText}>{t('common.delete')}</Text>
       </Pressable>
     );
   }

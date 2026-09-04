@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { DateField } from '@/components/date-field';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
@@ -67,23 +69,23 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ThemedText type="smallBold" themeColor="textSecondary">
-        Portiere
+        {t('matchForm.goalkeeper')}
       </ThemedText>
       <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Avversario
+        {t('matchForm.opponent')}
       </ThemedText>
       <TextInput
         value={opponent}
         onChangeText={setOpponent}
-        placeholder="Nome squadra avversaria"
+        placeholder={t('matchForm.opponentPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Casa o trasferta
+        {t('matchForm.homeOrAway')}
       </ThemedText>
       <ThemedView style={styles.chipRow}>
         {(
@@ -110,14 +112,14 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Tipo di partita
+        {t('matchForm.matchType')}
       </ThemedText>
       <ThemedView style={styles.chipRow}>
         {(
           [
-            { value: 'amichevole', icon: 'people-outline', label: 'Amichevole' },
-            { value: 'campionato', icon: 'ribbon-outline', label: 'Campionato' },
-            { value: 'coppa',      icon: 'trophy-outline', label: 'Coppa' },
+            { value: 'amichevole', icon: 'people-outline', label: t('matchForm.matchTypeFriendly') },
+            { value: 'campionato', icon: 'ribbon-outline', label: t('matchForm.matchTypeLeague') },
+            { value: 'coppa',      icon: 'trophy-outline', label: t('matchForm.matchTypeCup') },
           ] as const
         ).map((option) => {
           const selected = matchType === option.value;
@@ -145,12 +147,12 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       {matchType === 'campionato' && (
         <>
           <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-            Giornata (opzionale)
+            {t('matchForm.matchday')}
           </ThemedText>
           <TextInput
             value={matchday}
             onChangeText={setMatchday}
-            placeholder="Es. 1"
+            placeholder={t('matchForm.matchdayPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
@@ -159,29 +161,29 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       )}
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Data
+        {t('matchForm.date')}
       </ThemedText>
       <ThemedView style={styles.spacingSmall}>
         <DateField value={matchDate} onChange={setMatchDate} />
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Orario (opzionale)
+        {t('matchForm.time')}
       </ThemedText>
       <TextInput
         value={matchTime ?? ''}
         onChangeText={setMatchTime}
-        placeholder="18:30"
+        placeholder={t('matchForm.timePlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Risultato (opzionale)
+        {t('matchForm.result')}
       </ThemedText>
       <View style={styles.chipRow}>
         <View style={{ flex: 1 }}>
-          <ThemedText type="small" themeColor="textSecondary">Gol fatti</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsScored')}</ThemedText>
           <TextInput
             value={goalsScored}
             onChangeText={setGoalsScored}
@@ -192,7 +194,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
           />
         </View>
         <View style={{ flex: 1 }}>
-          <ThemedText type="small" themeColor="textSecondary">Gol subiti</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsConceded')}</ThemedText>
           <TextInput
             value={goalsConceded}
             onChangeText={setGoalsConceded}
@@ -205,7 +207,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </View>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Voto portiere (opzionale)
+        {t('matchForm.rating')}
       </ThemedText>
       <View style={styles.ratingRow}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -226,23 +228,23 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </View>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Risultato testuale (opzionale)
+        {t('matchForm.resultText')}
       </ThemedText>
       <TextInput
         value={result}
         onChangeText={setResult}
-        placeholder="Es. 2-1"
+        placeholder={t('matchForm.resultTextPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Note sul risultato (opzionale)
+        {t('matchForm.resultNotes')}
       </ThemedText>
       <TextInput
         value={resultNotes}
         onChangeText={setResultNotes}
-        placeholder="Parate, gol subiti, prestazione..."
+        placeholder={t('matchForm.resultNotesPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={4}
@@ -250,12 +252,12 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Note generali (opzionale)
+        {t('matchForm.notes')}
       </ThemedText>
       <TextInput
         value={notes ?? ''}
         onChangeText={setNotes}
-        placeholder="Luogo esatto, convocazione, altre info..."
+        placeholder={t('matchForm.notesPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={4}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { DateField } from '@/components/date-field';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmit }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -65,46 +67,46 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <ThemedText type="smallBold" themeColor="textSecondary">
-        Portiere
+        {t('trainingForm.goalkeeper')}
       </ThemedText>
       <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Titolo
+        {t('trainingForm.title')}
       </ThemedText>
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="Es. Seduta portieri"
+        placeholder={t('trainingForm.titlePlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Data
+        {t('trainingForm.date')}
       </ThemedText>
       <ThemedView style={styles.spacingSmall}>
         <DateField value={date} onChange={setDate} />
       </ThemedView>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Orario (opzionale)
+        {t('trainingForm.time')}
       </ThemedText>
       <TextInput
         value={time ?? ''}
         onChangeText={setTime}
-        placeholder="18:00"
+        placeholder={t('trainingForm.timePlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Note (opzionale)
+        {t('trainingForm.notes')}
       </ThemedText>
       <TextInput
         value={notes ?? ''}
         onChangeText={setNotes}
-        placeholder="Indicazioni generali sulla seduta..."
+        placeholder={t('trainingForm.notesPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={3}
@@ -112,13 +114,13 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        Esercizi della seduta
+        {t('trainingForm.exercises')}
       </ThemedText>
       {exercises === null ? (
         <ActivityIndicator color={colors.accent} style={styles.spacing} />
       ) : exercises.length === 0 ? (
         <ThemedText type="small" themeColor="textSecondary" style={styles.spacingSmall}>
-          Nessun esercizio in libreria ancora.
+          {t('trainingForm.noExercises')}
         </ThemedText>
       ) : (
         <View style={styles.exerciseList}>

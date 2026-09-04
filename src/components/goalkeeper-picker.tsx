@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function GoalkeeperPicker({ value, onChange }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const { currentTeam, profile } = useAuth();
   const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
@@ -46,7 +48,7 @@ export function GoalkeeperPicker({ value, onChange }: Props) {
         style={({ pressed }) => pressed && styles.pressed}>
         <ThemedView type="backgroundElement" style={styles.addBtn}>
           <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
-          <ThemedText type="smallBold" style={{ color: colors.accent }}>Aggiungi portiere</ThemedText>
+          <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('components.addGoalkeeper')}</ThemedText>
         </ThemedView>
       </Pressable>
     );
@@ -64,7 +66,7 @@ export function GoalkeeperPicker({ value, onChange }: Props) {
             <ThemedText
               type="small"
               style={{ color: value === null ? colors.accentText : colors.textSecondary, fontWeight: '600' }}>
-              Tutti
+              {t('components.allGoalkeepers')}
             </ThemedText>
           </ThemedView>
         </Pressable>
@@ -101,7 +103,7 @@ export function GoalkeeperPicker({ value, onChange }: Props) {
           <TextInput
             value={newName}
             onChangeText={setNewName}
-            placeholder="Nome portiere"
+            placeholder={t('components.goalkeeperNamePlaceholder')}
             placeholderTextColor={colors.textSecondary}
             autoFocus
             style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text, flex: 1 }]}
@@ -116,7 +118,7 @@ export function GoalkeeperPicker({ value, onChange }: Props) {
               !newName.trim() && { opacity: 0.4 },
               pressed && styles.pressed,
             ]}>
-            <ThemedText type="smallBold" style={{ color: colors.accentText }}>Aggiungi</ThemedText>
+            <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('components.addButton')}</ThemedText>
           </Pressable>
         </View>
       )}

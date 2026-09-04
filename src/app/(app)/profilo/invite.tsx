@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,6 +13,7 @@ import { generateInviteCode, listTeamMembers } from '@/lib/api/teams';
 import { Radius, Spacing } from '@/constants/theme';
 
 export default function InviteScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const { canAddContent, maxPortieri } = usePlan();
@@ -40,7 +42,7 @@ export default function InviteScreen() {
       const newCode = await generateInviteCode(currentTeam.id);
       setCode(newCode);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Errore sconosciuto');
+      setError(e instanceof Error ? e.message : t('invite.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export default function InviteScreen() {
   async function handleShare() {
     if (!code) return;
     await Share.share({
-      message: `Entra in ${currentTeam?.name} su GK Coach! Usa il codice: ${code}`,
+      message: t('invite.shareMessage', { team: currentTeam?.name, code }),
     });
   }
 
@@ -57,12 +59,11 @@ export default function InviteScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <ThemedText themeColor="textSecondary" style={styles.description}>
-          Genera un codice monouso valido 30 giorni. Condividilo con i portieri che vuoi aggiungere
-          alla squadra <ThemedText type="smallBold">{currentTeam?.name}</ThemedText>.
+          {t('invite.description')}<ThemedText type="smallBold">{currentTeam?.name}</ThemedText>.
         </ThemedText>
 
         {atLimit && (
-          <UpgradeBanner message={`Hai raggiunto il limite di ${maxPortieri} portieri. Passa a Pro per aggiungerne altri.`} />
+          <UpgradeBanner message={t('invite.limitReached', { max: maxPortieri })} />
         )}
 
         {code ? (
@@ -74,7 +75,7 @@ export default function InviteScreen() {
               onPress={handleShare}
               style={({ pressed }) => [styles.copyBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.8 }]}>
               <ThemedText type="smallBold" style={{ color: colors.accent }}>
-                Condividi codice
+                {t('invite.shareCode')}
               </ThemedText>
             </Pressable>
           </ThemedView>
@@ -94,7 +95,7 @@ export default function InviteScreen() {
             <ActivityIndicator color={colors.accentText} />
           ) : (
             <ThemedText type="smallBold" style={{ color: colors.accentText }}>
-              {code ? 'Genera nuovo codice' : 'Genera codice invito'}
+              {code ? t('invite.generateNew') : t('invite.generateFirst')}
             </ThemedText>
           )}
         </Pressable>

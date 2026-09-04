@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,6 +12,7 @@ import { haptic } from '@/hooks/use-haptic';
 import { Radius, Spacing } from '@/constants/theme';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const { signUp } = useAuth();
   const colors = useTheme();
   const [fullName, setFullName] = useState('');
@@ -43,29 +45,28 @@ export default function RegisterScreen() {
       <SafeAreaView style={styles.safeArea}>
         <Image source={require('@/assets/images/gk-coach-logo.jpeg')} style={styles.logo} />
         <ThemedText type="title" style={styles.title}>
-          Crea account
+          {t('auth.createAccount')}
         </ThemedText>
         <ThemedText type="subtitle" themeColor="textSecondary" style={styles.subtitle}>
-          Registrati per accedere ad allenamenti, esercizi e partite
+          {t('auth.registerSubtitle')}
         </ThemedText>
 
         <ThemedView type="card" style={styles.card}>
           {done ? (
             <ThemedText>
-              Registrazione completata. Se richiesto, controlla la tua email per confermare
-              l&apos;account, poi torna al login.
+              {t('auth.registerSuccess')}
             </ThemedText>
           ) : (
             <>
               <TextInput
-                placeholder="Nome e cognome"
+                placeholder={t('auth.fullNamePlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 value={fullName}
                 onChangeText={setFullName}
                 style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
               />
               <TextInput
-                placeholder="Email"
+                placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -74,7 +75,7 @@ export default function RegisterScreen() {
                 style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
               />
               <TextInput
-                placeholder="Password"
+                placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 value={password}
@@ -83,7 +84,7 @@ export default function RegisterScreen() {
               />
 
               <ThemedText type="smallBold" themeColor="textSecondary">
-                Sei un:
+                {t('auth.youAre')}
               </ThemedText>
               <View style={styles.roleRow}>
                 <Pressable
@@ -92,7 +93,7 @@ export default function RegisterScreen() {
                   <ThemedText
                     type="smallBold"
                     style={{ color: role === 'preparatore' ? colors.accentText : colors.textSecondary }}>
-                    Preparatore
+                    {t('auth.coach')}
                   </ThemedText>
                 </Pressable>
                 <Pressable
@@ -101,14 +102,14 @@ export default function RegisterScreen() {
                   <ThemedText
                     type="smallBold"
                     style={{ color: role === 'portiere' ? colors.accentText : colors.textSecondary }}>
-                    Portiere
+                    {t('auth.goalkeeper')}
                   </ThemedText>
                 </Pressable>
               </View>
 
               {role === 'portiere' && (
                 <TextInput
-                  placeholder="Codice squadra (es. GK-ABC123)"
+                  placeholder={t('auth.teamCodePlaceholder')}
                   placeholderTextColor={colors.textSecondary}
                   autoCapitalize="characters"
                   value={inviteCode}
@@ -136,7 +137,7 @@ export default function RegisterScreen() {
                   <ActivityIndicator color={colors.accentText} />
                 ) : (
                   <ThemedText type="smallBold" style={{ color: colors.accentText }}>
-                    Registrati
+                    {t('auth.registerButton')}
                   </ThemedText>
                 )}
               </Pressable>
@@ -145,7 +146,7 @@ export default function RegisterScreen() {
         </ThemedView>
 
         <Link href="/(auth)/login" style={styles.link}>
-          <ThemedText type="link">Hai già un account? Accedi</ThemedText>
+          <ThemedText type="link">{t('auth.hasAccount')}</ThemedText>
         </Link>
       </SafeAreaView>
     </ThemedView>

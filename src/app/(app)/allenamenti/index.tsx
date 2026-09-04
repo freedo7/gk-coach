@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -37,6 +38,7 @@ function todayISO() {
 }
 
 export default function AllenamentiScreen() {
+  const { t } = useTranslation();
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -104,7 +106,7 @@ export default function AllenamentiScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.pageHeader}>
-          <ThemedText type="title">Allenamenti</ThemedText>
+          <ThemedText type="title">{t('trainings.title')}</ThemedText>
         </View>
 
         <ScrollView
@@ -136,11 +138,11 @@ export default function AllenamentiScreen() {
             <View style={styles.legend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-                <ThemedText type="small" themeColor="textSecondary">Allenamento</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">{t('trainings.trainingLegend')}</ThemedText>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
-                <ThemedText type="small" themeColor="textSecondary">Partita</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">{t('trainings.matchLegend')}</ThemedText>
               </View>
             </View>
           </ThemedView>
@@ -156,10 +158,10 @@ export default function AllenamentiScreen() {
                 const prevSelected = selectedTraining;
                 setTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
                 setSelectedTraining(null);
-                showToast('Allenamento eliminato');
-                try { await deleteTraining(selectedTraining.id); } catch { setTrainings(prev); setSelectedTraining(prevSelected); showToast('Errore durante l\'eliminazione', 'error'); }
+                showToast(t('trainings.trainingDeleted'));
+                try { await deleteTraining(selectedTraining.id); } catch { setTrainings(prev); setSelectedTraining(prevSelected); showToast(t('trainings.deleteError'), 'error'); }
               }}
-              confirmTitle="Eliminare l'allenamento?"
+              confirmTitle={t('trainings.deleteTrainingConfirm')}
               confirmMessage={selectedTraining.title}
             >
               <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
@@ -167,7 +169,7 @@ export default function AllenamentiScreen() {
                   <ThemedView type="card" style={styles.trainingCard}>
                     <View style={styles.trainingCardHeader}>
                       <ThemedText type="smallBold" themeColor="textSecondary">
-                        ALLENAMENTO
+                        {t('trainings.training')}
                       </ThemedText>
                       <Pressable
                         onPress={(e) => {
@@ -177,7 +179,7 @@ export default function AllenamentiScreen() {
                           setSelectedTraining({ ...selectedTraining, completed: newVal });
                           toggleTrainingCompleted(selectedTraining.id, newVal).catch(() => {
                             setSelectedTraining({ ...selectedTraining, completed: !newVal });
-                            showToast('Errore', 'error');
+                            showToast(t('common.error'), 'error');
                           });
                         }}
                         hitSlop={12}>
@@ -203,13 +205,13 @@ export default function AllenamentiScreen() {
               <Pressable>
                 <ThemedView type="backgroundElement" style={styles.emptyTrainingCard}>
                   <ThemedText type="smallBold" themeColor="accent">
-                    + Aggiungi allenamento per questo giorno
+                    {t('trainings.addTrainingForDay')}
                   </ThemedText>
                 </ThemedView>
               </Pressable>
             </Link>
           ) : (
-            <EmptyState icon="calendar-outline" title="Nessun evento" subtitle="Non ci sono allenamenti per questo giorno." />
+            <EmptyState icon="calendar-outline" title={t('trainings.noEvents')} subtitle={t('trainings.noTrainingsForDay')} />
           )}
 
           {/* Libreria esercizi */}
@@ -217,14 +219,14 @@ export default function AllenamentiScreen() {
             onPress={() => router.push('/esercizi')}
             style={({ pressed }) => [styles.libraryBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.7 }]}>
             <Ionicons name="book-outline" size={20} color={colors.accentText} />
-            <ThemedText type="smallBold" style={{ color: colors.accentText }}>Libreria esercizi</ThemedText>
+            <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('trainings.exerciseLibrary')}</ThemedText>
           </Pressable>
 
           {/* Partite del giorno */}
           {dayMatches.length > 0 && (
             <View style={styles.matchSection}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {dayMatches.length === 1 ? 'PARTITA' : 'PARTITE'}
+                {dayMatches.length === 1 ? t('trainings.match') : t('trainings.matchesPlural')}
               </ThemedText>
               {dayMatches.map((m) => (
                 <MatchRow key={m.id} match={m} />
