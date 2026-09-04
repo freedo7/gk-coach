@@ -18,8 +18,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { listMatches } from '@/lib/api/matches';
 import { haptic } from '@/hooks/use-haptic';
 import { deleteTraining, getTrainingByDate, listTrainings, toggleTrainingCompleted, type TrainingWithExercises } from '@/lib/api/trainings';
+import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { formatTime } from '@/lib/format';
-import type { Match, Training } from '@/types/database';
+import type { Goalkeeper, Match, Training } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 function todayISO() {
@@ -46,12 +47,26 @@ export default function AllenamentiScreen() {
   const { show: showToast } = useToast();
   const today = todayISO();
 
-  const [trainings, setTrainings] = useState<Training[] | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [allTrainings, setAllTrainings] = useState<Training[] | null>(null);
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
+  const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
+  const [selectedGk, setSelectedGk] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
   const [loadingTraining, setLoadingTraining] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Filter by selected goalkeeper
+  const trainings = useMemo(() => {
+    if (!allTrainings) return null;
+    if (selectedGk) return allTrainings.filter((t) => t.goalkeeper_id === selectedGk || !t.goalkeeper_id);
+    return allTrainings;
+  }, [allTrainings, selectedGk]);
+
+  const matches = useMemo(() => {
+    if (selectedGk) return allMatches.filter((m) => m.goalkeeper_id === selectedGk || !m.goalkeeper_id);
+    return allMatches;
+  }, [allMatches, selectedGk]);
 
   // Track which dates have trainings and/or matches
   const trainingDatesSet = useMemo(() => new Set((trainings ?? []).map((tr) => tr.training_date)), [trainings]);
@@ -63,14 +78,17 @@ export default function AllenamentiScreen() {
       const filtered = myGoalkeeperId
         ? data.filter((t) => !t.goalkeeper_id || t.goalkeeper_id === myGoalkeeperId)
         : data;
-      setTrainings(filtered);
+      setAllTrainings(filtered);
     });
     listMatches(currentTeam.id, { isAdmin }).then((data) => {
       const filtered = myGoalkeeperId
         ? data.filter((m) => !m.goalkeeper_id || m.goalkeeper_id === myGoalkeeperId)
         : data;
-      setMatches(filtered);
+      setAllMatches(filtered);
     });
+    if (isAdmin) {
+      listGoalkeepers(currentTeam.id).then(setGoalkeepers);
+    }
   }, [currentTeam, isAdmin, myGoalkeeperId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
@@ -94,7 +112,7 @@ export default function AllenamentiScreen() {
     getTrainingByDate(selectedDate, currentTeam.id)
       .then(setSelectedTraining)
       .finally(() => setLoadingTraining(false));
-  }, [selectedDate, trainings, currentTeam]);
+  }, [selectedDate, allTrainings, selectedGk, currentTeam]);
 
   const dayMatches = useMemo(
     () => matches.filter((m) => m.match_date === selectedDate),
@@ -161,6 +179,44 @@ export default function AllenamentiScreen() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
+          {/* Filtro portiere (solo admin con più di 1 portiere) */}
+          {isAdmin && goalkeepers.length > 1 && (
+            <View style={styles.gkFilter}>
+              <Pressable
+                onPress={() => { haptic('light'); setSelectedGk(null); }}
+                style={styles.gkChipWrapper}>
+                <ThemedView
+                  type={selectedGk === null ? undefined : 'backgroundElement'}
+                  style={[styles.gkChip, selectedGk === null && { backgroundColor: colors.accent }]}>
+                  <ThemedText
+                    type="small"
+                    style={{ color: selectedGk === null ? colors.accentText : colors.textSecondary, fontWeight: '600' }}>
+                    {t('common.all')}
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+              {goalkeepers.map((gk) => {
+                const sel = selectedGk === gk.id;
+                return (
+                  <Pressable
+                    key={gk.id}
+                    onPress={() => { haptic('light'); setSelectedGk(sel ? null : gk.id); }}
+                    style={styles.gkChipWrapper}>
+                    <ThemedView
+                      type={sel ? undefined : 'backgroundElement'}
+                      style={[styles.gkChip, sel && { backgroundColor: colors.accent }]}>
+                      <ThemedText
+                        type="small"
+                        style={{ color: sel ? colors.accentText : colors.text, fontWeight: '600' }}>
+                        {gk.name}
+                      </ThemedText>
+                    </ThemedView>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
           <ThemedView type="card" style={styles.calendarCard}>
             <Calendar
               key={lang}
@@ -195,12 +251,12 @@ export default function AllenamentiScreen() {
             <SwipeableRow
               enabled={isAdmin}
               onDelete={async () => {
-                const prev = trainings;
+                const prev = allTrainings;
                 const prevSelected = selectedTraining;
-                setTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
+                setAllTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
                 setSelectedTraining(null);
                 showToast(t('trainings.trainingDeleted'));
-                try { await deleteTraining(selectedTraining.id); } catch { setTrainings(prev); setSelectedTraining(prevSelected); showToast(t('trainings.deleteError'), 'error'); }
+                try { await deleteTraining(selectedTraining.id); } catch { setAllTrainings(prev); setSelectedTraining(prevSelected); showToast(t('trainings.deleteError'), 'error'); }
               }}
               confirmTitle={t('trainings.deleteTrainingConfirm')}
               confirmMessage={selectedTraining.title}
@@ -381,5 +437,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     letterSpacing: 0.5,
+  },
+  gkFilter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  gkChipWrapper: {},
+  gkChip: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
   },
 });

@@ -16,7 +16,8 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteMatch, listMatches } from '@/lib/api/matches';
-import type { Match } from '@/types/database';
+import { listGoalkeepers } from '@/lib/api/goalkeepers';
+import type { Goalkeeper, Match } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 const MATCH_TYPES = ['amichevole', 'campionato', 'coppa'] as const;
@@ -32,13 +33,21 @@ export default function PartiteScreen() {
   const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
-  const [matches, setMatches] = useState<Match[] | null>(null);
+  const [allMatches, setAllMatches] = useState<Match[] | null>(null);
+  const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
+  const [selectedGk, setSelectedGk] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [upcomingLimit, setUpcomingLimit] = useState(3);
   const [pastLimit, setPastLimit] = useState(3);
+
+  const matches = useMemo(() => {
+    if (!allMatches) return null;
+    if (selectedGk) return allMatches.filter((m) => m.goalkeeper_id === selectedGk || !m.goalkeeper_id);
+    return allMatches;
+  }, [allMatches, selectedGk]);
 
   const loadData = useCallback(() => {
     if (!currentTeam) return;
@@ -47,9 +56,12 @@ export default function PartiteScreen() {
         const filtered = myGoalkeeperId
           ? data.filter((m) => !m.goalkeeper_id || m.goalkeeper_id === myGoalkeeperId)
           : data;
-        setMatches(filtered);
+        setAllMatches(filtered);
       })
       .catch((err) => setError(err.message));
+    if (isAdmin) {
+      listGoalkeepers(currentTeam.id).then(setGoalkeepers);
+    }
   }, [currentTeam, isAdmin, myGoalkeeperId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
@@ -62,13 +74,13 @@ export default function PartiteScreen() {
   }
 
   async function handleDelete(matchId: string) {
-    const prev = matches;
-    setMatches((m) => m?.filter((x) => x.id !== matchId) ?? null);
+    const prev = allMatches;
+    setAllMatches((m) => m?.filter((x) => x.id !== matchId) ?? null);
     showToast(t('matches.matchDeleted'));
     try {
       await deleteMatch(matchId);
     } catch {
-      setMatches(prev);
+      setAllMatches(prev);
       showToast(t('matches.deleteError'), 'error');
     }
   }
@@ -130,6 +142,44 @@ export default function PartiteScreen() {
             ))}
           </ScrollView>
         </View>
+
+        {/* Filtro portiere (solo admin con più di 1 portiere) */}
+        {isAdmin && goalkeepers.length > 1 && (
+          <View style={[styles.gkFilter, { paddingHorizontal: Spacing.four }]}>
+            <Pressable
+              onPress={() => { haptic('light'); setSelectedGk(null); }}
+              style={styles.gkChipWrapper}>
+              <ThemedView
+                type={selectedGk === null ? undefined : 'backgroundElement'}
+                style={[styles.gkChip, selectedGk === null && { backgroundColor: colors.accent }]}>
+                <ThemedText
+                  type="small"
+                  style={{ color: selectedGk === null ? colors.accentText : colors.textSecondary, fontWeight: '600' }}>
+                  {t('common.all')}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+            {goalkeepers.map((gk) => {
+              const sel = selectedGk === gk.id;
+              return (
+                <Pressable
+                  key={gk.id}
+                  onPress={() => { haptic('light'); setSelectedGk(sel ? null : gk.id); }}
+                  style={styles.gkChipWrapper}>
+                  <ThemedView
+                    type={sel ? undefined : 'backgroundElement'}
+                    style={[styles.gkChip, sel && { backgroundColor: colors.accent }]}>
+                    <ThemedText
+                      type="small"
+                      style={{ color: sel ? colors.accentText : colors.text, fontWeight: '600' }}>
+                      {gk.name}
+                    </ThemedText>
+                  </ThemedView>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         {error && (
           <ThemedText type="small" themeColor="accent" style={styles.padding}>
@@ -263,6 +313,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.three,
     borderRadius: Radius.control,
+  },
+  gkFilter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  gkChipWrapper: {},
+  gkChip: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
   },
   pressed: {
     opacity: 0.7,
