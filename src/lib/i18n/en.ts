@@ -239,6 +239,7 @@ export default {
     notificationsSection: 'NOTIFICATIONS',
     pushNotifications: 'Push notifications',
     appearanceSection: 'APPEARANCE',
+    languageSection: 'LANGUAGE',
     logout: 'Log out',
     yourTeams: 'Your teams',
     newTeam: '+ New team',

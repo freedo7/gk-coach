@@ -228,12 +228,12 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </View>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.resultText')}
+        {t('matchForm.textResult')}
       </ThemedText>
       <TextInput
         value={result}
         onChangeText={setResult}
-        placeholder={t('matchForm.resultTextPlaceholder')}
+        placeholder={t('matchForm.textResultPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />

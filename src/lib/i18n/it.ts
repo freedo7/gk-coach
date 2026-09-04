@@ -239,6 +239,7 @@ export default {
     notificationsSection: 'NOTIFICHE',
     pushNotifications: 'Notifiche push',
     appearanceSection: 'ASPETTO',
+    languageSection: 'LINGUA',
     logout: 'Esci',
     yourTeams: 'Le tue squadre',
     newTeam: '+ Nuova squadra',
