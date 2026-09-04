@@ -15,13 +15,20 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/auth-context';
 import { useThemePreference, type ThemePreference } from '@/context/theme-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { haptic } from '@/hooks/use-haptic';
+import { setLanguage } from '@/lib/i18n';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
+
+const LANG_OPTIONS: { value: string; label: string; flag: string }[] = [
+  { value: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { value: 'en', label: 'English', flag: '🇬🇧' },
+];
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'auto', label: 'Automatico', icon: 'phone-portrait-outline' },
@@ -92,6 +99,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export default function ImpostazioniScreen() {
+  const { t, i18n } = useTranslation();
   const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
   const colors = useTheme();
   const plan = usePlan();
@@ -302,6 +310,33 @@ export default function ImpostazioniScreen() {
                       <View style={styles.rowBody}>
                         <ThemedText type="default">{opt.label}</ThemedText>
                         {preference === opt.value && (
+                          <Ionicons name="checkmark" size={20} color={colors.accent} />
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                ))}
+              </ThemedView>
+            </>
+          )}
+
+          {/* ─── LINGUA ─── */}
+          {(match('lingua') || match('language')) && (
+            <>
+              <SectionHeader title={t('settings.languageSection', 'LINGUA')} />
+              <ThemedView type="card" style={styles.card}>
+                {LANG_OPTIONS.map((opt, idx) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => { haptic('light'); setLanguage(opt.value); }}
+                    style={({ pressed }) => pressed && styles.pressed}>
+                    <View style={[styles.row, idx < LANG_OPTIONS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
+                      <View style={[styles.iconBox, { backgroundColor: '#007AFF' }]}>
+                        <ThemedText style={{ fontSize: 16 }}>{opt.flag}</ThemedText>
+                      </View>
+                      <View style={styles.rowBody}>
+                        <ThemedText type="default">{opt.label}</ThemedText>
+                        {i18n.language === opt.value && (
                           <Ionicons name="checkmark" size={20} color={colors.accent} />
                         )}
                       </View>

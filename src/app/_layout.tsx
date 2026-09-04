@@ -3,6 +3,7 @@ import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import '@/lib/i18n';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
 import { PurchasesProvider } from '@/context/purchases-context';
