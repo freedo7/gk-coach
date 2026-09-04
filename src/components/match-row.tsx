@@ -3,6 +3,7 @@ import { Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { SwipeableRow } from '@/components/swipeable-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -17,7 +18,7 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
   const time = formatTime(match.match_time);
   const content = (
     <Link href={`/partite/${match.id}`} asChild>
-      <Pressable style={({ pressed }) => pressed && styles.pressed}>
+      <AnimatedPressable>
         <ThemedView type="card" style={[styles.row, muted && styles.rowMuted]}>
           <View style={styles.rowLeft}>
             <ThemedText type="smallBold" themeColor="textSecondary">
@@ -58,7 +59,7 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
             )}
           </View>
         </ThemedView>
-      </Pressable>
+      </AnimatedPressable>
     </Link>
   );
 

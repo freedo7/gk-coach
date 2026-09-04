@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FadeIn } from '@/components/fade-in';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -82,63 +83,71 @@ export default function PartitaDettaglioScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedView type="backgroundElement" style={styles.badge}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {match.is_home ? t('matches.homeLabel') : t('matches.awayLabel')}
-            </ThemedText>
-          </ThemedView>
+          <FadeIn>
+            <ThemedView type="backgroundElement" style={styles.badge}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {match.is_home ? t('matches.homeLabel') : t('matches.awayLabel')}
+              </ThemedText>
+            </ThemedView>
 
-          <ThemedText type="title">{match.opponent}</ThemedText>
-          <ThemedText type="subtitle" themeColor="textSecondary">
-            {formatDateLong(match.match_date)}
-            {time ? ` · ${time}` : ''}
-          </ThemedText>
-          {match.match_type === 'campionato' && match.matchday && (
-            <ThemedText type="smallBold" themeColor="accent">
-              {t('matches.matchday')} {match.matchday}
+            <ThemedText type="title">{match.opponent}</ThemedText>
+            <ThemedText type="subtitle" themeColor="textSecondary">
+              {formatDateLong(match.match_date)}
+              {time ? ` · ${time}` : ''}
             </ThemedText>
-          )}
+            {match.match_type === 'campionato' && match.matchday && (
+              <ThemedText type="smallBold" themeColor="accent">
+                {t('matches.matchday')} {match.matchday}
+              </ThemedText>
+            )}
+          </FadeIn>
 
           {(match.goals_scored != null || match.result) && (
-            <ThemedView type="card" style={[styles.resultCard, { borderColor: colors.accent }]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.result')}</ThemedText>
-              {match.goals_scored != null && match.goals_conceded != null ? (
-                <View style={styles.scoreRow}>
-                  <ThemedText style={styles.resultText}>{match.goals_scored}</ThemedText>
-                  <ThemedText style={[styles.resultText, { opacity: 0.4 }]}>-</ThemedText>
-                  <ThemedText style={styles.resultText}>{match.goals_conceded}</ThemedText>
-                  {match.goals_conceded === 0 && (
-                    <View style={[styles.cleanSheetBadge, { backgroundColor: colors.accentSoft }]}>
-                      <ThemedText type="small" style={{ color: colors.accent, fontWeight: '700' }}>{t('matches.cleanSheet')}</ThemedText>
-                    </View>
-                  )}
-                </View>
-              ) : match.result ? (
-                <ThemedText style={styles.resultText}>{match.result}</ThemedText>
-              ) : null}
-              {isAdmin && match.result_notes && (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.notesText}>
-                  {match.result_notes}
-                </ThemedText>
-              )}
-            </ThemedView>
+            <FadeIn delay={100}>
+              <ThemedView type="card" style={[styles.resultCard, { borderColor: colors.accent }]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.result')}</ThemedText>
+                {match.goals_scored != null && match.goals_conceded != null ? (
+                  <View style={styles.scoreRow}>
+                    <ThemedText style={styles.resultText}>{match.goals_scored}</ThemedText>
+                    <ThemedText style={[styles.resultText, { opacity: 0.4 }]}>-</ThemedText>
+                    <ThemedText style={styles.resultText}>{match.goals_conceded}</ThemedText>
+                    {match.goals_conceded === 0 && (
+                      <View style={[styles.cleanSheetBadge, { backgroundColor: colors.accentSoft }]}>
+                        <ThemedText type="small" style={{ color: colors.accent, fontWeight: '700' }}>{t('matches.cleanSheet')}</ThemedText>
+                      </View>
+                    )}
+                  </View>
+                ) : match.result ? (
+                  <ThemedText style={styles.resultText}>{match.result}</ThemedText>
+                ) : null}
+                {isAdmin && match.result_notes && (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.notesText}>
+                    {match.result_notes}
+                  </ThemedText>
+                )}
+              </ThemedView>
+            </FadeIn>
           )}
 
           {match.rating != null && (
-            <ThemedView type="card" style={styles.notesCard}>
-              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.goalkeeperRating')}</ThemedText>
-              <View style={styles.ratingDisplay}>
-                <ThemedText style={[styles.ratingNumber, { color: colors.accent }]}>{match.rating}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
-              </View>
-            </ThemedView>
+            <FadeIn delay={200}>
+              <ThemedView type="card" style={styles.notesCard}>
+                <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.goalkeeperRating')}</ThemedText>
+                <View style={styles.ratingDisplay}>
+                  <ThemedText style={[styles.ratingNumber, { color: colors.accent }]}>{match.rating}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+                </View>
+              </ThemedView>
+            </FadeIn>
           )}
 
           {isAdmin && match.notes && (
-            <ThemedView type="card" style={styles.notesCard}>
-              <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.notes')}</ThemedText>
-              <ThemedText style={styles.notesText}>{match.notes}</ThemedText>
-            </ThemedView>
+            <FadeIn delay={300}>
+              <ThemedView type="card" style={styles.notesCard}>
+                <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.notes')}</ThemedText>
+                <ThemedText style={styles.notesText}>{match.notes}</ThemedText>
+              </ThemedView>
+            </FadeIn>
           )}
 
           {isAdmin && (

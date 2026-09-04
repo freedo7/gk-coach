@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
+import { FadeIn } from '@/components/fade-in';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -325,10 +326,18 @@ export default function StatisticheScreen() {
 
           {/* ── Riepilogo ── */}
           <View style={styles.statsGrid}>
-            <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
-            <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
-            <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${rated.length} ${t('stats.rated')}`} />
-            <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
+            <FadeIn delay={0}>
+              <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
+            </FadeIn>
+            <FadeIn delay={100}>
+              <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
+            </FadeIn>
+            <FadeIn delay={200}>
+              <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${rated.length} ${t('stats.rated')}`} />
+            </FadeIn>
+            <FadeIn delay={300}>
+              <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
+            </FadeIn>
           </View>
 
           {/* ── Risultati ── */}

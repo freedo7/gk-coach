@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { haptic } from '@/hooks/use-haptic';
 import { EmptyState } from '@/components/empty-state';
+import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
@@ -150,8 +151,10 @@ export default function PartiteScreen() {
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 {t('matches.upcomingMatches')}
               </ThemedText>
-              {upcoming.slice(0, upcomingLimit).map((match) => (
-                <MatchRow key={match.id} match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
+              {upcoming.slice(0, upcomingLimit).map((match, index) => (
+                <FadeIn key={match.id} delay={index * 60}>
+                  <MatchRow match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
+                </FadeIn>
               ))}
               {upcoming.length > upcomingLimit && (
                 <Pressable
@@ -168,8 +171,10 @@ export default function PartiteScreen() {
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 {t('matches.pastMatches')}
               </ThemedText>
-              {past.slice(0, pastLimit).map((match) => (
-                <MatchRow key={match.id} match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
+              {past.slice(0, pastLimit).map((match, index) => (
+                <FadeIn key={match.id} delay={index * 60}>
+                  <MatchRow match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
+                </FadeIn>
               ))}
               {past.length > pastLimit && (
                 <Pressable
