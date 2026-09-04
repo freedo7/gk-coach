@@ -72,9 +72,15 @@ export default function AllenamentiScreen() {
     setTimeout(() => setRefreshing(false), 600);
   }
 
+  const [prevDate, setPrevDate] = useState(selectedDate);
   useEffect(() => {
     if (!currentTeam) return;
-    setLoadingTraining(true);
+    const dateChanged = selectedDate !== prevDate;
+    if (dateChanged) {
+      setPrevDate(selectedDate);
+      setSelectedTraining(null);
+      setLoadingTraining(true);
+    }
     getTrainingByDate(selectedDate, currentTeam.id)
       .then(setSelectedTraining)
       .finally(() => setLoadingTraining(false));
