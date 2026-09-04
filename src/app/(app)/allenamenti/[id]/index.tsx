@@ -11,7 +11,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteTraining, getTraining, listComments, addComment, deleteComment, type TrainingWithExercises } from '@/lib/api/trainings';
-import { sendPushToTeam } from '@/lib/api/push';
+import { sendPushToCoach } from '@/lib/api/push';
 import { generateTrainingPdf } from '@/lib/pdf';
 import { formatDateLong, formatTime } from '@/lib/format';
 import { haptic } from '@/hooks/use-haptic';
@@ -67,7 +67,7 @@ export default function AllenamentoDettaglioScreen() {
       showToast(t('trainings.commentAdded'));
       if (currentTeam) {
         const name = profile?.full_name ?? '';
-        sendPushToTeam(
+        sendPushToCoach(
           currentTeam.id,
           t('trainings.newCommentPush'),
           t('trainings.newCommentBody', { name, training: training?.title ?? '' })

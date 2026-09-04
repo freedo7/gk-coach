@@ -28,7 +28,7 @@ function todayISO() {
 
 export default function PartiteScreen() {
   const { t } = useTranslation();
-  const { isAdmin, currentTeam } = useAuth();
+  const { isAdmin, currentTeam, myGoalkeeperId } = useAuth();
   const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
@@ -43,9 +43,14 @@ export default function PartiteScreen() {
   const loadData = useCallback(() => {
     if (!currentTeam) return;
     listMatches(currentTeam.id, { isAdmin })
-      .then(setMatches)
+      .then((data) => {
+        const filtered = myGoalkeeperId
+          ? data.filter((m) => !m.goalkeeper_id || m.goalkeeper_id === myGoalkeeperId)
+          : data;
+        setMatches(filtered);
+      })
       .catch((err) => setError(err.message));
-  }, [currentTeam, isAdmin]);
+  }, [currentTeam, isAdmin, myGoalkeeperId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 

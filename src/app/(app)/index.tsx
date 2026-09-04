@@ -71,7 +71,7 @@ function MiniStat({ icon, iconBg, value, label }: { icon: string; iconBg: string
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { profile, isAdmin, currentTeam } = useAuth();
+  const { profile, isAdmin, currentTeam, myGoalkeeperId } = useAuth();
   const colors = useTheme();
   const today = todayISO();
   const monthPrefix = currentMonthPrefix();
@@ -86,15 +86,21 @@ export default function HomeScreen() {
   const loadData = useCallback(() => {
     if (!currentTeam) return;
     listTrainings(currentTeam.id).then((data) => {
-      setAllTrainings(data);
-      const upcoming = data.filter((t) => t.training_date >= today);
+      const filtered = myGoalkeeperId
+        ? data.filter((t) => !t.goalkeeper_id || t.goalkeeper_id === myGoalkeeperId)
+        : data;
+      setAllTrainings(filtered);
+      const upcoming = filtered.filter((t) => t.training_date >= today);
       setNextTraining(upcoming[0] ?? null);
     });
     listMatches(currentTeam.id, { isAdmin }).then((data) => {
-      setAllMatches(data);
-      const upcoming = data.filter((m) => m.match_date >= today);
+      const filtered = myGoalkeeperId
+        ? data.filter((m) => !m.goalkeeper_id || m.goalkeeper_id === myGoalkeeperId)
+        : data;
+      setAllMatches(filtered);
+      const upcoming = filtered.filter((m) => m.match_date >= today);
       setNextMatch(upcoming[0] ?? null);
-      const past = data.filter((m) => m.match_date < today);
+      const past = filtered.filter((m) => m.match_date < today);
       setLastMatch(past.length > 0 ? past[past.length - 1] : null);
     });
   }, [currentTeam, isAdmin, today]);

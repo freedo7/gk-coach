@@ -40,7 +40,7 @@ export default function AllenamentiScreen() {
     today: t('calendar.today'),
   };
   LocaleConfig.defaultLocale = lang;
-  const { isAdmin, currentTeam } = useAuth();
+  const { isAdmin, currentTeam, myGoalkeeperId } = useAuth();
   const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
@@ -59,9 +59,19 @@ export default function AllenamentiScreen() {
 
   const loadData = useCallback(() => {
     if (!currentTeam) return;
-    listTrainings(currentTeam.id).then(setTrainings);
-    listMatches(currentTeam.id, { isAdmin }).then(setMatches);
-  }, [currentTeam, isAdmin]);
+    listTrainings(currentTeam.id).then((data) => {
+      const filtered = myGoalkeeperId
+        ? data.filter((t) => !t.goalkeeper_id || t.goalkeeper_id === myGoalkeeperId)
+        : data;
+      setTrainings(filtered);
+    });
+    listMatches(currentTeam.id, { isAdmin }).then((data) => {
+      const filtered = myGoalkeeperId
+        ? data.filter((m) => !m.goalkeeper_id || m.goalkeeper_id === myGoalkeeperId)
+        : data;
+      setMatches(filtered);
+    });
+  }, [currentTeam, isAdmin, myGoalkeeperId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 

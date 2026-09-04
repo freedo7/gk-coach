@@ -30,3 +30,24 @@ export async function deleteGoalkeeper(id: string) {
   const { error } = await supabase.from('goalkeepers').delete().eq('id', id);
   if (error) throw error;
 }
+
+export async function getGoalkeeperByProfile(teamId: string, profileId: string): Promise<Goalkeeper | null> {
+  const { data, error } = await supabase
+    .from('goalkeepers')
+    .select('*')
+    .eq('team_id', teamId)
+    .eq('profile_id', profileId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function createGoalkeeperForProfile(name: string, teamId: string, profileId: string): Promise<Goalkeeper> {
+  const { data, error } = await supabase
+    .from('goalkeepers')
+    .insert({ name, team_id: teamId, profile_id: profileId, created_by: profileId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

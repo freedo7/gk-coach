@@ -4,7 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
 import i18n from '@/lib/i18n';
-import { listMyTeams, createTeam as apiCreateTeam, joinTeamByCode as apiJoinTeamByCode } from '@/lib/api/teams';
+import { listMyTeams, createTeam as apiCreateTeam, joinTeamByCode as apiJoinTeamByCode, removeTeamMember } from '@/lib/api/teams';
+import { getGoalkeeperByProfile, createGoalkeeperForProfile } from '@/lib/api/goalkeepers';
 import type { Profile, Team } from '@/types/database';
 
 const CURRENT_TEAM_KEY = 'currentTeamId';
@@ -16,9 +17,11 @@ interface AuthContextValue {
   loading: boolean;
   teams: Team[];
   currentTeam: Team | null;
+  myGoalkeeperId: string | null;
   setCurrentTeam: (team: Team) => void;
   createTeam: (name: string) => Promise<{ error: string | null }>;
   joinTeam: (code: string) => Promise<{ error: string | null }>;
+  leaveTeam: () => Promise<{ error: string | null }>;
   refreshTeams: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
@@ -40,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
+  const [myGoalkeeperId, setMyGoalkeeperId] = useState<string | null>(null);
 
   async function loadProfile(userId: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -63,13 +67,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(CURRENT_TEAM_KEY, team.id);
   }
 
+  // Load or auto-create goalkeeper record for portiere users
+  async function loadMyGoalkeeper(teamId: string, userId: string, userProfile: Profile | null) {
+    const role = userProfile?.role ?? session?.user?.user_metadata?.role;
+    if (role === 'admin' || role === 'preparatore') {
+      setMyGoalkeeperId(null);
+      return;
+    }
+    try {
+      let gk = await getGoalkeeperByProfile(teamId, userId);
+      if (!gk) {
+        const name = userProfile?.full_name ?? session?.user?.user_metadata?.full_name ?? '';
+        gk = await createGoalkeeperForProfile(name || 'Portiere', teamId, userId);
+      }
+      setMyGoalkeeperId(gk.id);
+    } catch {
+      setMyGoalkeeperId(null);
+    }
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       setSession(initialSession);
       if (initialSession) {
-        Promise.all([loadProfile(initialSession.user.id), loadTeams()]).finally(() =>
-          setLoading(false)
-        );
+        await Promise.all([loadProfile(initialSession.user.id), loadTeams()]);
+        setLoading(false);
       } else {
         setLoading(false);
       }
@@ -84,11 +106,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setTeams([]);
         setCurrentTeamState(null);
+        setMyGoalkeeperId(null);
       }
     });
 
     return () => subscription.subscription.unsubscribe();
   }, []);
+
+  // When currentTeam or profile changes, load goalkeeper for portiere
+  useEffect(() => {
+    if (currentTeam && session) {
+      loadMyGoalkeeper(currentTeam.id, session.user.id, profile);
+    }
+  }, [currentTeam?.id, profile?.role]);
 
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -156,6 +186,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function leaveTeam() {
+    if (!session || !currentTeam) return { error: 'No team' };
+    try {
+      await removeTeamMember(currentTeam.id, session.user.id);
+      const updated = teams.filter((t) => t.id !== currentTeam.id);
+      setTeams(updated);
+      setCurrentTeamState(updated[0] ?? null);
+      setMyGoalkeeperId(null);
+      await AsyncStorage.removeItem(CURRENT_TEAM_KEY);
+      return { error: null };
+    } catch (e: unknown) {
+      return { error: (e as any)?.message ?? String(e) };
+    }
+  }
+
   const role = profile?.role ?? session?.user?.user_metadata?.role;
   const isAdmin = role === 'admin' || role === 'preparatore';
 
@@ -168,9 +213,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         teams,
         currentTeam,
+        myGoalkeeperId,
         setCurrentTeam,
         createTeam,
         joinTeam,
+        leaveTeam,
         refreshTeams,
         signIn,
         signUp,

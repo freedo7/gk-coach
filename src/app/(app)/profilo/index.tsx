@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -12,11 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/auth-context';
+import { sendPushToCoach } from '@/lib/api/push';
 import { useThemePreference, type ThemePreference } from '@/context/theme-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
@@ -108,7 +109,7 @@ export default function ImpostazioniScreen() {
   const { t, i18n } = useTranslation();
   const ROLE_LABEL = useRoleLabel();
   const THEME_OPTIONS = useThemeOptions();
-  const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam } = useAuth();
+  const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam, leaveTeam } = useAuth();
   const colors = useTheme();
   const plan = usePlan();
   const router = useRouter();
@@ -253,6 +254,36 @@ export default function ImpostazioniScreen() {
                     iconBg="#5856D6"
                     label={t('settings.inviteGoalkeepers')}
                     onPress={() => router.push('/profilo/invite')}
+                    last={isAdmin}
+                  />
+                )}
+                {!isAdmin && match('abbandona') && (
+                  <SettingsRow
+                    icon="exit-outline"
+                    iconBg="#FF3B30"
+                    iconColor="#fff"
+                    label={t('settings.leaveTeam')}
+                    onPress={() => {
+                      haptic('warning');
+                      Alert.alert(t('settings.leaveTeamConfirm'), t('settings.leaveTeamMessage'), [
+                        { text: t('common.cancel'), style: 'cancel' },
+                        {
+                          text: t('settings.leaveTeam'),
+                          style: 'destructive',
+                          onPress: () => {
+                            if (currentTeam) {
+                              const name = profile?.full_name ?? '';
+                              sendPushToCoach(
+                                currentTeam.id,
+                                t('settings.leaveTeamPush'),
+                                t('settings.leaveTeamPushBody', { name })
+                              );
+                            }
+                            leaveTeam();
+                          },
+                        },
+                      ]);
+                    }}
                     last
                   />
                 )}

@@ -109,14 +109,14 @@ function MiniBarChart({ data, accentColor }: { data: { label: string; value: num
 /* ── Main screen ── */
 export default function StatisticheScreen() {
   const { t } = useTranslation();
-  const { isAdmin, currentTeam } = useAuth();
+  const { isAdmin, currentTeam, myGoalkeeperId } = useAuth();
   const colors = useTheme();
   const router = useRouter();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [allTrainings, setAllTrainings] = useState<Training[]>([]);
   const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
-  const [selectedGk, setSelectedGk] = useState<string | null>(null);
+  const [selectedGk, setSelectedGk] = useState<string | null>(myGoalkeeperId);
   const [timePeriod, setTimePeriod] = useState<'all' | 'season' | '3m' | '1m'>('all');
   const [categories, setCategories] = useState<CategoryCount[]>([]);
   const [refreshing, setRefreshing] = useState(false);
