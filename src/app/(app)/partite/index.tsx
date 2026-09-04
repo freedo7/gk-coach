@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { haptic } from '@/hooks/use-haptic';
 import { EmptyState } from '@/components/empty-state';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonList } from '@/components/skeleton';
@@ -48,6 +49,7 @@ export default function PartiteScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function onRefresh() {
+    haptic('light');
     setRefreshing(true);
     loadData();
     setTimeout(() => setRefreshing(false), 600);

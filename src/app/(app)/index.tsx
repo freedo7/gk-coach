@@ -5,6 +5,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { haptic } from '@/hooks/use-haptic';
 import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
@@ -101,6 +102,7 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function onRefresh() {
+    haptic('light');
     setRefreshing(true);
     loadData();
     setTimeout(() => setRefreshing(false), 600);

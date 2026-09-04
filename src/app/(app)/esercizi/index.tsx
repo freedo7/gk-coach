@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/empty-state';
+import { SkeletonList } from '@/components/skeleton';
 import { IconTecnicaBase } from '@/components/icons/icon-tecnica-base';
 import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
 import { ThemedText } from '@/components/themed-text';
@@ -90,7 +91,11 @@ export default function EserciziScreen() {
           </ThemedView>
         </View>
 
-        {loading && <ActivityIndicator style={styles.loader} color={colors.accent} />}
+        {loading && (
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <SkeletonList count={4} type="category" />
+          </ScrollView>
+        )}
 
         {error && (
           <ThemedText type="small" themeColor="accent" style={styles.padding}>
@@ -197,9 +202,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-  },
-  loader: {
-    marginTop: Spacing.five,
   },
   padding: {
     padding: Spacing.four,

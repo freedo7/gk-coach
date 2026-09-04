@@ -66,6 +66,7 @@ export default function AllenamentiScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function onRefresh() {
+    haptic('light');
     setRefreshing(true);
     loadData();
     setTimeout(() => setRefreshing(false), 600);

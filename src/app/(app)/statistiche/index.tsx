@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
+import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -157,6 +158,7 @@ export default function StatisticheScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function onRefresh() {
+    haptic('light');
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
@@ -225,8 +227,11 @@ export default function StatisticheScreen() {
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          <View style={styles.loadingContainer}>
-            <ThemedText type="small" themeColor="textSecondary">{t('stats.loadingStats')}</ThemedText>
+          <View style={styles.scrollContent}>
+            <ThemedText type="title">{t('stats.title')}</ThemedText>
+            <View style={{ marginTop: Spacing.three }}>
+              <SkeletonList count={4} type="stat" />
+            </View>
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -433,7 +438,6 @@ export default function StatisticheScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.five,

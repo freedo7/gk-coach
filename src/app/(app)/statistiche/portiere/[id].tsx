@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
+import { haptic } from '@/hooks/use-haptic';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MatchRow } from '@/components/match-row';
@@ -51,6 +52,7 @@ export default function SchedaPortiereScreen() {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function onRefresh() {
+    haptic('light');
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
