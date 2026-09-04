@@ -72,7 +72,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
       <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('trainingForm.title')}
+        {t('trainingForm.titleLabel')}
       </ThemedText>
       <TextInput
         value={title}
@@ -114,7 +114,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('trainingForm.exercises')}
+        {t('trainingForm.exercisesLabel')}
       </ThemedText>
       {exercises === null ? (
         <ActivityIndicator color={colors.accent} style={styles.spacing} />
