@@ -1,5 +1,4 @@
-import { DefaultTheme, DarkTheme, ThemeProvider } from '@react-navigation/native';
-import { Slot } from 'expo-router';
+import { DefaultTheme, DarkTheme, ThemeProvider, Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
