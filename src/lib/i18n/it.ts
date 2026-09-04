@@ -332,6 +332,19 @@ export default {
     },
   },
 
+  // Onboarding
+  onboarding: {
+    slide1Title: 'Allena i tuoi\nportieri',
+    slide1Subtitle: 'Pianifica sedute, assegna esercizi e segui ogni portiere con precisione.',
+    slide2Title: 'Traccia ogni\npartita',
+    slide2Subtitle: 'Registra risultati, voti e statistiche. Tutto in un unico posto.',
+    slide3Title: 'Analizza e\nmigliora',
+    slide3Subtitle: 'Statistiche dettagliate, trend e report PDF per ogni portiere.',
+    next: 'Avanti',
+    getStarted: 'Inizia ora',
+    skip: 'Salta',
+  },
+
   // Auth
   auth: {
     loginSubtitle: 'Accedi per vedere allenamenti, esercizi e partite',

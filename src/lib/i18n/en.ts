@@ -332,6 +332,19 @@ export default {
     },
   },
 
+  // Onboarding
+  onboarding: {
+    slide1Title: 'Train your\ngoalkeepers',
+    slide1Subtitle: 'Plan sessions, assign exercises and follow every goalkeeper with precision.',
+    slide2Title: 'Track every\nmatch',
+    slide2Subtitle: 'Record results, ratings and statistics. All in one place.',
+    slide3Title: 'Analyze and\nimprove',
+    slide3Subtitle: 'Detailed stats, trends and PDF reports for every goalkeeper.',
+    next: 'Next',
+    getStarted: 'Get started',
+    skip: 'Skip',
+  },
+
   // Auth
   auth: {
     loginSubtitle: 'Log in to see trainings, exercises and matches',
