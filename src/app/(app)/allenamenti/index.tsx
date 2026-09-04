@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Calendar, LocaleConfig, type DateData } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useRouter } from 'expo-router';
@@ -28,17 +28,18 @@ function todayISO() {
 }
 
 export default function AllenamentiScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  // Configure calendar locale with translated strings
-  LocaleConfig.locales['it'] = {
+  // Configure calendar locale with translated strings — use current language as key
+  const lang = i18n.language;
+  LocaleConfig.locales[lang] = {
     monthNames: t('calendar.monthNames', { returnObjects: true }) as string[],
     monthNamesShort: t('calendar.monthNamesShort', { returnObjects: true }) as string[],
     dayNames: t('calendar.dayNames', { returnObjects: true }) as string[],
     dayNamesShort: t('calendar.dayNamesShort', { returnObjects: true }) as string[],
     today: t('calendar.today'),
   };
-  LocaleConfig.defaultLocale = 'it';
+  LocaleConfig.defaultLocale = lang;
   const { isAdmin, currentTeam } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -52,8 +53,9 @@ export default function AllenamentiScreen() {
   const [loadingTraining, setLoadingTraining] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const DOT_TRAINING = useMemo(() => ({ key: 'training', color: colors.accent }), [colors.accent]);
-  const DOT_MATCH = useMemo(() => ({ key: 'match', color: colors.danger }), [colors.danger]);
+  // Track which dates have trainings and/or matches
+  const trainingDatesSet = useMemo(() => new Set((trainings ?? []).map((tr) => tr.training_date)), [trainings]);
+  const matchDatesSet = useMemo(() => new Set(matches.map((m) => m.match_date)), [matches]);
 
   const loadData = useCallback(() => {
     if (!currentTeam) return;
@@ -82,25 +84,54 @@ export default function AllenamentiScreen() {
     [matches, selectedDate],
   );
 
-  // Multi-dot: allenamenti verdi, partite rosse
-  const markedDates: Record<string, any> = {};
-  for (const t of trainings ?? []) {
-    markedDates[t.training_date] = {
-      ...(markedDates[t.training_date] ?? {}),
-      dots: [...(markedDates[t.training_date]?.dots ?? []), DOT_TRAINING],
-    };
-  }
-  for (const m of matches) {
-    markedDates[m.match_date] = {
-      ...(markedDates[m.match_date] ?? {}),
-      dots: [...(markedDates[m.match_date]?.dots ?? []), DOT_MATCH],
-    };
-  }
-  markedDates[selectedDate] = {
-    ...(markedDates[selectedDate] ?? {}),
-    selected: true,
-    selectedColor: colors.accent,
-  };
+  // Custom day component for colored rings
+  const renderDay = useCallback(({ date, state }: { date?: DateData; state?: string }) => {
+    if (!date) return <View style={styles.dayCell} />;
+    const dateStr = date.dateString;
+    const isSelected = dateStr === selectedDate;
+    const isToday = dateStr === today;
+    const hasTraining = trainingDatesSet.has(dateStr);
+    const hasMatch = matchDatesSet.has(dateStr);
+    const disabled = state === 'disabled';
+
+    // Ring color for the event type
+    const eventRing = hasTraining && hasMatch
+      ? colors.accent
+      : hasTraining
+        ? colors.accent
+        : hasMatch
+          ? colors.danger
+          : null;
+
+    return (
+      <Pressable
+        onPress={() => setSelectedDate(dateStr)}
+        style={styles.dayCell}>
+        {/* Outer event ring — visible when selected AND has event, or when both events on same day */}
+        {hasTraining && hasMatch && (
+          <View style={[styles.outerRing, { borderColor: colors.danger }]} />
+        )}
+        {isSelected && !hasTraining && !hasMatch ? null : isSelected && !(hasTraining && hasMatch) && eventRing && (
+          <View style={[styles.outerRing, { borderColor: eventRing }]} />
+        )}
+        <View style={[
+          styles.dayCircle,
+          !isSelected && eventRing && !(hasTraining && hasMatch) && { borderWidth: 2.5, borderColor: eventRing },
+          !isSelected && hasTraining && hasMatch && { borderWidth: 2.5, borderColor: colors.accent },
+          isSelected && { backgroundColor: colors.accentSoft },
+        ]}>
+          <ThemedText style={[
+            styles.dayText,
+            disabled && { color: colors.textSecondary, opacity: 0.3 },
+            isToday && !isSelected && { color: colors.accent, fontWeight: '800' },
+            isSelected && { color: colors.accent, fontWeight: '800' },
+          ]}>
+            {date.day}
+          </ThemedText>
+        </View>
+      </Pressable>
+    );
+  }, [selectedDate, today, trainingDatesSet, matchDatesSet, colors]);
 
   return (
     <ThemedView style={styles.container}>
@@ -115,23 +146,16 @@ export default function AllenamentiScreen() {
         >
           <ThemedView type="card" style={styles.calendarCard}>
             <Calendar
+              key={lang}
               current={selectedDate}
               firstDay={1}
-              markingType="multi-dot"
-              onDayPress={(day) => setSelectedDate(day.dateString)}
-              markedDates={markedDates}
+              dayComponent={renderDay}
               theme={{
                 backgroundColor: 'transparent',
                 calendarBackground: 'transparent',
                 textSectionTitleColor: colors.textSecondary,
-                dayTextColor: colors.text,
-                todayTextColor: colors.accent,
                 monthTextColor: colors.text,
                 arrowColor: colors.accent,
-                selectedDayBackgroundColor: colors.accent,
-                selectedDayTextColor: colors.accentText,
-                dotColor: colors.accent,
-                textDayFontWeight: '500',
                 textMonthFontWeight: '700',
               }}
             />
@@ -284,6 +308,30 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  dayCell: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 40,
+  },
+  dayCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outerRing: {
+    position: 'absolute',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 2,
+  },
+  dayText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   trainingLoader: {
     marginVertical: Spacing.two,
