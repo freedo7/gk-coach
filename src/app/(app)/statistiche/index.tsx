@@ -170,7 +170,7 @@ export default function StatisticheScreen() {
   // ── Filter by goalkeeper + time period ──
   const cutoffDate = useMemo(() => timeCutoff(timePeriod), [timePeriod]);
 
-  // Performance lookup: per ogni partita, le performance di quel portiere
+  // Performance lookup: per portiere singolo, mappa match_id -> performance
   const perfByMatch = useMemo(() => {
     const map: Record<string, MatchPerformance> = {};
     if (!selectedGk) return map;
@@ -179,6 +179,16 @@ export default function StatisticheScreen() {
       .forEach((p) => { map[p.match_id] = p; });
     return map;
   }, [allPerformances, selectedGk]);
+
+  // Per vista generale: tutte le performance raggruppate per match
+  const perfsByMatch = useMemo(() => {
+    const map: Record<string, MatchPerformance[]> = {};
+    allPerformances.forEach((p) => {
+      if (!map[p.match_id]) map[p.match_id] = [];
+      map[p.match_id].push(p);
+    });
+    return map;
+  }, [allPerformances]);
 
   const matches = useMemo(() => {
     let filtered = allMatches;
@@ -217,20 +227,28 @@ export default function StatisticheScreen() {
     }).length;
   }, [matches, matchesWithScore, selectedGk, perfByMatch]);
 
-  // Rating: per portiere singolo usa la performance se disponibile
+  // Rating: include sia match.rating che performance individuali
   const ratingData = useMemo(() => {
-    if (!selectedGk) {
-      const rated = matches.filter((m) => m.rating != null);
-      return { count: rated.length, avg: rated.length > 0 ? rated.reduce((s, m) => s + m.rating!, 0) / rated.length : null };
-    }
     const ratings: number[] = [];
-    matches.forEach((m) => {
-      const perf = perfByMatch[m.id];
-      if (perf?.rating != null) { ratings.push(perf.rating); return; }
-      if (m.goalkeeper_id === selectedGk && m.rating != null) ratings.push(m.rating);
-    });
+    if (!selectedGk) {
+      matches.forEach((m) => {
+        const perfs = perfsByMatch[m.id];
+        if (perfs && perfs.length > 0) {
+          // Aggiungi ogni voto individuale
+          perfs.forEach((p) => { if (p.rating != null) ratings.push(p.rating); });
+        } else if (m.rating != null) {
+          ratings.push(m.rating);
+        }
+      });
+    } else {
+      matches.forEach((m) => {
+        const perf = perfByMatch[m.id];
+        if (perf?.rating != null) { ratings.push(perf.rating); return; }
+        if (m.goalkeeper_id === selectedGk && m.rating != null) ratings.push(m.rating);
+      });
+    }
     return { count: ratings.length, avg: ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null };
-  }, [matches, selectedGk, perfByMatch]);
+  }, [matches, selectedGk, perfByMatch, perfsByMatch]);
   const avgRating = ratingData.avg != null ? ratingData.avg.toFixed(1) : '—';
 
   const avgConceded = matchesWithScore.length > 0
@@ -373,9 +391,15 @@ export default function StatisticheScreen() {
           {matchesWithScore.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {t('stats.results')}
+                {t('stats.results')} ({matchesWithScore.length}/{matches.length})
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
+                {/* Barra visiva W/D/L */}
+                <View style={styles.resultBar}>
+                  {wins > 0 && <View style={[styles.resultBarSegment, { flex: wins, backgroundColor: '#34C759' }]} />}
+                  {draws > 0 && <View style={[styles.resultBarSegment, { flex: draws, backgroundColor: colors.textSecondary }]} />}
+                  {losses > 0 && <View style={[styles.resultBarSegment, { flex: losses, backgroundColor: '#FF3B30' }]} />}
+                </View>
                 <View style={styles.resultRow}>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#34C759' }]}>{wins}</ThemedText>
@@ -394,6 +418,10 @@ export default function StatisticheScreen() {
                 <View style={styles.avgRow}>
                   <ThemedText type="small" themeColor="textSecondary">{t('stats.avgConceded')}</ThemedText>
                   <ThemedText type="smallBold">{avgConceded}</ThemedText>
+                </View>
+                <View style={styles.avgRow}>
+                  <ThemedText type="small" themeColor="textSecondary">{t('stats.cleanSheets')}</ThemedText>
+                  <ThemedText type="smallBold">{cleanSheets}</ThemedText>
                 </View>
               </ThemedView>
             </>
@@ -540,6 +568,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.two,
+  },
+  resultBar: {
+    flexDirection: 'row',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  resultBarSegment: {
+    height: '100%',
   },
   resultRow: {
     flexDirection: 'row',
