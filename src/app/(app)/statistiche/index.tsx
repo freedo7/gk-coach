@@ -424,24 +424,26 @@ export default function StatisticheScreen() {
             <ThemedView type="card" style={styles.card}>
               <View style={styles.chartContainer}>
                 {weeklyActivity.map((w, i) => {
-                  const max = Math.max(...weeklyActivity.map((x) => x.trainings + x.matches), 1);
+                  const max = Math.max(...weeklyActivity.map((x) => Math.max(x.trainings, x.matches)), 1);
                   return (
                     <View key={i} style={styles.chartCol}>
-                      <View style={styles.chartBarWrapper}>
-                        {(w.trainings > 0 || w.matches > 0) && (
-                          <ThemedText type="small" style={{ fontSize: 10, fontWeight: '700', textAlign: 'center', color: colors.text }}>
-                            {w.trainings + w.matches}
-                          </ThemedText>
-                        )}
-                        {w.matches > 0 && (
-                          <View style={[styles.chartBar, { height: `${(w.matches / max) * 100}%`, backgroundColor: '#FF9500', borderBottomLeftRadius: w.trainings > 0 ? 0 : 4, borderBottomRightRadius: w.trainings > 0 ? 0 : 4 }]} />
-                        )}
-                        {w.trainings > 0 && (
-                          <View style={[styles.chartBar, { height: `${(w.trainings / max) * 100}%`, backgroundColor: colors.accent }]} />
-                        )}
-                        {w.trainings === 0 && w.matches === 0 && (
-                          <View style={[styles.chartBar, { height: 4, backgroundColor: colors.backgroundElement }]} />
-                        )}
+                      <View style={styles.chartPairWrapper}>
+                        <View style={styles.chartBarWrapper}>
+                          {w.trainings > 0 && (
+                            <ThemedText type="small" style={{ fontSize: 9, fontWeight: '700', textAlign: 'center', color: colors.accent }}>
+                              {w.trainings}
+                            </ThemedText>
+                          )}
+                          <View style={[styles.chartBar, { height: w.trainings > 0 ? `${(w.trainings / max) * 100}%` : 4, backgroundColor: w.trainings > 0 ? colors.accent : colors.backgroundElement }]} />
+                        </View>
+                        <View style={styles.chartBarWrapper}>
+                          {w.matches > 0 && (
+                            <ThemedText type="small" style={{ fontSize: 9, fontWeight: '700', textAlign: 'center', color: '#FF9500' }}>
+                              {w.matches}
+                            </ThemedText>
+                          )}
+                          <View style={[styles.chartBar, { height: w.matches > 0 ? `${(w.matches / max) * 100}%` : 4, backgroundColor: w.matches > 0 ? '#FF9500' : colors.backgroundElement }]} />
+                        </View>
                       </View>
                       <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
                         {w.label}
@@ -644,10 +646,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.half,
   },
+  chartPairWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 2,
+    alignItems: 'flex-end',
+  },
   chartBarWrapper: {
     flex: 1,
-    width: '100%',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   chartBar: {
     width: '100%',
