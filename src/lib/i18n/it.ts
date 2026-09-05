@@ -173,6 +173,7 @@ export default {
     notes: 'Note (opzionale)',
     notesPlaceholder: 'Indicazioni generali sulla seduta...',
     exercisesLabel: 'Esercizi della seduta',
+    searchExercises: 'Cerca esercizi...',
     noExercises: 'Nessun esercizio in libreria ancora.',
   },
 

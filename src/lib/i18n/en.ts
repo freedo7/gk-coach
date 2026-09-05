@@ -173,6 +173,7 @@ export default {
     notes: 'Notes (optional)',
     notesPlaceholder: 'General instructions for the session...',
     exercisesLabel: 'Session exercises',
+    searchExercises: 'Search exercises...',
     noExercises: 'No exercises in library yet.',
   },
 
