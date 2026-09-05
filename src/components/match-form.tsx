@@ -405,8 +405,8 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
               style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
 
-            {/* Valutazioni portieri */}
-            {allGoalkeepers.length > 0 && (
+            {/* Valutazioni portieri (solo con "Tutti") */}
+            {goalkeeperId === null && allGoalkeepers.length > 0 && (
               <View style={styles.perfSection}>
                 <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
                 <ThemedText type="smallBold" themeColor="textSecondary">
