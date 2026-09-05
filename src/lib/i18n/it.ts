@@ -10,6 +10,7 @@ export default {
     create: 'Crea',
     error: 'Errore',
     close: 'Chiudi',
+    confirm: 'Conferma',
     all: 'Tutti',
     loading: 'Caricamento...',
     noResults: 'Nessun risultato',

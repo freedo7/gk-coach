@@ -10,6 +10,7 @@ export default {
     create: 'Create',
     error: 'Error',
     close: 'Close',
+    confirm: 'Confirm',
     all: 'All',
     loading: 'Loading...',
     noResults: 'No results',

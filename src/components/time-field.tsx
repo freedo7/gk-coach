@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -27,13 +28,25 @@ function formatTime(date: Date): string {
 }
 
 export function TimeField({ value, onChange, placeholder }: Props) {
+  const { t } = useTranslation();
   const colors = useTheme();
   const [show, setShow] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(parseTime(value));
+
+  function openPicker() {
+    setTempDate(parseTime(value));
+    setShow(true);
+  }
+
+  function confirm() {
+    onChange(formatTime(tempDate));
+    setShow(false);
+  }
 
   return (
     <View>
       <Pressable
-        onPress={() => setShow(true)}
+        onPress={openPicker}
         style={({ pressed }) => [pressed && styles.pressed]}>
         <ThemedView type="backgroundElement" style={styles.field}>
           <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
@@ -56,20 +69,44 @@ export function TimeField({ value, onChange, placeholder }: Props) {
         </ThemedView>
       </Pressable>
 
-      {show && (
-        <DateTimePicker
-          mode="time"
-          value={parseTime(value)}
-          is24Hour
-          minuteInterval={5}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_event, selectedDate) => {
-            setShow(Platform.OS === 'ios');
-            if (selectedDate) {
-              onChange(formatTime(selectedDate));
-            }
-          }}
-        />
+      {Platform.OS === 'ios' ? (
+        <Modal visible={show} transparent animationType="fade">
+          <Pressable style={styles.overlay} onPress={() => setShow(false)}>
+            <Pressable style={[styles.modal, { backgroundColor: colors.backgroundElement }]}>
+              <DateTimePicker
+                mode="time"
+                value={tempDate}
+                is24Hour
+                minuteInterval={5}
+                display="spinner"
+                onChange={(_event, selectedDate) => {
+                  if (selectedDate) setTempDate(selectedDate);
+                }}
+              />
+              <Pressable
+                onPress={confirm}
+                style={[styles.confirmBtn, { backgroundColor: colors.accent }]}>
+                <ThemedText type="smallBold" style={{ color: colors.accentText }}>
+                  {t('common.confirm')}
+                </ThemedText>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : (
+        show && (
+          <DateTimePicker
+            mode="time"
+            value={tempDate}
+            is24Hour
+            minuteInterval={5}
+            display="default"
+            onChange={(_event, selectedDate) => {
+              setShow(false);
+              if (selectedDate) onChange(formatTime(selectedDate));
+            }}
+          />
+        )
       )}
     </View>
   );
@@ -91,5 +128,23 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modal: {
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.six,
+    paddingHorizontal: Spacing.four,
+  },
+  confirmBtn: {
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+    marginTop: Spacing.two,
   },
 });
