@@ -12,11 +12,11 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { haptic } from '@/hooks/use-haptic';
-import { listMatches } from '@/lib/api/matches';
+import { listMatches, listAllPerformances } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { supabase } from '@/lib/supabase';
-import type { Match, Training, Goalkeeper } from '@/types/database';
+import type { Match, Training, Goalkeeper, MatchPerformance } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 /* ── helpers ── */
@@ -115,6 +115,7 @@ export default function StatisticheScreen() {
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [allTrainings, setAllTrainings] = useState<Training[]>([]);
+  const [allPerformances, setAllPerformances] = useState<MatchPerformance[]>([]);
   const [goalkeepers, setGoalkeepers] = useState<Goalkeeper[]>([]);
   const [selectedGk, setSelectedGk] = useState<string | null>(myGoalkeeperId);
   const [timePeriod, setTimePeriod] = useState<'all' | 'season' | '3m' | '1m'>('all');
@@ -125,10 +126,11 @@ export default function StatisticheScreen() {
   const loadData = useCallback(async () => {
     if (!currentTeam) return;
     try {
-      const [m, t, gks, catData] = await Promise.all([
+      const [m, t, gks, perfs, catData] = await Promise.all([
         listMatches(currentTeam.id, { isAdmin }),
         listTrainings(currentTeam.id),
         listGoalkeepers(currentTeam.id),
+        listAllPerformances(currentTeam.id),
         supabase
           .from('training_exercises')
           .select('exercise:exercises(category:exercise_categories(name))')
@@ -137,6 +139,7 @@ export default function StatisticheScreen() {
       ]);
       setAllMatches(m);
       setAllTrainings(t);
+      setAllPerformances(perfs);
       setGoalkeepers(gks);
 
       // Count categories
@@ -166,11 +169,26 @@ export default function StatisticheScreen() {
 
   // ── Filter by goalkeeper + time period ──
   const cutoffDate = useMemo(() => timeCutoff(timePeriod), [timePeriod]);
+
+  // Performance lookup: per ogni partita, le performance di quel portiere
+  const perfByMatch = useMemo(() => {
+    const map: Record<string, MatchPerformance> = {};
+    if (!selectedGk) return map;
+    allPerformances
+      .filter((p) => p.goalkeeper_id === selectedGk)
+      .forEach((p) => { map[p.match_id] = p; });
+    return map;
+  }, [allPerformances, selectedGk]);
+
   const matches = useMemo(() => {
-    let filtered = selectedGk ? allMatches.filter((m) => m.goalkeeper_id === selectedGk) : allMatches;
+    let filtered = allMatches;
+    if (selectedGk) {
+      // Includi partite assegnate al portiere O che hanno una performance per lui
+      filtered = filtered.filter((m) => m.goalkeeper_id === selectedGk || perfByMatch[m.id]);
+    }
     if (cutoffDate) filtered = filtered.filter((m) => m.match_date >= cutoffDate);
     return filtered;
-  }, [allMatches, selectedGk, cutoffDate]);
+  }, [allMatches, selectedGk, cutoffDate, perfByMatch]);
   const trainings = useMemo(() => {
     let filtered = selectedGk ? allTrainings.filter((t) => t.goalkeeper_id === selectedGk) : allTrainings;
     if (cutoffDate) filtered = filtered.filter((t) => t.training_date >= cutoffDate);
@@ -188,12 +206,32 @@ export default function StatisticheScreen() {
   const wins = matchesWithScore.filter((m) => m.goals_scored! > m.goals_conceded!).length;
   const draws = matchesWithScore.filter((m) => m.goals_scored! === m.goals_conceded!).length;
   const losses = matchesWithScore.filter((m) => m.goals_scored! < m.goals_conceded!).length;
-  const cleanSheets = matchesWithScore.filter((m) => m.goals_conceded === 0).length;
+  const cleanSheets = useMemo(() => {
+    if (!selectedGk) return matchesWithScore.filter((m) => m.goals_conceded === 0).length;
+    // Per portiere singolo: usa goals_conceded dalla performance se disponibile
+    return matches.filter((m) => {
+      const perf = perfByMatch[m.id];
+      if (perf && perf.goals_conceded != null) return perf.goals_conceded === 0;
+      if (m.goalkeeper_id === selectedGk && m.goals_conceded != null) return m.goals_conceded === 0;
+      return false;
+    }).length;
+  }, [matches, matchesWithScore, selectedGk, perfByMatch]);
 
-  const rated = matches.filter((m) => m.rating != null);
-  const avgRating = rated.length > 0
-    ? (rated.reduce((sum, m) => sum + m.rating!, 0) / rated.length).toFixed(1)
-    : '—';
+  // Rating: per portiere singolo usa la performance se disponibile
+  const ratingData = useMemo(() => {
+    if (!selectedGk) {
+      const rated = matches.filter((m) => m.rating != null);
+      return { count: rated.length, avg: rated.length > 0 ? rated.reduce((s, m) => s + m.rating!, 0) / rated.length : null };
+    }
+    const ratings: number[] = [];
+    matches.forEach((m) => {
+      const perf = perfByMatch[m.id];
+      if (perf?.rating != null) { ratings.push(perf.rating); return; }
+      if (m.goalkeeper_id === selectedGk && m.rating != null) ratings.push(m.rating);
+    });
+    return { count: ratings.length, avg: ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null };
+  }, [matches, selectedGk, perfByMatch]);
+  const avgRating = ratingData.avg != null ? ratingData.avg.toFixed(1) : '—';
 
   const avgConceded = matchesWithScore.length > 0
     ? (matchesWithScore.reduce((sum, m) => sum + m.goals_conceded!, 0) / matchesWithScore.length).toFixed(1)
@@ -327,7 +365,7 @@ export default function StatisticheScreen() {
           <View style={styles.statsGrid}>
             <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
             <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
-            <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${rated.length} ${t('stats.rated')}`} />
+            <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${ratingData.count} ${t('stats.rated')}`} />
             <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
           </View>
 

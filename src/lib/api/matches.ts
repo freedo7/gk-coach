@@ -79,6 +79,15 @@ export interface PerformanceInput {
   notes: string | null;
 }
 
+export async function listAllPerformances(teamId: string): Promise<MatchPerformance[]> {
+  const { data, error } = await supabase
+    .from('match_performances')
+    .select('*, goalkeeper:goalkeepers(name), match:matches!inner(team_id)')
+    .eq('match.team_id', teamId);
+  if (error) throw error;
+  return data as unknown as MatchPerformance[];
+}
+
 export async function setPerformances(matchId: string, performances: PerformanceInput[]) {
   await supabase.from('match_performances').delete().eq('match_id', matchId);
   if (performances.length === 0) return;

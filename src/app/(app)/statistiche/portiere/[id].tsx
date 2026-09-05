@@ -11,12 +11,12 @@ import { ThemedView } from '@/components/themed-view';
 import { MatchRow } from '@/components/match-row';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
-import { listMatches } from '@/lib/api/matches';
+import { listMatches, listAllPerformances } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { useToast } from '@/context/toast-context';
 import { generateGoalkeeperPdf } from '@/lib/pdf';
-import type { Match, Training, Goalkeeper } from '@/types/database';
+import type { Match, Training, Goalkeeper, MatchPerformance } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 export default function SchedaPortiereScreen() {
@@ -29,6 +29,7 @@ export default function SchedaPortiereScreen() {
   const [goalkeeper, setGoalkeeper] = useState<Goalkeeper | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [trainings, setTrainings] = useState<Training[]>([]);
+  const [perfByMatch, setPerfByMatch] = useState<Record<string, MatchPerformance>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -36,13 +37,19 @@ export default function SchedaPortiereScreen() {
   const loadData = useCallback(async () => {
     if (!currentTeam) return;
     try {
-      const [gks, m, t] = await Promise.all([
+      const [gks, m, t, perfs] = await Promise.all([
         listGoalkeepers(currentTeam.id),
         listMatches(currentTeam.id, { isAdmin }),
         listTrainings(currentTeam.id),
+        listAllPerformances(currentTeam.id),
       ]);
       setGoalkeeper(gks.find((g) => g.id === id) ?? null);
-      setMatches(m.filter((match) => match.goalkeeper_id === id));
+      // Performance lookup per questo portiere
+      const pMap: Record<string, MatchPerformance> = {};
+      perfs.filter((p) => p.goalkeeper_id === id).forEach((p) => { pMap[p.match_id] = p; });
+      setPerfByMatch(pMap);
+      // Partite assegnate al portiere O con performance
+      setMatches(m.filter((match) => match.goalkeeper_id === id || pMap[match.id]));
       setTrainings(t.filter((tr) => tr.goalkeeper_id === id));
     } finally {
       setLoading(false);
@@ -81,18 +88,29 @@ export default function SchedaPortiereScreen() {
   const wins = matchesWithScore.filter((m) => m.goals_scored! > m.goals_conceded!).length;
   const draws = matchesWithScore.filter((m) => m.goals_scored! === m.goals_conceded!).length;
   const losses = matchesWithScore.filter((m) => m.goals_scored! < m.goals_conceded!).length;
-  const cleanSheets = matchesWithScore.filter((m) => m.goals_conceded === 0).length;
+  const cleanSheets = matches.filter((m) => {
+    const perf = perfByMatch[m.id];
+    if (perf?.goals_conceded != null) return perf.goals_conceded === 0;
+    if (m.goalkeeper_id === id && m.goals_conceded != null) return m.goals_conceded === 0;
+    return false;
+  }).length;
 
-  const rated = matches.filter((m) => m.rating != null);
-  const avgRating = rated.length > 0
-    ? (rated.reduce((sum, m) => sum + m.rating!, 0) / rated.length).toFixed(1)
+  // Rating: usa performance se disponibile
+  const ratings: number[] = [];
+  matches.forEach((m) => {
+    const perf = perfByMatch[m.id];
+    if (perf?.rating != null) { ratings.push(perf.rating); return; }
+    if (m.goalkeeper_id === id && m.rating != null) ratings.push(m.rating);
+  });
+  const avgRating = ratings.length > 0
+    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
     : '—';
   const avgConceded = matchesWithScore.length > 0
     ? (matchesWithScore.reduce((sum, m) => sum + m.goals_conceded!, 0) / matchesWithScore.length).toFixed(1)
     : '—';
 
   // Rating trend (last 5 rated matches)
-  const ratingTrend = rated.slice(-5).map((m) => m.rating!);
+  const ratingTrend = ratings.slice(-5);
 
   return (
     <ThemedView style={styles.container}>
