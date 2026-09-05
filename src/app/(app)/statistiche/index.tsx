@@ -422,36 +422,39 @@ export default function StatisticheScreen() {
           </ThemedText>
           {hasWeeklyActivity ? (
             <ThemedView type="card" style={styles.card}>
-              <View style={styles.chartContainer}>
-                {weeklyActivity.map((w, i) => {
-                  const max = Math.max(...weeklyActivity.map((x) => Math.max(x.trainings, x.matches)), 1);
-                  return (
-                    <View key={i} style={styles.chartCol}>
-                      <View style={styles.chartPairWrapper}>
-                        <View style={styles.chartBarWrapper}>
-                          {w.trainings > 0 && (
-                            <ThemedText type="small" style={{ fontSize: 9, fontWeight: '700', textAlign: 'center', color: colors.accent }}>
-                              {w.trainings}
-                            </ThemedText>
-                          )}
-                          <View style={[styles.chartBar, { height: w.trainings > 0 ? `${(w.trainings / max) * 100}%` : 4, backgroundColor: w.trainings > 0 ? colors.accent : colors.backgroundElement }]} />
+              {(() => {
+                const BAR_MAX_H = 80;
+                const max = Math.max(...weeklyActivity.map((x) => Math.max(x.trainings, x.matches)), 1);
+                return (
+                  <View style={styles.chartContainer}>
+                    {weeklyActivity.map((w, i) => (
+                      <View key={i} style={styles.chartCol}>
+                        <View style={styles.chartPairWrapper}>
+                          <View style={styles.chartBarWrapper}>
+                            {w.trainings > 0 && (
+                              <ThemedText type="small" style={styles.chartNum}>
+                                {w.trainings}
+                              </ThemedText>
+                            )}
+                            <View style={[styles.chartBar, { height: w.trainings > 0 ? (w.trainings / max) * BAR_MAX_H : 4, backgroundColor: w.trainings > 0 ? colors.accent : colors.backgroundElement }]} />
+                          </View>
+                          <View style={styles.chartBarWrapper}>
+                            {w.matches > 0 && (
+                              <ThemedText type="small" style={[styles.chartNum, { color: '#FF9500' }]}>
+                                {w.matches}
+                              </ThemedText>
+                            )}
+                            <View style={[styles.chartBar, { height: w.matches > 0 ? (w.matches / max) * BAR_MAX_H : 4, backgroundColor: w.matches > 0 ? '#FF9500' : colors.backgroundElement }]} />
+                          </View>
                         </View>
-                        <View style={styles.chartBarWrapper}>
-                          {w.matches > 0 && (
-                            <ThemedText type="small" style={{ fontSize: 9, fontWeight: '700', textAlign: 'center', color: '#FF9500' }}>
-                              {w.matches}
-                            </ThemedText>
-                          )}
-                          <View style={[styles.chartBar, { height: w.matches > 0 ? `${(w.matches / max) * 100}%` : 4, backgroundColor: w.matches > 0 ? '#FF9500' : colors.backgroundElement }]} />
-                        </View>
+                        <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
+                          {w.label}
+                        </ThemedText>
                       </View>
-                      <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
-                        {w.label}
-                      </ThemedText>
-                    </View>
-                  );
-                })}
-              </View>
+                    ))}
+                  </View>
+                );
+              })()}
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
@@ -638,8 +641,7 @@ const styles = StyleSheet.create({
   chartContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 100,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   chartCol: {
     flex: 1,
@@ -647,20 +649,24 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   chartPairWrapper: {
-    flex: 1,
+    height: '100%',
     flexDirection: 'row',
-    gap: 2,
+    gap: 3,
     alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   chartBarWrapper: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    width: 16,
     alignItems: 'center',
   },
   chartBar: {
     width: '100%',
-    borderRadius: 4,
-    minHeight: 4,
+    borderRadius: 3,
+  },
+  chartNum: {
+    fontSize: 10,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   legendRow: {
     flexDirection: 'row',
