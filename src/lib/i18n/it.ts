@@ -164,6 +164,8 @@ export default {
     goalkeeperPerformances: 'Valutazioni portieri',
     goalkeeperPerformancesHint: 'Aggiungi voto e commento per ogni portiere che ha giocato',
     performanceNotesPlaceholder: 'Commento sulla prestazione...',
+    us: 'Noi',
+    perfGoalsConceded: 'Gol subiti',
     addDetails: 'Aggiungi dettagli',
     addNotes: 'Aggiungi note',
   },

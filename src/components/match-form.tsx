@@ -28,6 +28,7 @@ interface PerfState {
   goalkeeper_id: string;
   name: string;
   rating: number;
+  goals_conceded: string;
   notes: string;
 }
 
@@ -46,7 +47,6 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
   const [goalsScored, setGoalsScored] = useState(initial?.goals_scored?.toString() ?? '');
   const [goalsConceded, setGoalsConceded] = useState(initial?.goals_conceded?.toString() ?? '');
   const [rating, setRating] = useState(initial?.rating ?? 0);
-  const [result, setResult] = useState(initial?.result ?? '');
   const [resultNotes, setResultNotes] = useState(initial?.result_notes ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +67,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
             goalkeeper_id: p.goalkeeper_id,
             name: p.goalkeeper?.name ?? gks.find((g) => g.id === p.goalkeeper_id)?.name ?? '',
             rating: p.rating ?? 0,
+            goals_conceded: p.goals_conceded?.toString() ?? '',
             notes: p.notes ?? '',
           }))
         );
@@ -107,7 +108,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
 
   function addPerformance(gk: Goalkeeper) {
     haptic('light');
-    setPerformances((prev) => [...prev, { goalkeeper_id: gk.id, name: gk.name, rating: 0, notes: '' }]);
+    setPerformances((prev) => [...prev, { goalkeeper_id: gk.id, name: gk.name, rating: 0, goals_conceded: '', notes: '' }]);
   }
 
   function removePerformance(gkId: string) {
@@ -115,7 +116,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
     setPerformances((prev) => prev.filter((p) => p.goalkeeper_id !== gkId));
   }
 
-  function updatePerformance(gkId: string, field: 'rating' | 'notes', value: number | string) {
+  function updatePerformance(gkId: string, field: 'rating' | 'goals_conceded' | 'notes', value: number | string) {
     setPerformances((prev) =>
       prev.map((p) => (p.goalkeeper_id === gkId ? { ...p, [field]: value } : p))
     );
@@ -127,10 +128,11 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
     setSubmitting(true);
     try {
       const perfInputs: PerformanceInput[] = performances
-        .filter((p) => p.rating > 0 || p.notes.trim())
+        .filter((p) => p.rating > 0 || p.goals_conceded.trim() || p.notes.trim())
         .map((p) => ({
           goalkeeper_id: p.goalkeeper_id,
           rating: p.rating > 0 ? p.rating : null,
+          goals_conceded: p.goals_conceded.trim() ? parseInt(p.goals_conceded.trim(), 10) : null,
           notes: p.notes.trim() || null,
         }));
       await onSubmit(
@@ -145,7 +147,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
           goals_scored: goalsScored.trim() ? parseInt(goalsScored.trim(), 10) : null,
           goals_conceded: goalsConceded.trim() ? parseInt(goalsConceded.trim(), 10) : null,
           rating: rating > 0 ? rating : null,
-          result: result.trim() || null,
+          result: null,
           result_notes: resultNotes.trim() || null,
           notes: notes.trim() || null,
         },
@@ -294,21 +296,26 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
             </ThemedText>
             <View style={styles.chipRow}>
               <View style={{ flex: 1 }}>
-                <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsScored')}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {isHome ? t('matchForm.us') : opponent.trim() || t('matchForm.opponent')}
+                </ThemedText>
                 <TextInput
-                  value={goalsScored}
-                  onChangeText={setGoalsScored}
+                  value={isHome ? goalsScored : goalsConceded}
+                  onChangeText={isHome ? setGoalsScored : setGoalsConceded}
                   placeholder="0"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="number-pad"
                   style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
                 />
               </View>
+              <ThemedText style={styles.scoreSeparator}>-</ThemedText>
               <View style={{ flex: 1 }}>
-                <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsConceded')}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {isHome ? opponent.trim() || t('matchForm.opponent') : t('matchForm.us')}
+                </ThemedText>
                 <TextInput
-                  value={goalsConceded}
-                  onChangeText={setGoalsConceded}
+                  value={isHome ? goalsConceded : goalsScored}
+                  onChangeText={isHome ? setGoalsConceded : setGoalsScored}
                   placeholder="0"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="number-pad"
@@ -337,17 +344,6 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
                 </Pressable>
               ))}
             </View>
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-              {t('matchForm.textResult')}
-            </ThemedText>
-            <TextInput
-              value={result}
-              onChangeText={setResult}
-              placeholder={t('matchForm.textResultPlaceholder')}
-              placeholderTextColor={colors.textSecondary}
-              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-            />
           </View>
         </FadeIn>
       )}
@@ -404,28 +400,41 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
                       </Pressable>
                     </View>
 
-                    <ThemedText type="small" themeColor="textSecondary" style={styles.perfLabel}>
-                      {t('matchForm.ratingSection')}
-                    </ThemedText>
-                    <View style={styles.ratingRow}>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                        <Pressable
-                          key={n}
-                          onPress={() => {
-                            haptic('light');
-                            updatePerformance(perf.goalkeeper_id, 'rating', perf.rating === n ? 0 : n);
-                          }}
-                          style={[
-                            styles.ratingDot,
-                            { backgroundColor: n <= perf.rating ? colors.accent : colors.backgroundElement },
-                          ]}>
-                          <ThemedText
-                            type="small"
-                            style={{ color: n <= perf.rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
-                            {n}
-                          </ThemedText>
-                        </Pressable>
-                      ))}
+                    <View style={styles.perfFieldRow}>
+                      <View style={{ flex: 1 }}>
+                        <ThemedText type="small" themeColor="textSecondary">{t('matchForm.perfGoalsConceded')}</ThemedText>
+                        <TextInput
+                          value={perf.goals_conceded}
+                          onChangeText={(v) => updatePerformance(perf.goalkeeper_id, 'goals_conceded', v)}
+                          placeholder="0"
+                          placeholderTextColor={colors.textSecondary}
+                          keyboardType="number-pad"
+                          style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                        />
+                      </View>
+                      <View style={{ flex: 2 }}>
+                        <ThemedText type="small" themeColor="textSecondary">{t('matchForm.ratingSection')}</ThemedText>
+                        <View style={[styles.ratingRow, { marginTop: Spacing.one }]}>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                            <Pressable
+                              key={n}
+                              onPress={() => {
+                                haptic('light');
+                                updatePerformance(perf.goalkeeper_id, 'rating', perf.rating === n ? 0 : n);
+                              }}
+                              style={[
+                                styles.ratingDot,
+                                { backgroundColor: n <= perf.rating ? colors.accent : colors.backgroundElement },
+                              ]}>
+                              <ThemedText
+                                type="small"
+                                style={{ color: n <= perf.rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                                {n}
+                              </ThemedText>
+                            </Pressable>
+                          ))}
+                        </View>
+                      </View>
                     </View>
 
                     <TextInput
@@ -580,6 +589,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     maxWidth: 36,
+  },
+  scoreSeparator: {
+    fontSize: 24,
+    fontWeight: '700',
+    alignSelf: 'flex-end',
+    paddingBottom: Spacing.three,
+    opacity: 0.3,
+  },
+  perfFieldRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    alignItems: 'flex-start',
   },
   perfSection: {
     marginTop: Spacing.four,

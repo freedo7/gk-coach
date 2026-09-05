@@ -157,14 +157,21 @@ export default function PartitaDettaglioScreen() {
                   <View key={perf.id} style={styles.perfRow}>
                     <View style={styles.perfInfo}>
                       <ThemedText type="smallBold">{perf.goalkeeper?.name ?? '—'}</ThemedText>
-                      {perf.rating != null && (
-                        <View style={styles.perfRating}>
-                          <ThemedText style={[styles.perfRatingNumber, { color: colors.accent }]}>
-                            {perf.rating}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
+                        {perf.goals_conceded != null && (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {perf.goals_conceded} {t('matchForm.perfGoalsConceded').toLowerCase()}
                           </ThemedText>
-                          <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
-                        </View>
-                      )}
+                        )}
+                        {perf.rating != null && (
+                          <View style={styles.perfRating}>
+                            <ThemedText style={[styles.perfRatingNumber, { color: colors.accent }]}>
+                              {perf.rating}
+                            </ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+                          </View>
+                        )}
+                      </View>
                     </View>
                     {perf.notes && (
                       <ThemedText type="small" themeColor="textSecondary">{perf.notes}</ThemedText>

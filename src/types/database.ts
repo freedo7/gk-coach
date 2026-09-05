@@ -105,6 +105,7 @@ export interface MatchPerformance {
   match_id: string;
   goalkeeper_id: string;
   rating: number | null;
+  goals_conceded: number | null;
   notes: string | null;
   created_at: string;
   goalkeeper?: { name: string };

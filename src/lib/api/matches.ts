@@ -75,6 +75,7 @@ export async function listPerformances(matchId: string): Promise<MatchPerformanc
 export interface PerformanceInput {
   goalkeeper_id: string;
   rating: number | null;
+  goals_conceded: number | null;
   notes: string | null;
 }
 

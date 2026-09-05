@@ -164,6 +164,8 @@ export default {
     goalkeeperPerformances: 'Goalkeeper performances',
     goalkeeperPerformancesHint: 'Add rating and comment for each goalkeeper who played',
     performanceNotesPlaceholder: 'Performance comment...',
+    us: 'Us',
+    perfGoalsConceded: 'Goals conceded',
     addDetails: 'Add details',
     addNotes: 'Add notes',
   },
