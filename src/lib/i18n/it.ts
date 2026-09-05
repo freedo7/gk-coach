@@ -224,6 +224,8 @@ export default {
     avgConceded: 'Media gol subiti',
     scoredMatches: '{{scored}} su {{total}} con risultato',
     weeklyTrainings: 'ALLENAMENTI PER SETTIMANA',
+    weeklyActivity: 'ATTIVITÀ ULTIME 4 SETTIMANE',
+    noRecentActivity: 'Nessuna attività recente',
     matchesByType: 'PARTITE PER TIPO',
     topCategories: "CATEGORIE PIU' ALLENATE",
     emptyStats: 'Aggiungi partite e allenamenti per vedere le tue statistiche.',

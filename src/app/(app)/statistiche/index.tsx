@@ -34,11 +34,6 @@ function weeksAgo(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function shortWeekLabel(dateStr: string) {
-  const d = new Date(dateStr);
-  return `${d.getDate()}/${d.getMonth() + 1}`;
-}
-
 function timeCutoff(period: 'all' | 'season' | '3m' | '1m'): string | null {
   if (period === 'all') return null;
   const now = new Date();
@@ -75,39 +70,6 @@ function StatCard({ icon, iconBg, label, value, sub }: {
       <ThemedText style={styles.statValue}>{value}</ThemedText>
       {sub && <ThemedText type="small" themeColor="textSecondary">{sub}</ThemedText>}
     </ThemedView>
-  );
-}
-
-/* ── Bar chart (simple) ── */
-function MiniBarChart({ data, accentColor }: { data: { label: string; value: number }[]; accentColor: string }) {
-  const colors = useTheme();
-  const max = Math.max(...data.map((d) => d.value), 1);
-  return (
-    <View style={styles.chartContainer}>
-      {data.map((d, i) => (
-        <View key={i} style={styles.chartCol}>
-          <View style={styles.chartBarWrapper}>
-            {d.value > 0 && (
-              <ThemedText type="small" style={{ fontSize: 10, fontWeight: '700', textAlign: 'center', color: accentColor }}>
-                {d.value}
-              </ThemedText>
-            )}
-            <View
-              style={[
-                styles.chartBar,
-                {
-                  height: `${(d.value / max) * 100}%`,
-                  backgroundColor: d.value > 0 ? accentColor : colors.backgroundElement,
-                },
-              ]}
-            />
-          </View>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
-            {d.label}
-          </ThemedText>
-        </View>
-      ))}
-    </View>
   );
 }
 
@@ -264,26 +226,42 @@ export default function StatisticheScreen() {
   const byType = { amichevole: 0, campionato: 0, coppa: 0 };
   matches.forEach((m) => { byType[m.match_type] = (byType[m.match_type] ?? 0) + 1; });
 
-  // Weekly activity (last 8 weeks)
-  const cutoff = weeksAgo(8);
+  // Weekly activity (last 4 weeks) — allenamenti + partite
+  const cutoff = weeksAgo(4);
   const recentTrainings = trainings.filter((t) => t.training_date >= cutoff);
-  const weeks: { key: string; label: string; count: number }[] = [];
-  for (let i = 7; i >= 0; i--) {
+  const recentMatches = matches.filter((m) => m.match_date >= cutoff);
+  const weeklyActivity: { label: string; trainings: number; matches: number }[] = [];
+  for (let i = 3; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i * 7);
-    // Lunedì di quella settimana
     const day = d.getDay();
     const monday = new Date(d);
     monday.setDate(d.getDate() - ((day + 6) % 7));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const label = `${monday.getDate()}/${monday.getMonth() + 1}`;
     const key = weekKey(d.toISOString().slice(0, 10));
-    weeks.push({ key, label: `${monday.getDate()}/${monday.getMonth() + 1}`, count: 0 });
+    weeklyActivity.push({ label, trainings: 0, matches: 0 });
   }
   recentTrainings.forEach((t) => {
     const key = weekKey(t.training_date);
-    const w = weeks.find((w) => w.key === key);
-    if (w) w.count++;
+    for (let i = 0; i < weeklyActivity.length; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - (3 - i) * 7);
+      if (weekKey(d.toISOString().slice(0, 10)) === key) { weeklyActivity[i].trainings++; break; }
+    }
   });
-  const weeklyData = weeks.map((w) => ({ label: w.label, value: w.count }));
+  recentMatches.forEach((m) => {
+    const key = weekKey(m.match_date);
+    for (let i = 0; i < weeklyActivity.length; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - (3 - i) * 7);
+      if (weekKey(d.toISOString().slice(0, 10)) === key) { weeklyActivity[i].matches++; break; }
+    }
+  });
+  const totalWeeklyTrainings = weeklyActivity.reduce((s, w) => s + w.trainings, 0);
+  const totalWeeklyMatches = weeklyActivity.reduce((s, w) => s + w.matches, 0);
+  const hasWeeklyActivity = totalWeeklyTrainings > 0 || totalWeeklyMatches > 0;
 
   if (loading) {
     return (
@@ -440,11 +418,55 @@ export default function StatisticheScreen() {
 
           {/* ── Attività settimanale ── */}
           <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-            {t('stats.weeklyTrainings')}
+            {t('stats.weeklyActivity')}
           </ThemedText>
-          <ThemedView type="card" style={styles.card}>
-            <MiniBarChart data={weeklyData} accentColor={colors.accent} />
-          </ThemedView>
+          {hasWeeklyActivity ? (
+            <ThemedView type="card" style={styles.card}>
+              <View style={styles.chartContainer}>
+                {weeklyActivity.map((w, i) => {
+                  const max = Math.max(...weeklyActivity.map((x) => x.trainings + x.matches), 1);
+                  return (
+                    <View key={i} style={styles.chartCol}>
+                      <View style={styles.chartBarWrapper}>
+                        {(w.trainings > 0 || w.matches > 0) && (
+                          <ThemedText type="small" style={{ fontSize: 10, fontWeight: '700', textAlign: 'center', color: colors.text }}>
+                            {w.trainings + w.matches}
+                          </ThemedText>
+                        )}
+                        {w.matches > 0 && (
+                          <View style={[styles.chartBar, { height: `${(w.matches / max) * 100}%`, backgroundColor: '#FF9500', borderBottomLeftRadius: w.trainings > 0 ? 0 : 4, borderBottomRightRadius: w.trainings > 0 ? 0 : 4 }]} />
+                        )}
+                        {w.trainings > 0 && (
+                          <View style={[styles.chartBar, { height: `${(w.trainings / max) * 100}%`, backgroundColor: colors.accent }]} />
+                        )}
+                        {w.trainings === 0 && w.matches === 0 && (
+                          <View style={[styles.chartBar, { height: 4, backgroundColor: colors.backgroundElement }]} />
+                        )}
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
+                        {w.label}
+                      </ThemedText>
+                    </View>
+                  );
+                })}
+              </View>
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
+                  <ThemedText type="small" themeColor="textSecondary">{t('stats.trainingsLabel')} ({totalWeeklyTrainings})</ThemedText>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#FF9500' }]} />
+                  <ThemedText type="small" themeColor="textSecondary">{t('stats.matchesLabel')} ({totalWeeklyMatches})</ThemedText>
+                </View>
+              </View>
+            </ThemedView>
+          ) : (
+            <ThemedView type="card" style={[styles.card, { alignItems: 'center', paddingVertical: Spacing.four }]}>
+              <Ionicons name="fitness-outline" size={28} color={colors.textSecondary} />
+              <ThemedText type="small" themeColor="textSecondary">{t('stats.noRecentActivity')}</ThemedText>
+            </ThemedView>
+          )}
 
           {/* ── Tipo partite ── */}
           {matches.length > 0 && (
@@ -631,6 +653,21 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 4,
     minHeight: 4,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.four,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   chartLabel: {
     fontSize: 9,

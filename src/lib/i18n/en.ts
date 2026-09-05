@@ -224,6 +224,8 @@ export default {
     avgConceded: 'Avg goals conceded',
     scoredMatches: '{{scored}} of {{total}} with result',
     weeklyTrainings: 'TRAININGS PER WEEK',
+    weeklyActivity: 'ACTIVITY LAST 4 WEEKS',
+    noRecentActivity: 'No recent activity',
     matchesByType: 'MATCHES BY TYPE',
     topCategories: 'MOST TRAINED CATEGORIES',
     emptyStats: 'Add matches and trainings to see your statistics.',
