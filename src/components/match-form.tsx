@@ -280,6 +280,19 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
         onChange={(v) => setMatchTime(v ?? '')}
       />
 
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+        {t('matchForm.generalNotes')}
+      </ThemedText>
+      <TextInput
+        value={notes ?? ''}
+        onChangeText={setNotes}
+        placeholder={t('matchForm.generalNotesPlaceholder')}
+        placeholderTextColor={colors.textSecondary}
+        multiline
+        numberOfLines={3}
+        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+      />
+
       {/* STEP 2: Portiere + Risultato + Voto + Risultato testuale */}
       {revealed.step2 && (
         <FadeIn delay={isEdit ? 0 : 200}>
@@ -391,19 +404,6 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
                 />
               </>
             )}
-
-            <ThemedText type="smallBold" themeColor="textSecondary" style={goalkeeperId !== null ? styles.spacing : undefined}>
-              {t('matchForm.generalNotes')}
-            </ThemedText>
-            <TextInput
-              value={notes ?? ''}
-              onChangeText={setNotes}
-              placeholder={t('matchForm.generalNotesPlaceholder')}
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={4}
-              style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-            />
 
             {/* Valutazioni portieri (solo con "Tutti") */}
             {goalkeeperId === null && allGoalkeepers.length > 0 && (
