@@ -328,22 +328,36 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
               {t('matchForm.ratingSection')}
             </ThemedText>
             <View style={styles.ratingRow}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <Pressable
-                  key={n}
-                  onPress={() => { haptic('light'); setRating(rating === n ? 0 : n); }}
-                  style={[
-                    styles.ratingDot,
-                    { backgroundColor: n <= rating ? colors.accent : colors.backgroundElement },
-                  ]}>
-                  <ThemedText
-                    type="small"
-                    style={{ color: n <= rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
-                    {n}
-                  </ThemedText>
-                </Pressable>
-              ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+                const filled = n <= Math.floor(rating);
+                const half = !filled && rating % 1 === 0.5 && n === Math.ceil(rating);
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => {
+                      haptic('light');
+                      if (rating === n) setRating(n + 0.5 <= 10 ? n + 0.5 : 0);
+                      else if (rating === n + 0.5) setRating(0);
+                      else setRating(n);
+                    }}
+                    style={[
+                      styles.ratingDot,
+                      { backgroundColor: filled ? colors.accent : half ? colors.accent + '40' : colors.backgroundElement },
+                    ]}>
+                    <ThemedText
+                      type="small"
+                      style={{ color: filled || half ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                      {n}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
             </View>
+            {rating > 0 && rating % 1 === 0.5 && (
+              <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
+                {t('matchForm.ratingSection')}: {rating}
+              </ThemedText>
+            )}
           </View>
         </FadeIn>
       )}
@@ -415,25 +429,36 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
                       <View style={{ flex: 2 }}>
                         <ThemedText type="small" themeColor="textSecondary">{t('matchForm.ratingSection')}</ThemedText>
                         <View style={[styles.ratingRow, { marginTop: Spacing.one }]}>
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                            <Pressable
-                              key={n}
-                              onPress={() => {
-                                haptic('light');
-                                updatePerformance(perf.goalkeeper_id, 'rating', perf.rating === n ? 0 : n);
-                              }}
-                              style={[
-                                styles.ratingDot,
-                                { backgroundColor: n <= perf.rating ? colors.accent : colors.backgroundElement },
-                              ]}>
-                              <ThemedText
-                                type="small"
-                                style={{ color: n <= perf.rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
-                                {n}
-                              </ThemedText>
-                            </Pressable>
-                          ))}
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+                            const filled = n <= Math.floor(perf.rating);
+                            const half = !filled && perf.rating % 1 === 0.5 && n === Math.ceil(perf.rating);
+                            return (
+                              <Pressable
+                                key={n}
+                                onPress={() => {
+                                  haptic('light');
+                                  if (perf.rating === n) updatePerformance(perf.goalkeeper_id, 'rating', n + 0.5 <= 10 ? n + 0.5 : 0);
+                                  else if (perf.rating === n + 0.5) updatePerformance(perf.goalkeeper_id, 'rating', 0);
+                                  else updatePerformance(perf.goalkeeper_id, 'rating', n);
+                                }}
+                                style={[
+                                  styles.ratingDot,
+                                  { backgroundColor: filled ? colors.accent : half ? colors.accent + '40' : colors.backgroundElement },
+                                ]}>
+                                <ThemedText
+                                  type="small"
+                                  style={{ color: filled || half ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                                  {n}
+                                </ThemedText>
+                              </Pressable>
+                            );
+                          })}
                         </View>
+                        {perf.rating > 0 && perf.rating % 1 === 0.5 && (
+                          <ThemedText type="small" themeColor="accent" style={{ marginTop: 2 }}>
+                            {perf.rating}
+                          </ThemedText>
+                        )}
                       </View>
                     </View>
 
