@@ -297,7 +297,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
             <View style={styles.chipRow}>
               <View style={{ flex: 1 }}>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {isHome ? t('matchForm.us') : opponent.trim() || t('matchForm.opponent')}
+                  {isHome ? currentTeam?.name ?? t('matchForm.us') : opponent.trim() || t('matchForm.opponent')}
                 </ThemedText>
                 <TextInput
                   value={isHome ? goalsScored : goalsConceded}
@@ -311,7 +311,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
               <ThemedText style={styles.scoreSeparator}>-</ThemedText>
               <View style={{ flex: 1 }}>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {isHome ? opponent.trim() || t('matchForm.opponent') : t('matchForm.us')}
+                  {isHome ? opponent.trim() || t('matchForm.opponent') : currentTeam?.name ?? t('matchForm.us')}
                 </ThemedText>
                 <TextInput
                   value={isHome ? goalsConceded : goalsScored}
@@ -324,42 +324,46 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
               </View>
             </View>
 
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-              {t('matchForm.ratingSection')}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('matchForm.ratingHint')}
-            </ThemedText>
-            <View style={styles.ratingRow}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
-                const filled = n <= Math.floor(rating);
-                const half = !filled && rating % 1 === 0.5 && n === Math.ceil(rating);
-                return (
-                  <Pressable
-                    key={n}
-                    onPress={() => {
-                      haptic('light');
-                      if (rating === n) setRating(n + 0.5 <= 10 ? n + 0.5 : 0);
-                      else if (rating === n + 0.5) setRating(0);
-                      else setRating(n);
-                    }}
-                    style={[
-                      styles.ratingDot,
-                      { backgroundColor: filled ? colors.accent : half ? colors.accent + '40' : colors.backgroundElement },
-                    ]}>
-                    <ThemedText
-                      type="small"
-                      style={{ color: filled || half ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
-                      {n}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {rating > 0 && rating % 1 === 0.5 && (
-              <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
-                {t('matchForm.ratingSection')}: {rating}
-              </ThemedText>
+            {goalkeeperId !== null && (
+              <>
+                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+                  {t('matchForm.ratingSection')}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('matchForm.ratingHint')}
+                </ThemedText>
+                <View style={styles.ratingRow}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+                    const filled = n <= Math.floor(rating);
+                    const half = !filled && rating % 1 === 0.5 && n === Math.ceil(rating);
+                    return (
+                      <Pressable
+                        key={n}
+                        onPress={() => {
+                          haptic('light');
+                          if (rating === n) setRating(n + 0.5 <= 10 ? n + 0.5 : 0);
+                          else if (rating === n + 0.5) setRating(0);
+                          else setRating(n);
+                        }}
+                        style={[
+                          styles.ratingDot,
+                          { backgroundColor: filled ? colors.accent : half ? colors.accent + '40' : colors.backgroundElement },
+                        ]}>
+                        <ThemedText
+                          type="small"
+                          style={{ color: filled || half ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                          {n}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                {rating > 0 && rating % 1 === 0.5 && (
+                  <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
+                    {t('matchForm.ratingSection')}: {rating}
+                  </ThemedText>
+                )}
+              </>
             )}
           </View>
         </FadeIn>
@@ -371,20 +375,24 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
           <View style={styles.stepSection}>
             <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
 
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              {t('matchForm.resultNotes')}
-            </ThemedText>
-            <TextInput
-              value={resultNotes}
-              onChangeText={setResultNotes}
-              placeholder={t('matchForm.resultNotesPlaceholder')}
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={4}
-              style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-            />
+            {goalkeeperId !== null && (
+              <>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {t('matchForm.resultNotes')}
+                </ThemedText>
+                <TextInput
+                  value={resultNotes}
+                  onChangeText={setResultNotes}
+                  placeholder={t('matchForm.resultNotesPlaceholder')}
+                  placeholderTextColor={colors.textSecondary}
+                  multiline
+                  numberOfLines={4}
+                  style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                />
+              </>
+            )}
 
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+            <ThemedText type="smallBold" themeColor="textSecondary" style={goalkeeperId !== null ? styles.spacing : undefined}>
               {t('matchForm.generalNotes')}
             </ThemedText>
             <TextInput
