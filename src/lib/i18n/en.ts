@@ -193,6 +193,7 @@ export default {
     instructionsPlaceholder: 'Describe the exercise, steps, variations...',
     videoUrl: 'Video link (optional)',
     contentUrl: 'HTML sheet URL (optional)',
+    skip: 'Skip →',
   },
 
   // Statistics

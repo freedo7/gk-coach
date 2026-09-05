@@ -193,6 +193,7 @@ export default {
     instructionsPlaceholder: "Descrivi l'esercizio, i passaggi, le variabili...",
     videoUrl: 'Link video (opzionale)',
     contentUrl: 'URL scheda HTML (opzionale)',
+    skip: 'Salta →',
   },
 
   // Statistics
