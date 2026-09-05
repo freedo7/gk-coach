@@ -9,6 +9,18 @@ export interface TrainingWithExercises extends Training {
   training_exercises: TrainingExerciseWithExercise[];
 }
 
+export async function getLatestTraining(teamId: string): Promise<Training | null> {
+  const { data, error } = await supabase
+    .from('trainings')
+    .select('*')
+    .eq('team_id', teamId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function listTrainings(teamId: string): Promise<Training[]> {
   const { data, error } = await supabase
     .from('trainings')

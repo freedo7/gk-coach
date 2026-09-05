@@ -9,7 +9,8 @@ import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import type { MatchInput } from '@/lib/api/matches';
+import { getLatestMatch, type MatchInput } from '@/lib/api/matches';
+import { useAuth } from '@/context/auth-context';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -23,6 +24,7 @@ interface Props {
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const { t } = useTranslation();
   const colors = useTheme();
+  const { currentTeam } = useAuth();
   const isEdit = !!initial?.opponent;
   const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
@@ -39,6 +41,20 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Smart defaults: precompila dall'ultima partita creata
+  useEffect(() => {
+    if (!isEdit && !initial && currentTeam) {
+      getLatestMatch(currentTeam.id).then((latest) => {
+        if (!latest) return;
+        if (latest.match_time && !matchTime) setMatchTime(latest.match_time);
+        if (latest.goalkeeper_id && !goalkeeperId) setGoalkeeperId(latest.goalkeeper_id);
+        if (latest.match_type === 'campionato' && latest.matchday != null) {
+          setMatchday(String(latest.matchday + 1));
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   const valid = opponent.trim().length > 0 && !!matchDate && !!matchTime;
 

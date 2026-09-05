@@ -11,7 +11,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
 import { listCategories } from '@/lib/api/categories';
-import type { TrainingInput } from '@/lib/api/trainings';
+import { getLatestTraining, type TrainingInput } from '@/lib/api/trainings';
+import { useAuth } from '@/context/auth-context';
 import type { ExerciseCategory } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
@@ -27,6 +28,7 @@ interface Props {
 export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmit }: Props) {
   const { t } = useTranslation();
   const colors = useTheme();
+  const { currentTeam } = useAuth();
   const isEdit = !!initial?.title;
   const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -44,6 +46,15 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
   useEffect(() => {
     listExercises().then(setExercises);
     listCategories().then(setCategories);
+    // Smart defaults: precompila dall'ultimo allenamento creato
+    if (!isEdit && !initial && currentTeam) {
+      getLatestTraining(currentTeam.id).then((latest) => {
+        if (!latest) return;
+        if (latest.training_time && !time) setTime(latest.training_time);
+        if (latest.goalkeeper_id && !goalkeeperId) setGoalkeeperId(latest.goalkeeper_id);
+        if (latest.title && !title) setTitle(latest.title);
+      }).catch(() => {});
+    }
   }, []);
 
   // Progressive reveal

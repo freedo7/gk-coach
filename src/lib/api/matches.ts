@@ -5,6 +5,18 @@ function stripNotes(match: Match): Match {
   return { ...match, notes: null, result_notes: null };
 }
 
+export async function getLatestMatch(teamId: string): Promise<Match | null> {
+  const { data, error } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('team_id', teamId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function listMatches(teamId: string, opts?: { isAdmin?: boolean }): Promise<Match[]> {
   const { data, error } = await supabase.from('matches').select('*').eq('team_id', teamId).order('match_date');
   if (error) throw error;
