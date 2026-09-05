@@ -1,7 +1,7 @@
 import { Link, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTranslation } from 'react-i18next';
@@ -82,11 +82,21 @@ export default function EsercizioDettaglioScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedView type="backgroundElement" style={styles.badge}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {exercise.category.name}
-            </ThemedText>
-          </ThemedView>
+          <View style={styles.badgeRow}>
+            <ThemedView type="backgroundElement" style={styles.badge}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {exercise.category.name}
+              </ThemedText>
+            </ThemedView>
+            {!exercise.is_global && (
+              <View style={[styles.customBadge, { backgroundColor: colors.accentSoft }]}>
+                <Ionicons name="person-outline" size={12} color={colors.accent} />
+                <ThemedText type="small" style={{ color: colors.accent, fontWeight: '600' }}>
+                  {t('exercises.custom')}
+                </ThemedText>
+              </View>
+            )}
+          </View>
 
           <ThemedText type="title">{exercise.title}</ThemedText>
           {(exercise.sets || exercise.reps) && (
@@ -164,10 +174,22 @@ const styles = StyleSheet.create({
     paddingBottom: BottomTabInset + Spacing.six,
     gap: Spacing.three,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
   badge: {
-    alignSelf: 'flex-start',
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  customBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },
   description: {

@@ -98,6 +98,7 @@ export default {
     videoProOnly: 'Video disponibile nel piano Pro',
     openSheet: '📄 Apri scheda esercizio',
     sheetProOnly: 'Scheda PDF disponibile nel piano Pro',
+    custom: 'Mio',
     difficultyAll: 'Tutti',
     difficultyBase: 'Base',
     difficultyIntermediate: 'Intermedio',

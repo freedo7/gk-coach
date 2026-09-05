@@ -98,6 +98,7 @@ export default {
     videoProOnly: 'Video available on Pro plan',
     openSheet: '📄 Open exercise sheet',
     sheetProOnly: 'PDF sheet available on Pro plan',
+    custom: 'Custom',
     difficultyAll: 'All',
     difficultyBase: 'Basic',
     difficultyIntermediate: 'Intermediate',

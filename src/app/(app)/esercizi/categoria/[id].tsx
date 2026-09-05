@@ -117,9 +117,19 @@ export default function CategoriaScreen() {
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
               <ThemedView type="card" style={styles.rowCard}>
                 <View style={styles.rowHeader}>
-                  <ThemedText type="smallBold" style={styles.rowTitle}>
-                    {exercise.title}
-                  </ThemedText>
+                  <View style={styles.rowTitleRow}>
+                    <ThemedText type="smallBold" style={styles.rowTitle}>
+                      {exercise.title}
+                    </ThemedText>
+                    {!exercise.is_global && (
+                      <View style={[styles.customBadge, { backgroundColor: colors.accentSoft }]}>
+                        <Ionicons name="person-outline" size={10} color={colors.accent} />
+                        <ThemedText type="small" style={[styles.customBadgeText, { color: colors.accent }]}>
+                          {t('exercises.custom')}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
                   {exercise.difficulty && (
                     <ThemedView type="backgroundElement" style={styles.badge}>
                       <ThemedText type="small" themeColor="textSecondary">
@@ -214,8 +224,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  rowTitle: {
+  rowTitleRow: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    flexWrap: 'wrap',
+  },
+  rowTitle: {
+    flexShrink: 1,
+  },
+  customBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.one + 2,
+    paddingVertical: 1,
+  },
+  customBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   badge: {
     borderRadius: Radius.pill,
