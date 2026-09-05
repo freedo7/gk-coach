@@ -56,16 +56,6 @@ export function TimeField({ value, onChange, placeholder }: Props) {
             style={styles.fieldText}>
             {value || placeholder || '-- : --'}
           </ThemedText>
-          {value && (
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onChange(null);
-              }}
-              hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
-            </Pressable>
-          )}
         </ThemedView>
       </Pressable>
 

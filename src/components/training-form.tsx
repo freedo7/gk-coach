@@ -58,7 +58,7 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
     if (showStep3 && !revealed.step3) setRevealed((r) => ({ ...r, step3: true }));
   }, [showStep3]);
 
-  const valid = title.trim().length > 0 && !!date;
+  const valid = title.trim().length > 0 && !!date && !!time;
 
   const currentStep = useMemo(() => {
     if (!showStep2) return 1;

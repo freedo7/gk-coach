@@ -38,7 +38,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const valid = opponent.trim().length > 0 && !!matchDate;
+  const valid = opponent.trim().length > 0 && !!matchDate && !!matchTime;
 
   async function handleSubmit() {
     haptic('medium');
