@@ -87,6 +87,11 @@ function MiniBarChart({ data, accentColor }: { data: { label: string; value: num
       {data.map((d, i) => (
         <View key={i} style={styles.chartCol}>
           <View style={styles.chartBarWrapper}>
+            {d.value > 0 && (
+              <ThemedText type="small" style={{ fontSize: 10, fontWeight: '700', textAlign: 'center', color: accentColor }}>
+                {d.value}
+              </ThemedText>
+            )}
             <View
               style={[
                 styles.chartBar,
@@ -593,8 +598,9 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   resultNumber: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
+    lineHeight: 26,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
