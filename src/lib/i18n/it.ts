@@ -155,6 +155,7 @@ export default {
     goalsScored: 'Gol fatti',
     goalsConceded: 'Gol subiti',
     ratingSection: 'Voto portiere (opzionale)',
+    ratingHint: 'Tocca due volte per il mezzo voto',
     textResult: 'Risultato testuale (opzionale)',
     textResultPlaceholder: 'Es. 2-1',
     resultNotes: 'Note sul risultato (opzionale)',

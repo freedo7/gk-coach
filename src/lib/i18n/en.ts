@@ -155,6 +155,7 @@ export default {
     goalsScored: 'Goals scored',
     goalsConceded: 'Goals conceded',
     ratingSection: 'Goalkeeper rating (optional)',
+    ratingHint: 'Tap twice for half rating',
     textResult: 'Text result (optional)',
     textResultPlaceholder: 'E.g. 2-1',
     resultNotes: 'Result notes (optional)',

@@ -327,6 +327,9 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
               {t('matchForm.ratingSection')}
             </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('matchForm.ratingHint')}
+            </ThemedText>
             <View style={styles.ratingRow}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
                 const filled = n <= Math.floor(rating);
