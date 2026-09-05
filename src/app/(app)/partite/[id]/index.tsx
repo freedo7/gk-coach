@@ -10,9 +10,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
-import { deleteMatch, getMatch } from '@/lib/api/matches';
+import { deleteMatch, getMatch, listPerformances } from '@/lib/api/matches';
 import { formatDateLong, formatTime } from '@/lib/format';
-import type { Match } from '@/types/database';
+import type { Match, MatchPerformance } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -25,6 +25,7 @@ export default function PartitaDettaglioScreen() {
   const { show: showToast } = useToast();
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
+  const [performances, setPerformances] = useState<MatchPerformance[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
@@ -37,6 +38,11 @@ export default function PartitaDettaglioScreen() {
         .catch((err) => {
           if (!cancelled) setError(err.message);
         });
+      listPerformances(id)
+        .then((data) => {
+          if (!cancelled) setPerformances(data);
+        })
+        .catch(() => {});
       return () => {
         cancelled = true;
       };
@@ -141,6 +147,34 @@ export default function PartitaDettaglioScreen() {
             </FadeIn>
           )}
 
+          {performances.length > 0 && (
+            <FadeIn delay={250}>
+              <ThemedView type="card" style={styles.notesCard}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {t('matchForm.goalkeeperPerformances')}
+                </ThemedText>
+                {performances.map((perf) => (
+                  <View key={perf.id} style={styles.perfRow}>
+                    <View style={styles.perfInfo}>
+                      <ThemedText type="smallBold">{perf.goalkeeper?.name ?? '—'}</ThemedText>
+                      {perf.rating != null && (
+                        <View style={styles.perfRating}>
+                          <ThemedText style={[styles.perfRatingNumber, { color: colors.accent }]}>
+                            {perf.rating}
+                          </ThemedText>
+                          <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+                        </View>
+                      )}
+                    </View>
+                    {perf.notes && (
+                      <ThemedText type="small" themeColor="textSecondary">{perf.notes}</ThemedText>
+                    )}
+                  </View>
+                ))}
+              </ThemedView>
+            </FadeIn>
+          )}
+
           {isAdmin && match.notes && (
             <FadeIn delay={300}>
               <ThemedView type="card" style={styles.notesCard}>
@@ -233,6 +267,26 @@ const styles = StyleSheet.create({
   },
   notesText: {
     lineHeight: 22,
+  },
+  perfRow: {
+    gap: Spacing.half,
+    paddingTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(128,128,128,0.15)',
+  },
+  perfInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  perfRating: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 2,
+  },
+  perfRatingNumber: {
+    fontSize: 20,
+    fontWeight: '800',
   },
   adminActions: {
     flexDirection: 'row',

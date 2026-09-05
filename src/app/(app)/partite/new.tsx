@@ -6,7 +6,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/context/toast-context';
 import { usePlan } from '@/hooks/use-plan';
-import { createMatch } from '@/lib/api/matches';
+import { createMatch, setPerformances } from '@/lib/api/matches';
 import { sendPushToTeam } from '@/lib/api/push';
 
 export default function NuovaPartitaScreen() {
@@ -23,8 +23,9 @@ export default function NuovaPartitaScreen() {
     <ThemedView style={{ flex: 1 }}>
       <MatchForm
         submitLabel={t('matches.createMatch')}
-        onSubmit={async (input) => {
-          await createMatch(input, session.user.id, currentTeam.id);
+        onSubmit={async (input, performances) => {
+          const matchId = await createMatch(input, session.user.id, currentTeam.id);
+          if (performances.length > 0) await setPerformances(matchId, performances);
           sendPushToTeam(currentTeam.id, t('matches.newMatchPush'), `vs ${input.opponent}`);
           showToast(t('matches.matchCreated'));
           router.back();

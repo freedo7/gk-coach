@@ -161,6 +161,11 @@ export default {
     resultNotesPlaceholder: 'Saves, goals conceded, performance...',
     generalNotes: 'General notes (optional)',
     generalNotesPlaceholder: 'Venue, squad selection, other info...',
+    goalkeeperPerformances: 'Goalkeeper performances',
+    goalkeeperPerformancesHint: 'Add rating and comment for each goalkeeper who played',
+    performanceNotesPlaceholder: 'Performance comment...',
+    addDetails: 'Add details',
+    addNotes: 'Add notes',
   },
 
   // Training form

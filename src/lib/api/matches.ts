@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Match } from '@/types/database';
+import type { Match, MatchPerformance } from '@/types/database';
 
 function stripNotes(match: Match): Match {
   return { ...match, notes: null, result_notes: null };
@@ -45,9 +45,10 @@ export interface MatchInput {
   notes: string | null;
 }
 
-export async function createMatch(input: MatchInput, createdBy: string, teamId: string) {
-  const { error } = await supabase.from('matches').insert({ ...input, created_by: createdBy, team_id: teamId });
+export async function createMatch(input: MatchInput, createdBy: string, teamId: string): Promise<string> {
+  const { data, error } = await supabase.from('matches').insert({ ...input, created_by: createdBy, team_id: teamId }).select('id').single();
   if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateMatch(id: string, input: MatchInput) {
@@ -57,5 +58,30 @@ export async function updateMatch(id: string, input: MatchInput) {
 
 export async function deleteMatch(id: string) {
   const { error } = await supabase.from('matches').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Match performances (multi-goalkeeper)
+export async function listPerformances(matchId: string): Promise<MatchPerformance[]> {
+  const { data, error } = await supabase
+    .from('match_performances')
+    .select('*, goalkeeper:goalkeepers(name)')
+    .eq('match_id', matchId)
+    .order('created_at');
+  if (error) throw error;
+  return data as unknown as MatchPerformance[];
+}
+
+export interface PerformanceInput {
+  goalkeeper_id: string;
+  rating: number | null;
+  notes: string | null;
+}
+
+export async function setPerformances(matchId: string, performances: PerformanceInput[]) {
+  await supabase.from('match_performances').delete().eq('match_id', matchId);
+  if (performances.length === 0) return;
+  const rows = performances.map((p) => ({ match_id: matchId, ...p }));
+  const { error } = await supabase.from('match_performances').insert(rows);
   if (error) throw error;
 }

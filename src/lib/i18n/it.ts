@@ -161,6 +161,11 @@ export default {
     resultNotesPlaceholder: 'Parate, gol subiti, prestazione...',
     generalNotes: 'Note generali (opzionale)',
     generalNotesPlaceholder: 'Luogo esatto, convocazione, altre info...',
+    goalkeeperPerformances: 'Valutazioni portieri',
+    goalkeeperPerformancesHint: 'Aggiungi voto e commento per ogni portiere che ha giocato',
+    performanceNotesPlaceholder: 'Commento sulla prestazione...',
+    addDetails: 'Aggiungi dettagli',
+    addNotes: 'Aggiungi note',
   },
 
   // Training form

@@ -9,19 +9,29 @@ import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { getLatestMatch, type MatchInput } from '@/lib/api/matches';
+import { getLatestMatch, type MatchInput, type PerformanceInput } from '@/lib/api/matches';
+import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { useAuth } from '@/context/auth-context';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
+import type { Goalkeeper, MatchPerformance } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   initial?: Partial<MatchInput>;
+  initialPerformances?: MatchPerformance[];
   submitLabel: string;
-  onSubmit: (input: MatchInput) => Promise<void>;
+  onSubmit: (input: MatchInput, performances: PerformanceInput[]) => Promise<void>;
 }
 
-export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
+interface PerfState {
+  goalkeeper_id: string;
+  name: string;
+  rating: number;
+  notes: string;
+}
+
+export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit }: Props) {
   const { t } = useTranslation();
   const colors = useTheme();
   const { currentTeam } = useAuth();
@@ -42,7 +52,29 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Smart defaults: precompila dall'ultima partita creata
+  // Performance multi-portiere
+  const [allGoalkeepers, setAllGoalkeepers] = useState<Goalkeeper[]>([]);
+  const [performances, setPerformances] = useState<PerfState[]>([]);
+
+  useEffect(() => {
+    if (!currentTeam) return;
+    listGoalkeepers(currentTeam.id).then((gks) => {
+      setAllGoalkeepers(gks);
+      // Inizializza dalle performance esistenti
+      if (initialPerformances && initialPerformances.length > 0) {
+        setPerformances(
+          initialPerformances.map((p) => ({
+            goalkeeper_id: p.goalkeeper_id,
+            name: p.goalkeeper?.name ?? gks.find((g) => g.id === p.goalkeeper_id)?.name ?? '',
+            rating: p.rating ?? 0,
+            notes: p.notes ?? '',
+          }))
+        );
+      }
+    });
+  }, [currentTeam]);
+
+  // Smart defaults
   useEffect(() => {
     if (!isEdit && !initial && currentTeam) {
       getLatestMatch(currentTeam.id).then((latest) => {
@@ -58,44 +90,67 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
 
   const valid = opponent.trim().length > 0 && !!matchDate && !!matchTime;
 
-  // Progressive reveal
-  const showStep2 = isEdit || (opponent.trim().length > 0 && !!matchDate && !!matchTime);
-  const showStep3 = isEdit || showStep2;
-
+  // Progressive reveal: in edit tutto visibile, in creazione step 2 e 3 si aprono manualmente
   const [revealed, setRevealed] = useState({ step2: isEdit, step3: isEdit });
-  useEffect(() => {
-    if (showStep2 && !revealed.step2) setRevealed((r) => ({ ...r, step2: true }));
-  }, [showStep2]);
-  useEffect(() => {
-    if (showStep3 && !revealed.step3) setRevealed((r) => ({ ...r, step3: true }));
-  }, [showStep3]);
 
   const currentStep = useMemo(() => {
-    if (!showStep2) return 1;
-    if (!showStep3) return 2;
+    if (!revealed.step2) return 1;
+    if (!revealed.step3) return 2;
     return 3;
-  }, [showStep2, showStep3]);
+  }, [revealed]);
+
+  // Portieri disponibili (non ancora aggiunti alle performance)
+  const availableGks = useMemo(
+    () => allGoalkeepers.filter((gk) => !performances.some((p) => p.goalkeeper_id === gk.id)),
+    [allGoalkeepers, performances]
+  );
+
+  function addPerformance(gk: Goalkeeper) {
+    haptic('light');
+    setPerformances((prev) => [...prev, { goalkeeper_id: gk.id, name: gk.name, rating: 0, notes: '' }]);
+  }
+
+  function removePerformance(gkId: string) {
+    haptic('light');
+    setPerformances((prev) => prev.filter((p) => p.goalkeeper_id !== gkId));
+  }
+
+  function updatePerformance(gkId: string, field: 'rating' | 'notes', value: number | string) {
+    setPerformances((prev) =>
+      prev.map((p) => (p.goalkeeper_id === gkId ? { ...p, [field]: value } : p))
+    );
+  }
 
   async function handleSubmit() {
     haptic('medium');
     setError(null);
     setSubmitting(true);
     try {
-      await onSubmit({
-        goalkeeper_id: goalkeeperId,
-        opponent: opponent.trim(),
-        is_home: isHome,
-        match_date: matchDate!,
-        match_time: matchTime.trim() || null,
-        match_type: matchType,
-        matchday: matchType === 'campionato' && matchday.trim() ? parseInt(matchday.trim(), 10) : null,
-        goals_scored: goalsScored.trim() ? parseInt(goalsScored.trim(), 10) : null,
-        goals_conceded: goalsConceded.trim() ? parseInt(goalsConceded.trim(), 10) : null,
-        rating: rating > 0 ? rating : null,
-        result: result.trim() || null,
-        result_notes: resultNotes.trim() || null,
-        notes: notes.trim() || null,
-      });
+      const perfInputs: PerformanceInput[] = performances
+        .filter((p) => p.rating > 0 || p.notes.trim())
+        .map((p) => ({
+          goalkeeper_id: p.goalkeeper_id,
+          rating: p.rating > 0 ? p.rating : null,
+          notes: p.notes.trim() || null,
+        }));
+      await onSubmit(
+        {
+          goalkeeper_id: goalkeeperId,
+          opponent: opponent.trim(),
+          is_home: isHome,
+          match_date: matchDate!,
+          match_time: matchTime.trim() || null,
+          match_type: matchType,
+          matchday: matchType === 'campionato' && matchday.trim() ? parseInt(matchday.trim(), 10) : null,
+          goals_scored: goalsScored.trim() ? parseInt(goalsScored.trim(), 10) : null,
+          goals_conceded: goalsConceded.trim() ? parseInt(goalsConceded.trim(), 10) : null,
+          rating: rating > 0 ? rating : null,
+          result: result.trim() || null,
+          result_notes: resultNotes.trim() || null,
+          notes: notes.trim() || null,
+        },
+        perfInputs
+      );
     } catch (err: any) {
       setError(err?.message ?? err?.error_description ?? JSON.stringify(err));
     } finally {
@@ -297,7 +352,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         </FadeIn>
       )}
 
-      {/* STEP 3: Note */}
+      {/* STEP 3: Note + Valutazioni portieri */}
       {revealed.step3 && (
         <FadeIn delay={isEdit ? 0 : 200}>
           <View style={styles.stepSection}>
@@ -328,6 +383,80 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
               numberOfLines={4}
               style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
+
+            {/* Valutazioni portieri */}
+            {allGoalkeepers.length > 0 && (
+              <View style={styles.perfSection}>
+                <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {t('matchForm.goalkeeperPerformances')}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('matchForm.goalkeeperPerformancesHint')}
+                </ThemedText>
+
+                {performances.map((perf) => (
+                  <ThemedView key={perf.goalkeeper_id} type="card" style={styles.perfCard}>
+                    <View style={styles.perfHeader}>
+                      <ThemedText type="smallBold">{perf.name}</ThemedText>
+                      <Pressable onPress={() => removePerformance(perf.goalkeeper_id)} hitSlop={8}>
+                        <Ionicons name="close-circle" size={20} color={colors.danger} />
+                      </Pressable>
+                    </View>
+
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.perfLabel}>
+                      {t('matchForm.ratingSection')}
+                    </ThemedText>
+                    <View style={styles.ratingRow}>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                        <Pressable
+                          key={n}
+                          onPress={() => {
+                            haptic('light');
+                            updatePerformance(perf.goalkeeper_id, 'rating', perf.rating === n ? 0 : n);
+                          }}
+                          style={[
+                            styles.ratingDot,
+                            { backgroundColor: n <= perf.rating ? colors.accent : colors.backgroundElement },
+                          ]}>
+                          <ThemedText
+                            type="small"
+                            style={{ color: n <= perf.rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                            {n}
+                          </ThemedText>
+                        </Pressable>
+                      ))}
+                    </View>
+
+                    <TextInput
+                      value={perf.notes}
+                      onChangeText={(v) => updatePerformance(perf.goalkeeper_id, 'notes', v)}
+                      placeholder={t('matchForm.performanceNotesPlaceholder')}
+                      placeholderTextColor={colors.textSecondary}
+                      multiline
+                      numberOfLines={2}
+                      style={[styles.input, styles.perfNotes, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                    />
+                  </ThemedView>
+                ))}
+
+                {/* Aggiungi portiere */}
+                {availableGks.length > 0 && (
+                  <View style={styles.addPerfRow}>
+                    {availableGks.map((gk) => (
+                      <Pressable key={gk.id} onPress={() => addPerformance(gk)}>
+                        <ThemedView type="backgroundElement" style={styles.addPerfChip}>
+                          <Ionicons name="add" size={14} color={colors.accent} />
+                          <ThemedText type="small" style={{ color: colors.accent, fontWeight: '600' }}>
+                            {gk.name}
+                          </ThemedText>
+                        </ThemedView>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         </FadeIn>
       )}
@@ -338,15 +467,37 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         </ThemedText>
       )}
 
-      {revealed.step2 && (
+      {valid && (
         <FadeIn delay={isEdit ? 0 : 100}>
+          {/* Bottoni per aggiungere step opzionali (solo in creazione) */}
+          {!isEdit && !revealed.step2 && (
+            <Pressable
+              onPress={() => { haptic('light'); setRevealed((r) => ({ ...r, step2: true })); }}
+              style={styles.addStepLink}>
+              <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>
+                {t('matchForm.addDetails')}
+              </ThemedText>
+            </Pressable>
+          )}
+          {!isEdit && revealed.step2 && !revealed.step3 && (
+            <Pressable
+              onPress={() => { haptic('light'); setRevealed((r) => ({ ...r, step3: true })); }}
+              style={styles.addStepLink}>
+              <Ionicons name="add-circle-outline" size={18} color={colors.accent} />
+              <ThemedText type="smallBold" style={{ color: colors.accent }}>
+                {t('matchForm.addNotes')}
+              </ThemedText>
+            </Pressable>
+          )}
+
           <Pressable
             onPress={handleSubmit}
-            disabled={!valid || submitting}
+            disabled={submitting}
             style={({ pressed }) => [
               styles.button,
               { backgroundColor: colors.accent },
-              (!valid || submitting) && styles.buttonDisabled,
+              submitting && styles.buttonDisabled,
               pressed && styles.pressed,
             ]}>
             {submitting ? (
@@ -430,8 +581,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     maxWidth: 36,
   },
+  perfSection: {
+    marginTop: Spacing.four,
+    gap: Spacing.two,
+  },
+  perfCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  perfHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  perfLabel: {
+    marginTop: Spacing.one,
+  },
+  perfNotes: {
+    minHeight: 50,
+    textAlignVertical: 'top',
+  },
+  addPerfRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  addPerfChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+  },
+  addStepLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    marginTop: Spacing.four,
+  },
   button: {
-    marginTop: Spacing.five,
+    marginTop: Spacing.four,
     borderRadius: Radius.control,
     paddingVertical: Spacing.three,
     alignItems: 'center',

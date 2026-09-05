@@ -100,6 +100,16 @@ export interface TrainingComment {
   profile?: { full_name: string | null };
 }
 
+export interface MatchPerformance {
+  id: string;
+  match_id: string;
+  goalkeeper_id: string;
+  rating: number | null;
+  notes: string | null;
+  created_at: string;
+  goalkeeper?: { name: string };
+}
+
 export interface Match {
   id: string;
   team_id: string | null;
