@@ -54,7 +54,7 @@ export function TimeField({ value, onChange, placeholder }: Props) {
             type="default"
             themeColor={value ? 'text' : 'textSecondary'}
             style={styles.fieldText}>
-            {value || placeholder || '-- : --'}
+            {value ? value.slice(0, 5) : placeholder || '-- : --'}
           </ThemedText>
         </ThemedView>
       </Pressable>

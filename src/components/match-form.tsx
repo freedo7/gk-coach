@@ -178,7 +178,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.result')}
+        {t('matchForm.resultSection')}
       </ThemedText>
       <View style={styles.chipRow}>
         <View style={{ flex: 1 }}>
@@ -206,7 +206,7 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       </View>
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.rating')}
+        {t('matchForm.ratingSection')}
       </ThemedText>
       <View style={styles.ratingRow}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -251,12 +251,12 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.notes')}
+        {t('matchForm.generalNotes')}
       </ThemedText>
       <TextInput
         value={notes ?? ''}
         onChangeText={setNotes}
-        placeholder={t('matchForm.notesPlaceholder')}
+        placeholder={t('matchForm.generalNotesPlaceholder')}
         placeholderTextColor={colors.textSecondary}
         multiline
         numberOfLines={4}
