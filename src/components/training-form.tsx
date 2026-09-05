@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { DateField } from '@/components/date-field';
 import { FadeIn } from '@/components/fade-in';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
+import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { listExercises, type ExerciseWithCategory } from '@/lib/api/exercises';
@@ -147,12 +148,10 @@ export function TrainingForm({ initial, initialExerciseIds, submitLabel, onSubmi
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         {t('trainingForm.time')}
       </ThemedText>
-      <TextInput
-        value={time ?? ''}
-        onChangeText={setTime}
+      <TimeField
+        value={time || null}
+        onChange={(v) => setTime(v ?? '')}
         placeholder={t('trainingForm.timePlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       {/* STEP 2: Portiere + Note */}

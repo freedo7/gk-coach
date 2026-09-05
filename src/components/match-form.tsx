@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DateField } from '@/components/date-field';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
+import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import type { MatchInput } from '@/lib/api/matches';
@@ -170,12 +171,10 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
         {t('matchForm.time')}
       </ThemedText>
-      <TextInput
-        value={matchTime ?? ''}
-        onChangeText={setMatchTime}
+      <TimeField
+        value={matchTime || null}
+        onChange={(v) => setMatchTime(v ?? '')}
         placeholder={t('matchForm.timePlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
       />
 
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
