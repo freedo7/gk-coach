@@ -48,7 +48,7 @@ const SLIDES: Slide[] = [
   },
 ];
 
-function SlideItem({ slide, index, scrollX }: { slide: Slide; index: number; scrollX: Animated.SharedValue<number> }) {
+function SlideItem({ slide, index, scrollX }: { slide: Slide; index: number; scrollX: { value: number } }) {
   const { t } = useTranslation();
 
   const animStyle = useAnimatedStyle(() => {
@@ -88,7 +88,7 @@ function SlideItem({ slide, index, scrollX }: { slide: Slide; index: number; scr
   );
 }
 
-function Dot({ index, scrollX }: { index: number; scrollX: Animated.SharedValue<number> }) {
+function Dot({ index, scrollX }: { index: number; scrollX: { value: number } }) {
   const style = useAnimatedStyle(() => {
     const inputRange = [(index - 1) * SCREEN_WIDTH, index * SCREEN_WIDTH, (index + 1) * SCREEN_WIDTH];
     return {

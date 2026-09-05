@@ -3,7 +3,7 @@
     "name": "GK Coach",
     "slug": "gk-coach",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "gkcoach",
     "userInterfaceStyle": "automatic",
@@ -44,6 +44,7 @@
           "color": "#6FC22C"
         }
       ],
+      "expo-screen-orientation",
       "expo-font",
       "expo-image",
       "expo-sharing",

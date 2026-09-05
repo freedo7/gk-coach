@@ -204,6 +204,35 @@ export default {
     videoUrl: 'Link video (opzionale)',
     contentUrl: 'URL scheda HTML (opzionale)',
     skip: 'Salta →',
+    suggested: 'Suggerito',
+  },
+
+  // Exercise creation mode
+  exerciseMode: {
+    title: 'Nuovo esercizio',
+    builder: 'Builder campo',
+    builderDesc: 'Posiziona elementi sul campo virtuale',
+    classic: 'Classico',
+    classicDesc: 'Compila il form passo passo',
+  },
+
+  // Field builder
+  builder: {
+    addElement: 'AGGIUNGI ELEMENTO',
+    cone: 'Birillo',
+    mannequin: 'Sagoma',
+    ball: 'Pallone',
+    goalkeeper: 'Portiere',
+    goal: 'Porticina',
+    cube: 'Cubo',
+    arrow: 'Freccia',
+    confirm: 'Conferma disposizione',
+    rotateTitle: 'Ruota il telefono',
+    rotateSubtitle: 'Metti il telefono in orizzontale per un\'esperienza ottimale con il builder',
+    hint: 'Tieni premuto su un\'icona per vederne il nome',
+    undo: 'Annulla',
+    elementsCount: '{{count}} elementi',
+    elementsCountOne: '{{count}} elemento',
   },
 
   // Statistics

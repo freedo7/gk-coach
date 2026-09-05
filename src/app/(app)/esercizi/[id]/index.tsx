@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTranslation } from 'react-i18next';
 
+import { FieldPreview } from '@/components/field-preview';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UpgradeBanner } from '@/components/upgrade-banner';
@@ -107,7 +108,13 @@ export default function EsercizioDettaglioScreen() {
             </ThemedText>
           )}
 
-          <ThemedText style={styles.description}>{exercise.description}</ThemedText>
+          {exercise.description ? (
+            <ThemedText style={styles.description}>{exercise.description}</ThemedText>
+          ) : null}
+
+          {exercise.layout && exercise.layout.length > 0 && (
+            <FieldPreview layout={exercise.layout} />
+          )}
 
           {exercise.video_url && (
             canViewVideo ? (

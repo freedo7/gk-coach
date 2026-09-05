@@ -38,7 +38,7 @@ export function ThemePreferenceProvider({ children }: { children: React.ReactNod
     AsyncStorage.setItem(STORAGE_KEY, p);
   }, []);
 
-  const scheme = preference === 'auto' ? systemScheme : preference;
+  const scheme: 'light' | 'dark' = preference === 'auto' ? (systemScheme === 'dark' ? 'dark' : 'light') : preference;
 
   if (!loaded) return null;
 

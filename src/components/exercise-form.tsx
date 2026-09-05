@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
@@ -6,23 +6,28 @@ import { FadeIn } from '@/components/fade-in';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { listCategories } from '@/lib/api/categories';
-import type { ExerciseInput } from '@/lib/api/exercises';
-import type { ExerciseCategory } from '@/types/database';
+import { listExercises, type ExerciseInput, type ExerciseWithCategory } from '@/lib/api/exercises';
+import { getDefaults, type ExerciseDefaults } from '@/lib/exercise-defaults';
+import type { ExerciseCategory, FieldElement } from '@/types/database';
+import { useAuth } from '@/context/auth-context';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
   initial?: Partial<ExerciseInput>;
+  initialLayout?: ExerciseInput['layout'];
   submitLabel: string;
   onSubmit: (input: ExerciseInput) => Promise<void>;
 }
 
-export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
+export function ExerciseForm({ initial, initialLayout, submitLabel, onSubmit }: Props) {
   const { t } = useTranslation();
   const colors = useTheme();
+  const { currentTeam } = useAuth();
   const isEdit = !!initial?.title;
   const [categories, setCategories] = useState<ExerciseCategory[] | null>(null);
+  const [teamExercises, setTeamExercises] = useState<ExerciseWithCategory[]>([]);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? '');
@@ -35,18 +40,82 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
   const [reps, setReps] = useState(initial?.reps?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Traccia quali campi sono stati compilati dall'utente (non dai suggerimenti)
+  const [suggestedFields, setSuggestedFields] = useState<Set<keyof ExerciseDefaults>>(new Set());
+  const lastAppliedCategory = useRef<string>('');
+
+  // Pre-compila attrezzatura dal builder layout
+  useEffect(() => {
+    if (!initialLayout || initialLayout.length === 0 || equipment.trim()) return;
+    const equipmentTypes: Record<string, string> = {
+      cone: t('builder.cone'),
+      mannequin: t('builder.mannequin'),
+      ball: t('builder.ball'),
+      goal: t('builder.goal'),
+      cube: t('builder.cube'),
+    };
+    const counts = new Map<string, number>();
+    for (const el of initialLayout) {
+      const label = equipmentTypes[el.type];
+      if (label) counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    if (counts.size > 0) {
+      const parts = Array.from(counts.entries()).map(([name, n]) => n > 1 ? `${n}x ${name}` : name);
+      setEquipment(parts.join(', '));
+    }
+  }, [initialLayout]);
 
   useEffect(() => {
-    listCategories().then((data) => {
-      setCategories(data);
-      if (!categoryId && data.length > 0) setCategoryId(data[0].id);
+    Promise.all([
+      listCategories(),
+      currentTeam ? listExercises(currentTeam.id) : Promise.resolve([]),
+    ]).then(([cats, exs]) => {
+      setCategories(cats);
+      setTeamExercises(exs);
+      if (!categoryId && cats.length > 0) setCategoryId(cats[0].id);
     });
   }, []);
+
+  // Applica suggerimenti quando cambia la categoria (solo in creazione)
+  useEffect(() => {
+    if (isEdit || !categoryId || !categories || categories.length === 0) return;
+    if (lastAppliedCategory.current === categoryId) return;
+    lastAppliedCategory.current = categoryId;
+
+    const cat = categories.find((c) => c.id === categoryId);
+    if (!cat) return;
+
+    const defaults = getDefaults(cat.name, categoryId, teamExercises);
+    const newSuggested = new Set<keyof ExerciseDefaults>();
+
+    if (defaults.difficulty != null && !initial?.difficulty) {
+      setDifficulty(defaults.difficulty);
+      newSuggested.add('difficulty');
+    }
+    if (defaults.duration_minutes != null && !durationMinutes.trim()) {
+      setDurationMinutes(defaults.duration_minutes.toString());
+      newSuggested.add('duration_minutes');
+    }
+    if (defaults.sets != null && !sets.trim()) {
+      setSets(defaults.sets.toString());
+      newSuggested.add('sets');
+    }
+    if (defaults.reps != null && !reps.trim()) {
+      setReps(defaults.reps.toString());
+      newSuggested.add('reps');
+    }
+    if (defaults.equipment && !equipment.trim()) {
+      setEquipment(defaults.equipment);
+      newSuggested.add('equipment');
+    }
+
+    setSuggestedFields(newSuggested);
+  }, [categoryId, categories, teamExercises]);
 
   // Progressive reveal: step 1 always visible, others appear progressively
   const showStep2 = isEdit || (title.trim().length > 0 && categoryId.length > 0);
   const showStep3 = isEdit || (showStep2 && (difficulty !== null || durationMinutes.trim().length > 0 || sets.trim().length > 0 || reps.trim().length > 0));
-  const showStep4 = isEdit || (showStep3 && description.trim().length > 0);
+  const showStep4 = isEdit || showStep3;
 
   // Track which steps have already appeared (to avoid re-animating)
   const [revealed, setRevealed] = useState({ step2: isEdit, step3: isEdit, step4: isEdit });
@@ -60,7 +129,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
     if (showStep4 && !revealed.step4) setRevealed((r) => ({ ...r, step4: true }));
   }, [showStep4]);
 
-  const valid = title.trim().length > 0 && description.trim().length > 0 && categoryId.length > 0;
+  const valid = title.trim().length > 0 && categoryId.length > 0;
 
   // Step indicator
   const currentStep = useMemo(() => {
@@ -86,6 +155,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
         equipment: equipment.trim() || null,
         sets: sets.trim() ? parseInt(sets.trim(), 10) : null,
         reps: reps.trim() ? parseInt(reps.trim(), 10) : null,
+        layout: initialLayout ?? initial?.layout ?? null,
       });
     } catch (err) {
       setError((err as any)?.message ?? (err as any)?.error_description ?? JSON.stringify(err));
@@ -133,7 +203,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           {categories.map((category) => {
             const selected = category.id === categoryId;
             return (
-              <Pressable key={category.id} onPress={() => { haptic('light'); setCategoryId(category.id); }}>
+              <Pressable key={category.id} onPress={() => { haptic('light'); setCategoryId(category.id); lastAppliedCategory.current = ''; }}>
                 <ThemedView
                   style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                   type={selected ? undefined : 'backgroundElement'}>
@@ -153,16 +223,21 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           <View style={styles.stepSection}>
             <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
 
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              {t('exerciseForm.difficulty')}
-            </ThemedText>
+            <View style={styles.labelRow}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {t('exerciseForm.difficulty')}
+              </ThemedText>
+              {suggestedFields.has('difficulty') && (
+                <ThemedText type="small" style={[styles.suggestedBadge, { color: colors.accent }]}>{t('exerciseForm.suggested')}</ThemedText>
+              )}
+            </View>
             <ThemedView style={styles.chipRow}>
               {(['base', 'intermedio', 'avanzato'] as const).map((level) => {
                 const selected = difficulty === level;
                 return (
                   <Pressable
                     key={level}
-                    onPress={() => { haptic('light'); setDifficulty(selected ? null : level); }}>
+                    onPress={() => { haptic('light'); setDifficulty(selected ? null : level); setSuggestedFields((s) => { const n = new Set(s); n.delete('difficulty'); return n; }); }}>
                     <ThemedView
                       style={[styles.chip, selected && { backgroundColor: colors.accent }]}
                       type={selected ? undefined : 'backgroundElement'}>
@@ -175,25 +250,35 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
               })}
             </ThemedView>
 
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-              {t('exerciseForm.duration')}
-            </ThemedText>
+            <View style={[styles.labelRow, styles.spacing]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {t('exerciseForm.duration')}
+              </ThemedText>
+              {suggestedFields.has('duration_minutes') && (
+                <ThemedText type="small" style={[styles.suggestedBadge, { color: colors.accent }]}>{t('exerciseForm.suggested')}</ThemedText>
+              )}
+            </View>
             <TextInput
               value={durationMinutes}
-              onChangeText={setDurationMinutes}
+              onChangeText={(v) => { setDurationMinutes(v); setSuggestedFields((s) => { const n = new Set(s); n.delete('duration_minutes'); return n; }); }}
               placeholder={t('exerciseForm.durationPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               keyboardType="number-pad"
               style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
             />
 
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-              {t('exerciseForm.setsReps')}
-            </ThemedText>
+            <View style={[styles.labelRow, styles.spacing]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {t('exerciseForm.setsReps')}
+              </ThemedText>
+              {(suggestedFields.has('sets') || suggestedFields.has('reps')) && (
+                <ThemedText type="small" style={[styles.suggestedBadge, { color: colors.accent }]}>{t('exerciseForm.suggested')}</ThemedText>
+              )}
+            </View>
             <ThemedView style={styles.setsRow}>
               <TextInput
                 value={sets}
-                onChangeText={setSets}
+                onChangeText={(v) => { setSets(v); setSuggestedFields((s) => { const n = new Set(s); n.delete('sets'); return n; }); }}
                 placeholder={t('exerciseForm.setsPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="number-pad"
@@ -202,7 +287,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
               <ThemedText style={[styles.setsSeparator, { color: colors.textSecondary }]}>×</ThemedText>
               <TextInput
                 value={reps}
-                onChangeText={setReps}
+                onChangeText={(v) => { setReps(v); setSuggestedFields((s) => { const n = new Set(s); n.delete('reps'); return n; }); }}
                 placeholder={t('exerciseForm.repsPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="number-pad"
@@ -228,12 +313,17 @@ export function ExerciseForm({ initial, submitLabel, onSubmit }: Props) {
           <View style={styles.stepSection}>
             <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
 
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              {t('exerciseForm.equipment')}
-            </ThemedText>
+            <View style={styles.labelRow}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {t('exerciseForm.equipment')}
+              </ThemedText>
+              {suggestedFields.has('equipment') && (
+                <ThemedText type="small" style={[styles.suggestedBadge, { color: colors.accent }]}>{t('exerciseForm.suggested')}</ThemedText>
+              )}
+            </View>
             <TextInput
               value={equipment}
-              onChangeText={setEquipment}
+              onChangeText={(v) => { setEquipment(v); setSuggestedFields((s) => { const n = new Set(s); n.delete('equipment'); return n; }); }}
               placeholder={t('exerciseForm.equipmentPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
@@ -371,6 +461,16 @@ const styles = StyleSheet.create({
   setsSeparator: {
     fontSize: 20,
     fontWeight: '700',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  suggestedBadge: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    opacity: 0.7,
   },
   chipRow: {
     flexDirection: 'row',

@@ -55,7 +55,7 @@ function TabIcon({
   badge,
 }: {
   name: string;
-  color: string;
+  color: string | import('react-native').ColorValue;
   focused: boolean;
   badge?: boolean;
 }) {

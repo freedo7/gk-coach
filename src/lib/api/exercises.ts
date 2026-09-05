@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Exercise, ExerciseCategory } from '@/types/database';
+import type { Exercise, ExerciseCategory, FieldElement } from '@/types/database';
 
 export interface ExerciseWithCategory extends Exercise {
   category: ExerciseCategory;
@@ -38,6 +38,7 @@ export interface ExerciseInput {
   equipment: string | null;
   sets: number | null;
   reps: number | null;
+  layout: FieldElement[] | null;
 }
 
 export async function createExercise(input: ExerciseInput, createdBy: string, teamId: string) {

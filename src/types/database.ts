@@ -64,9 +64,19 @@ export interface Exercise {
   equipment: string | null;
   sets: number | null;
   reps: number | null;
+  layout: FieldElement[] | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface FieldElement {
+  type: 'cone' | 'mannequin' | 'ball' | 'goalkeeper' | 'goal' | 'cube' | 'arrow';
+  x: number;
+  y: number;
+  rotation: number;
+  /** Lunghezza freccia (solo per type='arrow') */
+  length?: number;
 }
 
 export interface Training {

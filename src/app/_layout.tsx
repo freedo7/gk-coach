@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { DefaultTheme, DarkTheme, ThemeProvider, Slot } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -34,6 +36,10 @@ function AppShell() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemePreferenceProvider>

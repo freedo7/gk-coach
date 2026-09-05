@@ -204,6 +204,35 @@ export default {
     videoUrl: 'Video link (optional)',
     contentUrl: 'HTML sheet URL (optional)',
     skip: 'Skip →',
+    suggested: 'Suggested',
+  },
+
+  // Exercise creation mode
+  exerciseMode: {
+    title: 'New exercise',
+    builder: 'Field builder',
+    builderDesc: 'Place elements on the virtual field',
+    classic: 'Classic',
+    classicDesc: 'Fill in the form step by step',
+  },
+
+  // Field builder
+  builder: {
+    addElement: 'ADD ELEMENT',
+    cone: 'Cone',
+    mannequin: 'Mannequin',
+    ball: 'Ball',
+    goalkeeper: 'Goalkeeper',
+    goal: 'Goal',
+    cube: 'Cube',
+    arrow: 'Arrow',
+    confirm: 'Confirm layout',
+    rotateTitle: 'Rotate your phone',
+    rotateSubtitle: 'Switch to landscape mode for the best experience with the builder',
+    hint: 'Long-press an icon to see its name',
+    undo: 'Undo',
+    elementsCount: '{{count}} elements',
+    elementsCountOne: '{{count}} element',
   },
 
   // Statistics
