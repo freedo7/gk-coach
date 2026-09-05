@@ -135,7 +135,7 @@ export default function PartitaDettaglioScreen() {
             </FadeIn>
           )}
 
-          {match.rating != null && (
+          {match.rating != null && performances.length === 0 && (
             <FadeIn delay={200}>
               <ThemedView type="card" style={styles.notesCard}>
                 <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.goalkeeperRating')}</ThemedText>
