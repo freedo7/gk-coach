@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { DateField } from '@/components/date-field';
+import { FadeIn } from '@/components/fade-in';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
@@ -22,6 +23,7 @@ interface Props {
 export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const { t } = useTranslation();
   const colors = useTheme();
+  const isEdit = !!initial?.opponent;
   const [goalkeeperId, setGoalkeeperId] = useState<string | null>(initial?.goalkeeper_id ?? null);
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [isHome, setIsHome] = useState(initial?.is_home ?? true);
@@ -39,6 +41,24 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   const valid = opponent.trim().length > 0 && !!matchDate && !!matchTime;
+
+  // Progressive reveal
+  const showStep2 = isEdit || (opponent.trim().length > 0 && !!matchDate && !!matchTime);
+  const showStep3 = isEdit || showStep2;
+
+  const [revealed, setRevealed] = useState({ step2: isEdit, step3: isEdit });
+  useEffect(() => {
+    if (showStep2 && !revealed.step2) setRevealed((r) => ({ ...r, step2: true }));
+  }, [showStep2]);
+  useEffect(() => {
+    if (showStep3 && !revealed.step3) setRevealed((r) => ({ ...r, step3: true }));
+  }, [showStep3]);
+
+  const currentStep = useMemo(() => {
+    if (!showStep2) return 1;
+    if (!showStep3) return 2;
+    return 3;
+  }, [showStep2, showStep3]);
 
   async function handleSubmit() {
     haptic('medium');
@@ -69,12 +89,23 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {t('matchForm.goalkeeper')}
-      </ThemedText>
-      <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
+      {/* Step indicator (solo in creazione) */}
+      {!isEdit && (
+        <View style={styles.stepIndicator}>
+          {[1, 2, 3].map((s) => (
+            <View
+              key={s}
+              style={[
+                styles.stepDot,
+                { backgroundColor: s <= currentStep ? colors.accent : colors.backgroundElement },
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+      {/* STEP 1: Avversario + Casa/Trasferta + Tipo + Giornata + Data + Orario */}
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {t('matchForm.opponent')}
       </ThemedText>
       <TextInput
@@ -174,94 +205,116 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
       <TimeField
         value={matchTime || null}
         onChange={(v) => setMatchTime(v ?? '')}
-        placeholder={t('matchForm.timePlaceholder')}
       />
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.resultSection')}
-      </ThemedText>
-      <View style={styles.chipRow}>
-        <View style={{ flex: 1 }}>
-          <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsScored')}</ThemedText>
-          <TextInput
-            value={goalsScored}
-            onChangeText={setGoalsScored}
-            placeholder="0"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsConceded')}</ThemedText>
-          <TextInput
-            value={goalsConceded}
-            onChangeText={setGoalsConceded}
-            placeholder="0"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="number-pad"
-            style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-          />
-        </View>
-      </View>
+      {/* STEP 2: Portiere + Risultato + Voto + Risultato testuale */}
+      {revealed.step2 && (
+        <FadeIn delay={isEdit ? 0 : 200}>
+          <View style={styles.stepSection}>
+            <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.ratingSection')}
-      </ThemedText>
-      <View style={styles.ratingRow}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-          <Pressable
-            key={n}
-            onPress={() => { haptic('light'); setRating(rating === n ? 0 : n); }}
-            style={[
-              styles.ratingDot,
-              { backgroundColor: n <= rating ? colors.accent : colors.backgroundElement },
-            ]}>
-            <ThemedText
-              type="small"
-              style={{ color: n <= rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
-              {n}
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              {t('matchForm.goalkeeper')}
             </ThemedText>
-          </Pressable>
-        ))}
-      </View>
+            <GoalkeeperPicker value={goalkeeperId} onChange={setGoalkeeperId} />
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.textResult')}
-      </ThemedText>
-      <TextInput
-        value={result}
-        onChangeText={setResult}
-        placeholder={t('matchForm.textResultPlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-      />
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+              {t('matchForm.resultSection')}
+            </ThemedText>
+            <View style={styles.chipRow}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsScored')}</ThemedText>
+                <TextInput
+                  value={goalsScored}
+                  onChangeText={setGoalsScored}
+                  placeholder="0"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="number-pad"
+                  style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" themeColor="textSecondary">{t('matchForm.goalsConceded')}</ThemedText>
+                <TextInput
+                  value={goalsConceded}
+                  onChangeText={setGoalsConceded}
+                  placeholder="0"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="number-pad"
+                  style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                />
+              </View>
+            </View>
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.resultNotes')}
-      </ThemedText>
-      <TextInput
-        value={resultNotes}
-        onChangeText={setResultNotes}
-        placeholder={t('matchForm.resultNotesPlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        multiline
-        numberOfLines={4}
-        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-      />
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+              {t('matchForm.ratingSection')}
+            </ThemedText>
+            <View style={styles.ratingRow}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <Pressable
+                  key={n}
+                  onPress={() => { haptic('light'); setRating(rating === n ? 0 : n); }}
+                  style={[
+                    styles.ratingDot,
+                    { backgroundColor: n <= rating ? colors.accent : colors.backgroundElement },
+                  ]}>
+                  <ThemedText
+                    type="small"
+                    style={{ color: n <= rating ? colors.accentText : colors.textSecondary, fontWeight: '700' }}>
+                    {n}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
 
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
-        {t('matchForm.generalNotes')}
-      </ThemedText>
-      <TextInput
-        value={notes ?? ''}
-        onChangeText={setNotes}
-        placeholder={t('matchForm.generalNotesPlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        multiline
-        numberOfLines={4}
-        style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-      />
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+              {t('matchForm.textResult')}
+            </ThemedText>
+            <TextInput
+              value={result}
+              onChangeText={setResult}
+              placeholder={t('matchForm.textResultPlaceholder')}
+              placeholderTextColor={colors.textSecondary}
+              style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+            />
+          </View>
+        </FadeIn>
+      )}
+
+      {/* STEP 3: Note */}
+      {revealed.step3 && (
+        <FadeIn delay={isEdit ? 0 : 200}>
+          <View style={styles.stepSection}>
+            <View style={[styles.stepDivider, { backgroundColor: colors.backgroundElement }]} />
+
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              {t('matchForm.resultNotes')}
+            </ThemedText>
+            <TextInput
+              value={resultNotes}
+              onChangeText={setResultNotes}
+              placeholder={t('matchForm.resultNotesPlaceholder')}
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+            />
+
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.spacing}>
+              {t('matchForm.generalNotes')}
+            </ThemedText>
+            <TextInput
+              value={notes ?? ''}
+              onChangeText={setNotes}
+              placeholder={t('matchForm.generalNotesPlaceholder')}
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, styles.multiline, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+            />
+          </View>
+        </FadeIn>
+      )}
 
       {error && (
         <ThemedText type="small" themeColor="accent" style={styles.spacing}>
@@ -269,23 +322,27 @@ export function MatchForm({ initial, submitLabel, onSubmit }: Props) {
         </ThemedText>
       )}
 
-      <Pressable
-        onPress={handleSubmit}
-        disabled={!valid || submitting}
-        style={({ pressed }) => [
-          styles.button,
-          { backgroundColor: colors.accent },
-          (!valid || submitting) && styles.buttonDisabled,
-          pressed && styles.pressed,
-        ]}>
-        {submitting ? (
-          <ActivityIndicator color={colors.accentText} />
-        ) : (
-          <ThemedText type="smallBold" style={{ color: colors.accentText }}>
-            {submitLabel}
-          </ThemedText>
-        )}
-      </Pressable>
+      {revealed.step2 && (
+        <FadeIn delay={isEdit ? 0 : 100}>
+          <Pressable
+            onPress={handleSubmit}
+            disabled={!valid || submitting}
+            style={({ pressed }) => [
+              styles.button,
+              { backgroundColor: colors.accent },
+              (!valid || submitting) && styles.buttonDisabled,
+              pressed && styles.pressed,
+            ]}>
+            {submitting ? (
+              <ActivityIndicator color={colors.accentText} />
+            ) : (
+              <ThemedText type="smallBold" style={{ color: colors.accentText }}>
+                {submitLabel}
+              </ThemedText>
+            )}
+          </Pressable>
+        </FadeIn>
+      )}
     </ScrollView>
   );
 }
@@ -294,6 +351,24 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.six,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    marginBottom: Spacing.four,
+  },
+  stepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  stepSection: {
+    marginTop: Spacing.two,
+  },
+  stepDivider: {
+    height: 1,
+    marginBottom: Spacing.four,
   },
   input: {
     borderRadius: Radius.control,
