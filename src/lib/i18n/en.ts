@@ -222,6 +222,7 @@ export default {
     draws: 'Draws',
     losses: 'Losses',
     avgConceded: 'Avg goals conceded',
+    scoredMatches: '{{scored}} of {{total}} with result',
     weeklyTrainings: 'TRAININGS PER WEEK',
     matchesByType: 'MATCHES BY TYPE',
     topCategories: 'MOST TRAINED CATEGORIES',

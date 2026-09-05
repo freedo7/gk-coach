@@ -222,6 +222,7 @@ export default {
     draws: 'Pareggi',
     losses: 'Sconfitte',
     avgConceded: 'Media gol subiti',
+    scoredMatches: '{{scored}} su {{total}} con risultato',
     weeklyTrainings: 'ALLENAMENTI PER SETTIMANA',
     matchesByType: 'PARTITE PER TIPO',
     topCategories: "CATEGORIE PIU' ALLENATE",

@@ -262,22 +262,23 @@ export default function StatisticheScreen() {
   // Weekly activity (last 8 weeks)
   const cutoff = weeksAgo(8);
   const recentTrainings = trainings.filter((t) => t.training_date >= cutoff);
-  const weekMap: Record<string, number> = {};
-  // initialize last 8 weeks
+  const weeks: { key: string; label: string; count: number }[] = [];
   for (let i = 7; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i * 7);
+    // Lunedì di quella settimana
+    const day = d.getDay();
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - ((day + 6) % 7));
     const key = weekKey(d.toISOString().slice(0, 10));
-    weekMap[key] = 0;
+    weeks.push({ key, label: `${monday.getDate()}/${monday.getMonth() + 1}`, count: 0 });
   }
   recentTrainings.forEach((t) => {
     const key = weekKey(t.training_date);
-    if (key in weekMap) weekMap[key]++;
+    const w = weeks.find((w) => w.key === key);
+    if (w) w.count++;
   });
-  const weeklyData = Object.entries(weekMap).map(([key, value]) => ({
-    label: key.split('-W')[1],
-    value,
-  }));
+  const weeklyData = weeks.map((w) => ({ label: w.label, value: w.count }));
 
   if (loading) {
     return (
@@ -391,10 +392,10 @@ export default function StatisticheScreen() {
           {matchesWithScore.length > 0 && (
             <>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {t('stats.results')} ({matchesWithScore.length}/{matches.length})
+                {t('stats.results')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
-                {/* Barra visiva W/D/L */}
+                {/* Barra visiva V/P/S */}
                 <View style={styles.resultBar}>
                   {wins > 0 && <View style={[styles.resultBarSegment, { flex: wins, backgroundColor: '#34C759' }]} />}
                   {draws > 0 && <View style={[styles.resultBarSegment, { flex: draws, backgroundColor: colors.textSecondary }]} />}
@@ -403,17 +404,22 @@ export default function StatisticheScreen() {
                 <View style={styles.resultRow}>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#34C759' }]}>{wins}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">{t('stats.wins')}</ThemedText>
+                    <ThemedText type="small" style={{ color: '#34C759' }}>V</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: colors.textSecondary }]}>{draws}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">{t('stats.draws')}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">P</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#FF3B30' }]}>{losses}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">{t('stats.losses')}</ThemedText>
+                    <ThemedText type="small" style={{ color: '#FF3B30' }}>S</ThemedText>
                   </View>
                 </View>
+                {matchesWithScore.length < matches.length && (
+                  <ThemedText type="small" themeColor="textSecondary" style={{ textAlign: 'center' }}>
+                    {t('stats.scoredMatches', { scored: matchesWithScore.length, total: matches.length })}
+                  </ThemedText>
+                )}
                 <View style={styles.divider} />
                 <View style={styles.avgRow}>
                   <ThemedText type="small" themeColor="textSecondary">{t('stats.avgConceded')}</ThemedText>
