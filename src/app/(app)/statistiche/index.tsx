@@ -641,6 +641,7 @@ const styles = StyleSheet.create({
   chartContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    height: 110,
     gap: Spacing.two,
   },
   chartCol: {
