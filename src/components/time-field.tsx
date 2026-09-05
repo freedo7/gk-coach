@@ -74,6 +74,7 @@ export function TimeField({ value, onChange, placeholder }: Props) {
           <Pressable style={styles.overlay} onPress={() => setShow(false)}>
             <Pressable style={[styles.modal, { backgroundColor: colors.backgroundElement }]}>
               <DateTimePicker
+                style={styles.picker}
                 mode="time"
                 value={tempDate}
                 is24Hour
@@ -140,6 +141,10 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.three,
     paddingBottom: Spacing.six,
     paddingHorizontal: Spacing.four,
+  },
+  picker: {
+    alignSelf: 'center',
+    width: '100%',
   },
   confirmBtn: {
     borderRadius: Radius.control,
