@@ -416,6 +416,19 @@ export default function StatisticheScreen() {
             </>
           )}
 
+          {/* ── Mappa tiri ── */}
+          {allPerformances.some((p) => p.shots && p.shots.length > 0 && (!selectedGk || p.goalkeeper_id === selectedGk)) && (
+            <Pressable
+              onPress={() => router.push(`/statistiche/mappa-tiri${selectedGk ? `?gk=${selectedGk}` : ''}` as any)}
+              style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+              <ThemedView type="card" style={[styles.card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: Spacing.three }]}>
+                <Ionicons name="locate-outline" size={18} color={colors.accent} />
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('stats.shotMaps')}</ThemedText>
+                <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+              </ThemedView>
+            </Pressable>
+          )}
+
           {/* ── Attività settimanale ── */}
           <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
             {t('stats.weeklyActivity')}

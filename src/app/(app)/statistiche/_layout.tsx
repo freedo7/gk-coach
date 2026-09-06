@@ -15,6 +15,7 @@ export default function StatisticheLayout() {
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="portiere/[id]" options={{ title: t('nav.goalkeeperProfile') }} />
+      <Stack.Screen name="mappa-tiri" options={{ title: t('stats.shotMaps') }} />
     </Stack>
   );
 }

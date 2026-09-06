@@ -171,6 +171,7 @@ export function ShotMapper({ visible, shots: initialShots, onClose }: Props) {
       fromX: fromPos.x, fromY: fromPos.y,
       toX: toPos.x, toY: toPos.y,
       outcome, curve,
+      distance: distanceFromGoal(fromPos.y),
     }]);
     setFromPos(null);
     setToPos(null);
@@ -241,19 +242,23 @@ export function ShotMapper({ visible, shots: initialShots, onClose }: Props) {
                       strokeWidth={2} strokeDasharray={s.outcome === 'save' ? '6,4' : undefined} />
                   ))}
                 </Svg>
-                {/* Punti partenza salvati */}
+                {/* Punti partenza salvati con numero */}
                 {shots.map((s, i) => (
-                  <View key={i} style={[styles.shotDot, {
-                    left: s.fromX * fieldW - 6, top: s.fromY * fieldH - 6,
+                  <View key={i} style={[styles.shotNumberDot, {
+                    left: s.fromX * fieldW - 10, top: s.fromY * fieldH - 10,
                     backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
-                  }]} />
+                  }]}>
+                    <ThemedText style={styles.shotNumberText}>{i + 1}</ThemedText>
+                  </View>
                 ))}
-                {/* Punto corrente */}
+                {/* Punto corrente con numero */}
                 {fromPos && (
-                  <View style={[styles.shotDotActive, {
-                    left: fromPos.x * fieldW - 8, top: fromPos.y * fieldH - 8,
-                    borderColor: colors.accent,
-                  }]} />
+                  <View style={[styles.shotNumberDot, {
+                    left: fromPos.x * fieldW - 10, top: fromPos.y * fieldH - 10,
+                    backgroundColor: colors.accent,
+                  }]}>
+                    <ThemedText style={styles.shotNumberText}>{shots.length + 1}</ThemedText>
+                  </View>
                 )}
             </View>
           </Pressable>
@@ -262,28 +267,47 @@ export function ShotMapper({ visible, shots: initialShots, onClose }: Props) {
           <Pressable onPress={step === 'goal' ? handleGoalTap : undefined}>
             <View style={[styles.goalContainer, { width: goalW, height: goalH, opacity: step === 'field' ? 0.4 : 1 }]}>
               <GoalSvg width={goalW} height={goalH} />
-              {/* Impatti salvati */}
+              {/* Impatti salvati con numero */}
               {shots.map((s, i) => (
-                <View key={i} style={[styles.shotDot, {
-                  left: s.toX * goalW - 6, top: s.toY * goalH - 6,
+                <View key={i} style={[styles.shotNumberDot, {
+                  left: s.toX * goalW - 10, top: s.toY * goalH - 10,
                   backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
-                }]} />
+                }]}>
+                  <ThemedText style={styles.shotNumberText}>{i + 1}</ThemedText>
+                </View>
               ))}
-              {/* Impatto corrente */}
+              {/* Impatto corrente con numero */}
               {toPos && (
-                <View style={[styles.shotDotActive, {
-                  left: toPos.x * goalW - 8, top: toPos.y * goalH - 8,
-                  borderColor: colors.accent,
-                }]} />
+                <View style={[styles.shotNumberDot, {
+                  left: toPos.x * goalW - 10, top: toPos.y * goalH - 10,
+                  backgroundColor: colors.accent,
+                }]}>
+                  <ThemedText style={styles.shotNumberText}>{shots.length + 1}</ThemedText>
+                </View>
               )}
             </View>
           </Pressable>
 
-          {/* Distanza dalla porta (sotto la porta grande) */}
-          {fromPos && (
-            <ThemedText type="smallBold" themeColor="accent" style={styles.distanceText}>
-              ~{distanceFromGoal(fromPos.y)}m {t('shotMapper.fromGoal')}
-            </ThemedText>
+          {/* Distanze dalla porta */}
+          {(shots.length > 0 || fromPos) && (
+            <View style={styles.distanceList}>
+              {shots.map((s, i) => (
+                <View key={i} style={styles.distanceRow}>
+                  <View style={[styles.distanceNumberDot, { backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158' }]}>
+                    <ThemedText style={styles.distanceNumberText}>{i + 1}</ThemedText>
+                  </View>
+                  <ThemedText type="small" themeColor="textSecondary">~{s.distance ?? distanceFromGoal(s.fromY)}m</ThemedText>
+                </View>
+              ))}
+              {fromPos && (
+                <View style={styles.distanceRow}>
+                  <View style={[styles.distanceNumberDot, { backgroundColor: colors.accent }]}>
+                    <ThemedText style={styles.distanceNumberText}>{shots.length + 1}</ThemedText>
+                  </View>
+                  <ThemedText type="smallBold" themeColor="accent">~{distanceFromGoal(fromPos.y)}m</ThemedText>
+                </View>
+              )}
+            </View>
           )}
 
           {/* Scelta esito + curva */}
@@ -390,27 +414,51 @@ const styles = StyleSheet.create({
   },
   goalContainer: {
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: 'visible',
     alignSelf: 'center',
   },
-  distanceText: {
-    textAlign: 'center',
+  distanceList: {
+    gap: 4,
+    alignSelf: 'flex-start',
+    width: '100%',
   },
-  shotDot: {
+  distanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  distanceNumberDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  distanceNumberText: {
+    color: '#FFF',
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  shotNumberDot: {
     position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  shotDotActive: {
-    position: 'absolute',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 3,
-    backgroundColor: 'rgba(255,255,255,0.4)',
+  shotNumberText: {
+    color: '#FFF',
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   outcomeSection: {
     gap: Spacing.two,

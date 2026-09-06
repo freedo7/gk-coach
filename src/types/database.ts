@@ -117,6 +117,7 @@ export interface ShotEvent {
   toY: number;
   outcome: 'goal' | 'save';
   curve: 'left' | 'right' | 'straight';
+  distance: number; // distanza dalla porta in metri
 }
 
 export interface MatchPerformance {

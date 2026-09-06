@@ -93,13 +93,26 @@ function ShotPreview({ shots }: { shots: ShotEvent[] }) {
             ))}
           </Svg>
           {shots.map((s, i) => (
-            <View key={i} style={[shotStyles.dot, {
-              left: s.fromX * W - 5, top: s.fromY * H - 5,
+            <View key={i} style={[shotStyles.numDot, {
+              left: s.fromX * W - 8, top: s.fromY * H - 8,
               backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
-            }]} />
+            }]}>
+              <ThemedText style={shotStyles.numText}>{i + 1}</ThemedText>
+            </View>
           ))}
         </View>
       </Pressable>
+      {/* Distanze */}
+      <View style={shotStyles.distanceList}>
+        {shots.map((s, i) => (
+          <View key={i} style={shotStyles.distanceItem}>
+            <View style={[shotStyles.distanceNumDot, { backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158' }]}>
+              <ThemedText style={shotStyles.distanceNumText}>{i + 1}</ThemedText>
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">~{s.distance ?? Math.round((1 - s.fromY) * 52.5)}m</ThemedText>
+          </View>
+        ))}
+      </View>
 
       <Modal visible={open} animationType="fade" transparent statusBarTranslucent>
         <Pressable style={shotStyles.modalBg} onPress={() => setOpen(false)}>
@@ -113,11 +126,24 @@ function ShotPreview({ shots }: { shots: ShotEvent[] }) {
               ))}
             </Svg>
             {shots.map((s, i) => (
-              <View key={i} style={[shotStyles.dot, {
-                left: s.fromX * fullW - 6, top: s.fromY * fullH - 6,
+              <View key={i} style={[shotStyles.numDot, {
+                left: s.fromX * fullW - 10, top: s.fromY * fullH - 10,
                 backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
-                width: 12, height: 12, borderRadius: 6,
-              }]} />
+                width: 20, height: 20, borderRadius: 10,
+              }]}>
+                <ThemedText style={shotStyles.numText}>{i + 1}</ThemedText>
+              </View>
+            ))}
+          </View>
+          {/* Distanze nel fullscreen */}
+          <View style={shotStyles.distanceList}>
+            {shots.map((s, i) => (
+              <View key={i} style={shotStyles.distanceItem}>
+                <View style={[shotStyles.distanceNumDot, { backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158' }]}>
+                  <ThemedText style={shotStyles.distanceNumText}>{i + 1}</ThemedText>
+                </View>
+                <ThemedText type="small" style={{ color: '#FFF' }}>~{s.distance ?? Math.round((1 - s.fromY) * 52.5)}m</ThemedText>
+              </View>
             ))}
           </View>
           <View style={[shotStyles.closeBtn, { backgroundColor: colors.backgroundElement }]}>
@@ -150,13 +176,49 @@ const shotStyles = StyleSheet.create({
     overflow: 'visible',
     marginTop: Spacing.one,
   },
-  dot: {
+  numDot: {
     position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     borderWidth: 1.5,
     borderColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  numText: {
+    color: '#FFF',
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  distanceList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: 4,
+  },
+  distanceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  distanceNumDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  distanceNumText: {
+    color: '#FFF',
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   modalBg: {
     flex: 1,
@@ -184,6 +246,7 @@ export default function PartitaDettaglioScreen() {
   const [match, setMatch] = useState<Match | null>(null);
   const [performances, setPerformances] = useState<MatchPerformance[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPerfId, setExpandedPerfId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -310,34 +373,47 @@ export default function PartitaDettaglioScreen() {
                 <ThemedText type="smallBold" themeColor="textSecondary">
                   {t('matchForm.goalkeeperPerformances')}
                 </ThemedText>
-                {performances.map((perf) => (
-                  <View key={perf.id} style={styles.perfRow}>
-                    <View style={styles.perfInfo}>
-                      <ThemedText type="smallBold">{perf.goalkeeper?.name ?? '—'}</ThemedText>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
-                        {perf.goals_conceded != null && (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {perf.goals_conceded} {t('matchForm.perfGoalsConceded').toLowerCase()}
-                          </ThemedText>
-                        )}
-                        {perf.rating != null && (
-                          <View style={styles.perfRating}>
-                            <ThemedText style={[styles.perfRatingNumber, { color: colors.accent }]}>
-                              {perf.rating}
-                            </ThemedText>
-                            <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+                {performances.map((perf) => {
+                  const isExpanded = expandedPerfId === perf.id;
+                  const shotCount = perf.shots?.length ?? 0;
+                  return (
+                    <Pressable
+                      key={perf.id}
+                      onPress={() => { haptic('light'); setExpandedPerfId(isExpanded ? null : perf.id); }}>
+                      <View style={styles.perfRow}>
+                        <View style={styles.perfInfo}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
+                            <ThemedText type="smallBold">{perf.goalkeeper?.name ?? '—'}</ThemedText>
+                            {shotCount > 0 && (
+                              <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textSecondary} />
+                            )}
                           </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
+                            {perf.goals_conceded != null && (
+                              <ThemedText type="small" themeColor="textSecondary">
+                                {perf.goals_conceded} {t('matchForm.perfGoalsConceded').toLowerCase()}
+                              </ThemedText>
+                            )}
+                            {perf.rating != null && (
+                              <View style={styles.perfRating}>
+                                <ThemedText style={[styles.perfRatingNumber, { color: colors.accent }]}>
+                                  {perf.rating}
+                                </ThemedText>
+                                <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        {perf.notes && (
+                          <ThemedText type="small" themeColor="textSecondary">{perf.notes}</ThemedText>
+                        )}
+                        {isExpanded && perf.shots && perf.shots.length > 0 && (
+                          <ShotPreview shots={perf.shots} />
                         )}
                       </View>
-                    </View>
-                    {perf.notes && (
-                      <ThemedText type="small" themeColor="textSecondary">{perf.notes}</ThemedText>
-                    )}
-                    {perf.shots && perf.shots.length > 0 && (
-                      <ShotPreview shots={perf.shots} />
-                    )}
-                  </View>
-                ))}
+                    </Pressable>
+                  );
+                })}
               </ThemedView>
             </FadeIn>
           )}
