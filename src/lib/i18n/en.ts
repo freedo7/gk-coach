@@ -137,6 +137,11 @@ export default {
     cup: 'Cup',
   },
 
+  // Match detail
+  matchDetail: {
+    manage: 'Manage',
+  },
+
   // Match form
   matchForm: {
     goalkeeper: 'Goalkeeper',
@@ -169,6 +174,27 @@ export default {
     perfGoalsConceded: 'Goals conceded',
     addDetails: 'Add details',
     addNotes: 'Add notes',
+    mapShots: 'Map shots',
+    shotsCount: '{{count}} shots',
+    shotsCountOne: '{{count}} shot',
+  },
+
+  // Shot mapper
+  shotMapper: {
+    title: 'Shot map',
+    tapField: 'Tap the field where the shot starts',
+    tapGoal: 'Tap the goal where it ends',
+    chooseOutcome: 'Shot outcome',
+    goal: 'Goal',
+    save: 'Save',
+    curveLeft: 'Curve L',
+    curveRight: 'Curve R',
+    straight: 'Straight',
+    done: 'Done',
+    undo: 'Undo last',
+    goals: 'Goals',
+    saves: 'Saves',
+    fromGoal: 'from goal',
   },
 
   // Training form

@@ -76,6 +76,7 @@ export interface PerformanceInput {
   goalkeeper_id: string;
   rating: number | null;
   goals_conceded: number | null;
+  shots: import('@/types/database').ShotEvent[] | null;
   notes: string | null;
 }
 

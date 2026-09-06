@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { DateField } from '@/components/date-field';
 import { FadeIn } from '@/components/fade-in';
 import { GoalkeeperPicker } from '@/components/goalkeeper-picker';
+import { ShotMapper } from '@/components/shot-mapper';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -14,7 +15,7 @@ import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { useAuth } from '@/context/auth-context';
 import { haptic } from '@/hooks/use-haptic';
 import { useTheme } from '@/hooks/use-theme';
-import type { Goalkeeper, MatchPerformance } from '@/types/database';
+import type { Goalkeeper, MatchPerformance, ShotEvent } from '@/types/database';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 
 interface Props {
@@ -29,6 +30,7 @@ interface PerfState {
   name: string;
   rating: number;
   goals_conceded: string;
+  shots: ShotEvent[];
   notes: string;
 }
 
@@ -68,6 +70,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
             name: p.goalkeeper?.name ?? gks.find((g) => g.id === p.goalkeeper_id)?.name ?? '',
             rating: p.rating ?? 0,
             goals_conceded: p.goals_conceded?.toString() ?? '',
+            shots: p.shots ?? [],
             notes: p.notes ?? '',
           }))
         );
@@ -108,7 +111,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
 
   function addPerformance(gk: Goalkeeper) {
     haptic('light');
-    setPerformances((prev) => [...prev, { goalkeeper_id: gk.id, name: gk.name, rating: 0, goals_conceded: '', notes: '' }]);
+    setPerformances((prev) => [...prev, { goalkeeper_id: gk.id, name: gk.name, rating: 0, goals_conceded: '', shots: [], notes: '' }]);
   }
 
   function removePerformance(gkId: string) {
@@ -122,17 +125,26 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
     );
   }
 
+  const [shotMapperGkId, setShotMapperGkId] = useState<string | null>(null);
+
+  function updateShots(gkId: string, shots: ShotEvent[]) {
+    setPerformances((prev) =>
+      prev.map((p) => (p.goalkeeper_id === gkId ? { ...p, shots } : p))
+    );
+  }
+
   async function handleSubmit() {
     haptic('medium');
     setError(null);
     setSubmitting(true);
     try {
       const perfInputs: PerformanceInput[] = performances
-        .filter((p) => p.rating > 0 || p.goals_conceded.trim() || p.notes.trim())
+        .filter((p) => p.rating > 0 || p.goals_conceded.trim() || p.notes.trim() || p.shots.length > 0)
         .map((p) => ({
           goalkeeper_id: p.goalkeeper_id,
           rating: p.rating > 0 ? p.rating : null,
           goals_conceded: p.goals_conceded.trim() ? parseInt(p.goals_conceded.trim(), 10) : null,
+          shots: p.shots.length > 0 ? p.shots : null,
           notes: p.notes.trim() || null,
         }));
       await onSubmit(
@@ -482,6 +494,31 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
                       numberOfLines={2}
                       style={[styles.input, styles.perfNotes, { backgroundColor: colors.backgroundElement, color: colors.text }]}
                     />
+
+                    {/* Bottone Mappa tiri */}
+                    <Pressable
+                      onPress={() => { haptic('light'); setShotMapperGkId(perf.goalkeeper_id); }}
+                      style={({ pressed }) => [styles.mapShotsBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.7 }]}>
+                      <Ionicons name="locate-outline" size={18} color={colors.accent} />
+                      <ThemedText type="smallBold" style={{ color: colors.accent }}>
+                        {t('matchForm.mapShots')}
+                      </ThemedText>
+                      {perf.shots.length > 0 && (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {t(perf.shots.length === 1 ? 'matchForm.shotsCountOne' : 'matchForm.shotsCount', { count: perf.shots.length })}
+                        </ThemedText>
+                      )}
+                    </Pressable>
+
+                    {/* Shot mapper modal */}
+                    <ShotMapper
+                      visible={shotMapperGkId === perf.goalkeeper_id}
+                      shots={perf.shots}
+                      onClose={(newShots) => {
+                        updateShots(perf.goalkeeper_id, newShots);
+                        setShotMapperGkId(null);
+                      }}
+                    />
                   </ThemedView>
                 ))}
 
@@ -658,6 +695,14 @@ const styles = StyleSheet.create({
   perfNotes: {
     minHeight: 50,
     textAlignVertical: 'top',
+  },
+  mapShotsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.two,
+    borderRadius: Radius.control,
   },
   addPerfRow: {
     flexDirection: 'row',

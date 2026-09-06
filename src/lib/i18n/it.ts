@@ -137,6 +137,11 @@ export default {
     cup: 'Coppa',
   },
 
+  // Match detail
+  matchDetail: {
+    manage: 'Gestisci',
+  },
+
   // Match form
   matchForm: {
     goalkeeper: 'Portiere',
@@ -169,6 +174,27 @@ export default {
     perfGoalsConceded: 'Gol subiti',
     addDetails: 'Aggiungi dettagli',
     addNotes: 'Aggiungi note',
+    mapShots: 'Mappa tiri',
+    shotsCount: '{{count}} tiri',
+    shotsCountOne: '{{count}} tiro',
+  },
+
+  // Shot mapper
+  shotMapper: {
+    title: 'Mappa tiri',
+    tapField: 'Tocca il campo dove parte il tiro',
+    tapGoal: 'Tocca la porta dove arriva',
+    chooseOutcome: 'Esito del tiro',
+    goal: 'Gol',
+    save: 'Parata',
+    curveLeft: 'Curva SX',
+    curveRight: 'Curva DX',
+    straight: 'Dritto',
+    done: 'Fatto',
+    undo: 'Annulla ultimo',
+    goals: 'Gol',
+    saves: 'Parate',
+    fromGoal: 'dalla porta',
   },
 
   // Training form

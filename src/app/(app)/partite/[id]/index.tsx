@@ -2,8 +2,9 @@ import { Link, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-rout
 import { useCallback, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Defs, ClipPath, Rect, Circle, Line, Path } from 'react-native-svg';
 
 import { FadeIn } from '@/components/fade-in';
 import { ThemedText } from '@/components/themed-text';
@@ -12,10 +13,166 @@ import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteMatch, getMatch, listPerformances } from '@/lib/api/matches';
 import { formatDateLong, formatTime } from '@/lib/format';
-import type { Match, MatchPerformance } from '@/types/database';
+import type { Match, MatchPerformance, ShotEvent } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+
+const HALF_FIELD_RATIO = 52.5 / 68;
+
+function MiniFieldSvg({ width: W, height: H }: { width: number; height: number }) {
+  const B = 3; const LW = 1; const LC = 'rgba(255,255,255,0.7)';
+  const penW = W * (40.32 / 68); const penH = H * (16.5 / 52.5); const penX = (W - penW) / 2;
+  const penY = H - B - penH;
+  const goalAreaW = W * (18.32 / 68); const goalAreaH = H * (5.5 / 52.5);
+  const goalAreaX = (W - goalAreaW) / 2; const goalAreaY = H - B - goalAreaH;
+  const goalW = W * (7.32 / 68); const goalX = (W - goalW) / 2;
+  const goalH = Math.max(H * (2 / 52.5), 3);
+  const svgH = H + goalH + B;
+  return (
+    <Svg width={W} height={svgH} style={StyleSheet.absoluteFill}>
+      <Defs><ClipPath id="mfc"><Rect x={0} y={0} width={W} height={H} rx={4} /></ClipPath></Defs>
+      <Rect x={0} y={0} width={W} height={svgH} fill="#3a8c3f" rx={4} />
+      <Rect x={B} y={B} width={W - B * 2} height={H - B * 2} fill="none" stroke={LC} strokeWidth={LW} />
+      <Rect x={goalX} y={H - B} width={goalW} height={goalH} fill="none" stroke={LC} strokeWidth={LW} />
+      <Rect x={goalAreaX} y={goalAreaY} width={goalAreaW} height={goalAreaH} fill="none" stroke={LC} strokeWidth={LW} />
+      <Rect x={penX} y={penY} width={penW} height={penH} fill="none" stroke={LC} strokeWidth={LW} />
+      <Line x1={B} y1={B} x2={W - B} y2={B} stroke={LC} strokeWidth={LW} />
+      {/* Semicerchio centrocampo */}
+      <Path d={`M ${W / 2 - W * (9.15 / 68)} ${B} A ${W * (9.15 / 68)} ${W * (9.15 / 68)} 0 0 0 ${W / 2 + W * (9.15 / 68)} ${B}`} fill="none" stroke={LC} strokeWidth={LW} />
+    </Svg>
+  );
+}
+
+function shotCurvePath(s: ShotEvent, W: number, H: number): string {
+  const sx = s.fromX * W; const sy = s.fromY * H;
+  const goalStartX = W * ((68 - 7.32) / 2 / 68);
+  const goalEndX = W - goalStartX;
+  const ex = goalStartX + s.toX * (goalEndX - goalStartX);
+  const ey = H;
+  const midY = sy + (ey - sy) * 0.6;
+  let cpx = (sx + ex) / 2;
+  if (s.curve === 'left') cpx -= W * 0.15;
+  else if (s.curve === 'right') cpx += W * 0.15;
+  return `M ${sx} ${sy} Q ${cpx} ${midY} ${ex} ${ey}`;
+}
+
+function ShotPreview({ shots }: { shots: ShotEvent[] }) {
+  const colors = useTheme();
+  const { width: screenW } = useWindowDimensions();
+  const [open, setOpen] = useState(false);
+
+  const W = screenW - Spacing.four * 2 - Spacing.three * 2; // dentro la card
+  const H = W * HALF_FIELD_RATIO;
+  const fullW = screenW * 0.9;
+  const fullH = fullW * HALF_FIELD_RATIO;
+
+  const goalCount = shots.filter((s) => s.outcome === 'goal').length;
+  const saveCount = shots.filter((s) => s.outcome === 'save').length;
+
+  return (
+    <>
+      <View style={shotStyles.statsRow}>
+        <View style={shotStyles.statBadge}>
+          <View style={[shotStyles.statDot, { backgroundColor: '#FF3B30' }]} />
+          <ThemedText type="small">{goalCount} gol</ThemedText>
+        </View>
+        <View style={shotStyles.statBadge}>
+          <View style={[shotStyles.statDot, { backgroundColor: '#30D158' }]} />
+          <ThemedText type="small">{saveCount} parate</ThemedText>
+        </View>
+      </View>
+      <Pressable onPress={() => setOpen(true)} style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+        <View style={[shotStyles.fieldWrap, { width: W, height: H + 10 }]}>
+          <MiniFieldSvg width={W} height={H} />
+          <Svg width={W} height={H} style={StyleSheet.absoluteFill} pointerEvents="none">
+            {shots.map((s, i) => (
+              <Path key={i} d={shotCurvePath(s, W, H)} fill="none"
+                stroke={s.outcome === 'goal' ? '#FF3B30' : '#30D158'}
+                strokeWidth={2} strokeDasharray={s.outcome === 'save' ? '5,3' : undefined} />
+            ))}
+          </Svg>
+          {shots.map((s, i) => (
+            <View key={i} style={[shotStyles.dot, {
+              left: s.fromX * W - 5, top: s.fromY * H - 5,
+              backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
+            }]} />
+          ))}
+        </View>
+      </Pressable>
+
+      <Modal visible={open} animationType="fade" transparent statusBarTranslucent>
+        <Pressable style={shotStyles.modalBg} onPress={() => setOpen(false)}>
+          <View style={[shotStyles.fieldWrap, { width: fullW, height: fullH + 10 }]}>
+            <MiniFieldSvg width={fullW} height={fullH} />
+            <Svg width={fullW} height={fullH} style={StyleSheet.absoluteFill} pointerEvents="none">
+              {shots.map((s, i) => (
+                <Path key={i} d={shotCurvePath(s, fullW, fullH)} fill="none"
+                  stroke={s.outcome === 'goal' ? '#FF3B30' : '#30D158'}
+                  strokeWidth={2.5} strokeDasharray={s.outcome === 'save' ? '6,4' : undefined} />
+              ))}
+            </Svg>
+            {shots.map((s, i) => (
+              <View key={i} style={[shotStyles.dot, {
+                left: s.fromX * fullW - 6, top: s.fromY * fullH - 6,
+                backgroundColor: s.outcome === 'goal' ? '#FF3B30' : '#30D158',
+                width: 12, height: 12, borderRadius: 6,
+              }]} />
+            ))}
+          </View>
+          <View style={[shotStyles.closeBtn, { backgroundColor: colors.backgroundElement }]}>
+            <Ionicons name="close" size={20} color={colors.text} />
+          </View>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
+
+const shotStyles = StyleSheet.create({
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    marginTop: Spacing.one,
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  fieldWrap: {
+    borderRadius: 6,
+    overflow: 'visible',
+    marginTop: Spacing.one,
+  },
+  dot: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+  },
+  modalBg: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.four,
+  },
+  closeBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 export default function PartitaDettaglioScreen() {
   const { t } = useTranslation();
@@ -176,6 +333,9 @@ export default function PartitaDettaglioScreen() {
                     {perf.notes && (
                       <ThemedText type="small" themeColor="textSecondary">{perf.notes}</ThemedText>
                     )}
+                    {perf.shots && perf.shots.length > 0 && (
+                      <ShotPreview shots={perf.shots} />
+                    )}
                   </View>
                 ))}
               </ThemedView>
@@ -193,16 +353,16 @@ export default function PartitaDettaglioScreen() {
 
           {isAdmin && (
             <View style={styles.adminActions}>
-              <Link href={`/partite/${match.id}/edit`} asChild>
-                <Pressable style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
-                  <Ionicons name="pencil-outline" size={18} color={colors.text} />
-                  <ThemedText type="smallBold">{t('common.edit')}</ThemedText>
-                </Pressable>
-              </Link>
+              <Pressable onPress={() => router.push(`/partite/${match.id}/edit`)}
+                style={({ pressed }) => [styles.actionButton, { flex: 1, backgroundColor: colors.backgroundElement }, pressed && styles.pressed]}>
+                <Ionicons name="pencil-outline" size={18} color={colors.text} />
+                <View style={{ width: 10 }} />
+                <ThemedText type="smallBold">{t('matchDetail.manage')}</ThemedText>
+              </Pressable>
               <Pressable
                 onPress={handleDelete}
-                style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                style={({ pressed }) => [styles.actionButton, { paddingHorizontal: Spacing.three, backgroundColor: colors.dangerSoft }, pressed && styles.pressed]}>
+                <Ionicons name="trash-outline" size={16} color={colors.danger} />
                 <ThemedText type="smallBold" style={{ color: colors.danger }}>{t('common.delete')}</ThemedText>
               </Pressable>
             </View>
@@ -301,7 +461,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.four,
   },
   actionButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

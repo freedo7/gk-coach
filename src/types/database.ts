@@ -110,12 +110,22 @@ export interface TrainingComment {
   profile?: { full_name: string | null };
 }
 
+export interface ShotEvent {
+  fromX: number;  // 0–1 posizione sul campo (da dove parte il tiro)
+  fromY: number;
+  toX: number;    // 0–1 posizione sulla porta (dove arriva)
+  toY: number;
+  outcome: 'goal' | 'save';
+  curve: 'left' | 'right' | 'straight';
+}
+
 export interface MatchPerformance {
   id: string;
   match_id: string;
   goalkeeper_id: string;
   rating: number | null;
   goals_conceded: number | null;
+  shots: ShotEvent[] | null;
   notes: string | null;
   created_at: string;
   goalkeeper?: { name: string };
