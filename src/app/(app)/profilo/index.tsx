@@ -18,6 +18,8 @@ import { ThemedView } from '@/components/themed-view';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/auth-context';
 import { sendPushToCoach } from '@/lib/api/push';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/toast-context';
 import { useThemePreference, type ThemePreference } from '@/context/theme-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
@@ -84,7 +86,7 @@ function SettingsRow({
             </ThemedText>
           )}
           {trailing}
-          {onPress && <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />}
+          {onPress && !trailing && <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />}
         </View>
       </View>
     </View>
@@ -114,9 +116,13 @@ export default function ImpostazioniScreen() {
   const plan = usePlan();
   const router = useRouter();
   const { preference, setPreference } = useThemePreference();
+  const { show: showToast } = useToast();
 
   const [query, setQuery] = useState('');
   const [notificheEnabled, setNotificheEnabled] = useState(true);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Team switcher modal
   const [switcherVisible, setSwitcherVisible] = useState(false);
@@ -143,6 +149,21 @@ export default function ImpostazioniScreen() {
     haptic('light');
     setCurrentTeam(team);
     setSwitcherVisible(false);
+  }
+
+  async function handleSendFeedback() {
+    if (!feedbackText.trim()) return;
+    setSendingFeedback(true);
+    const { error } = await supabase.from('feedback').insert({
+      user_id: profile.id,
+      user_email: profile.email,
+      message: feedbackText.trim(),
+    });
+    setSendingFeedback(false);
+    if (!error) {
+      setFeedbackText('');
+      showToast(t('settings.feedbackSent'), 'success');
+    }
   }
 
   // Filter rows by search
@@ -292,7 +313,7 @@ export default function ImpostazioniScreen() {
           )}
 
           {/* ─── ABBONAMENTO ─── */}
-          {(match('abbonamento') || match('pro') || match('piano') || match('upgrade')) && (
+          {(match('abbonamento') || match('pro') || match('piano') || match('upgrade') || match('feedback')) && (
             <>
               <SectionHeader title={t('settings.subscriptionSection')} />
               <ThemedView type="card" style={styles.card}>
@@ -303,9 +324,48 @@ export default function ImpostazioniScreen() {
                   label={t('settings.currentPlan')}
                   value={planLabel}
                   onPress={() => router.push('/profilo/paywall')}
+                />
+                <SettingsRow
+                  icon="chatbubble-ellipses-outline"
+                  iconBg="#5AC8FA"
+                  label={t('settings.feedback')}
+                  onPress={() => { haptic('light'); setFeedbackOpen(!feedbackOpen); }}
+                  trailing={<Ionicons name={feedbackOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textSecondary} />}
                   last
                 />
               </ThemedView>
+              {feedbackOpen && (
+                <View style={styles.feedbackBox}>
+                  <TextInput
+                    value={feedbackText}
+                    onChangeText={setFeedbackText}
+                    placeholder={t('settings.feedbackPlaceholder')}
+                    placeholderTextColor={colors.textSecondary}
+                    style={[styles.feedbackInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.backgroundElement }]}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    autoFocus
+                  />
+                  <Pressable
+                    onPress={handleSendFeedback}
+                    disabled={sendingFeedback || !feedbackText.trim()}
+                    style={({ pressed }) => [
+                      styles.feedbackBtn,
+                      { backgroundColor: colors.accent },
+                      (sendingFeedback || !feedbackText.trim()) && { opacity: 0.4 },
+                      pressed && styles.pressed,
+                    ]}>
+                    {sendingFeedback
+                      ? <ActivityIndicator color={colors.accentText} />
+                      : <>
+                          <Ionicons name="send-outline" size={16} color={colors.accentText} />
+                          <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('settings.feedbackSend')}</ThemedText>
+                        </>
+                    }
+                  </Pressable>
+                </View>
+              )}
             </>
           )}
 
@@ -382,6 +442,34 @@ export default function ImpostazioniScreen() {
                     </View>
                   </Pressable>
                 ))}
+              </ThemedView>
+            </>
+          )}
+
+          {/* ─── ADMIN ─── */}
+          {isAdmin && (match('admin') || match('feedback') || match('utenti') || match('abbonamenti')) && (
+            <>
+              <SectionHeader title="ADMIN" />
+              <ThemedView type="card" style={styles.card}>
+                <SettingsRow
+                  icon="mail-open-outline"
+                  iconBg="#AF52DE"
+                  label={t('settings.feedbackList')}
+                  onPress={() => router.push('/profilo/feedback' as any)}
+                />
+                <SettingsRow
+                  icon="people-outline"
+                  iconBg="#007AFF"
+                  label={t('settings.adminUsers')}
+                  onPress={() => router.push('/profilo/admin-users' as any)}
+                />
+                <SettingsRow
+                  icon="card-outline"
+                  iconBg="#34C759"
+                  label={t('settings.adminSubscriptions')}
+                  onPress={() => router.push('/profilo/admin-subscriptions' as any)}
+                  last
+                />
               </ThemedView>
             </>
           )}
@@ -550,6 +638,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.four,
     marginBottom: Spacing.two,
+  },
+  feedbackBox: {
+    marginTop: Spacing.two,
+    gap: Spacing.two,
+  },
+  feedbackInput: {
+    borderRadius: Radius.control,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    fontSize: 15,
+    minHeight: 80,
+  },
+  feedbackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    borderRadius: Radius.control,
+    paddingVertical: Spacing.three,
   },
   pressed: { opacity: 0.7 },
 

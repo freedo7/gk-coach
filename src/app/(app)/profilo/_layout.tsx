@@ -20,6 +20,9 @@ export default function ProfiloLayout() {
       <Stack.Screen name="invite" options={{ title: t('nav.inviteGoalkeepers') }} />
       <Stack.Screen name="portieri" options={{ title: t('nav.goalkeepers') }} />
       <Stack.Screen name="paywall" options={{ title: 'GK Coach Pro' }} />
+      <Stack.Screen name="feedback" options={{ title: t('settings.feedbackList') }} />
+      <Stack.Screen name="admin-users" options={{ title: t('settings.adminUsers') }} />
+      <Stack.Screen name="admin-subscriptions" options={{ title: t('settings.adminSubscriptions') }} />
     </Stack>
   );
 }
