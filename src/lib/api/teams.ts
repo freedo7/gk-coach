@@ -7,14 +7,16 @@ export async function listMyTeams(): Promise<Team[]> {
   return data ?? [];
 }
 
-export async function createTeam(name: string, coachId: string): Promise<Team> {
-  const { data, error } = await supabase
-    .from('teams')
-    .insert({ name: name.trim(), coach_id: coachId })
-    .select('*')
-    .single();
+export async function createTeam(name: string, _coachId?: string): Promise<Team> {
+  const { data: teamId, error } = await supabase.rpc('create_team_with_member', { p_name: name.trim() });
   if (error) throw error;
-  return data;
+  const { data: team, error: fetchError } = await supabase
+    .from('teams')
+    .select('*')
+    .eq('id', teamId)
+    .single();
+  if (fetchError) throw fetchError;
+  return team;
 }
 
 export async function joinTeamByCode(code: string): Promise<string> {

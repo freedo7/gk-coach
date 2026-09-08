@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -495,66 +497,68 @@ export default function ImpostazioniScreen() {
 
       {/* Modal squadre */}
       <Modal visible={switcherVisible} transparent animationType="slide" onRequestClose={() => setSwitcherVisible(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setSwitcherVisible(false)} />
-        <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
-          <ThemedText type="subtitle" style={styles.modalTitle}>{t('settings.yourTeams')}</ThemedText>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <Pressable style={styles.modalOverlay} onPress={() => setSwitcherVisible(false)} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
+            <ThemedText type="subtitle" style={styles.modalTitle}>{t('settings.yourTeams')}</ThemedText>
 
-          {teams.map((team) => (
-            <Pressable
-              key={team.id}
-              onPress={() => handleSwitchTeam(team)}
-              style={({ pressed }) => [
-                styles.teamItem,
-                { backgroundColor: colors.backgroundElement },
-                team.id === currentTeam?.id && { backgroundColor: colors.accentSoft },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">{team.name}</ThemedText>
-              {team.id === currentTeam?.id && (
-                <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
-              )}
-            </Pressable>
-          ))}
-
-          {isAdmin && !showCreateForm && (
-            <Pressable
-              onPress={() => setShowCreateForm(true)}
-              style={({ pressed }) => [styles.newTeamBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('settings.newTeam')}</ThemedText>
-            </Pressable>
-          )}
-
-          {isAdmin && showCreateForm && (
-            <View style={styles.createForm}>
-              <TextInput
-                placeholder={t('settings.teamNamePlaceholder')}
-                placeholderTextColor={colors.textSecondary}
-                value={newTeamName}
-                onChangeText={setNewTeamName}
-                style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
-                autoFocus
-              />
-              {createTeamError && (
-                <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
-                  {createTeamError}
-                </ThemedText>
-              )}
+            {teams.map((team) => (
               <Pressable
-                onPress={handleCreateTeam}
-                disabled={creatingTeam || !newTeamName.trim()}
+                key={team.id}
+                onPress={() => handleSwitchTeam(team)}
                 style={({ pressed }) => [
-                  styles.createBtn,
-                  { backgroundColor: colors.accent },
-                  (creatingTeam || !newTeamName.trim()) && { opacity: 0.4 },
+                  styles.teamItem,
+                  { backgroundColor: colors.backgroundElement },
+                  team.id === currentTeam?.id && { backgroundColor: colors.accentSoft },
                   pressed && styles.pressed,
                 ]}>
-                {creatingTeam
-                  ? <ActivityIndicator color={colors.accentText} />
-                  : <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('common.create')}</ThemedText>}
+                <ThemedText type="smallBold">{team.name}</ThemedText>
+                {team.id === currentTeam?.id && (
+                  <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
+                )}
               </Pressable>
-            </View>
-          )}
-        </View>
+            ))}
+
+            {isAdmin && !showCreateForm && (
+              <Pressable
+                onPress={() => setShowCreateForm(true)}
+                style={({ pressed }) => [styles.newTeamBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
+                <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('settings.newTeam')}</ThemedText>
+              </Pressable>
+            )}
+
+            {isAdmin && showCreateForm && (
+              <View style={styles.createForm}>
+                <TextInput
+                  placeholder={t('settings.teamNamePlaceholder')}
+                  placeholderTextColor={colors.textSecondary}
+                  value={newTeamName}
+                  onChangeText={setNewTeamName}
+                  style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+                  autoFocus
+                />
+                {createTeamError && (
+                  <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.one }}>
+                    {createTeamError}
+                  </ThemedText>
+                )}
+                <Pressable
+                  onPress={handleCreateTeam}
+                  disabled={creatingTeam || !newTeamName.trim()}
+                  style={({ pressed }) => [
+                    styles.createBtn,
+                    { backgroundColor: colors.accent },
+                    (creatingTeam || !newTeamName.trim()) && { opacity: 0.4 },
+                    pressed && styles.pressed,
+                  ]}>
+                  {creatingTeam
+                    ? <ActivityIndicator color={colors.accentText} />
+                    : <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('common.create')}</ThemedText>}
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ThemedView>
   );
