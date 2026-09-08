@@ -24,15 +24,15 @@ export const Colors = {
   dark: {
     text: '#ffffff',
     background: 'transparent',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    backgroundElement: '#262830',
+    backgroundSelected: '#323540',
+    textSecondary: '#C0C4CA',
     accent: '#6FC22C',
     accentText: '#0F1A05',
     accentSoft: '#25361A',
     danger: '#EF5350',
     dangerSoft: '#3B1A1A',
-    card: '#1A1B1E',
+    card: '#1C1D21',
   },
 } as const;
 
@@ -40,23 +40,28 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: 'SpaceGrotesk_400Regular',
+    sansMedium: 'SpaceGrotesk_500Medium',
+    sansSemiBold: 'SpaceGrotesk_600SemiBold',
+    sansBold: 'SpaceGrotesk_700Bold',
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'SpaceGrotesk_400Regular',
+    sansMedium: 'SpaceGrotesk_500Medium',
+    sansSemiBold: 'SpaceGrotesk_600SemiBold',
+    sansBold: 'SpaceGrotesk_700Bold',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    sans: 'Space Grotesk, sans-serif',
+    sansMedium: 'Space Grotesk, sans-serif',
+    sansSemiBold: 'Space Grotesk, sans-serif',
+    sansBold: 'Space Grotesk, sans-serif',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
