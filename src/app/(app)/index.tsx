@@ -17,7 +17,7 @@ import { listMatches } from '@/lib/api/matches';
 import { listTrainings } from '@/lib/api/trainings';
 import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match, Training } from '@/types/database';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 function todayISO() {
   const now = new Date();
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   miniStatValue: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     lineHeight: 24,
   },
   section: {

@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 38,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 44,

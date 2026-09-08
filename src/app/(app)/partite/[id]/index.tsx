@@ -16,7 +16,7 @@ import { formatDateLong, formatTime } from '@/lib/format';
 import type { Match, MatchPerformance, ShotEvent } from '@/types/database';
 import { haptic } from '@/hooks/use-haptic';
 import { useToast } from '@/context/toast-context';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 const HALF_FIELD_RATIO = 52.5 / 68;
 
@@ -360,7 +360,7 @@ export default function PartitaDettaglioScreen() {
               <ThemedView type="card" style={styles.notesCard}>
                 <ThemedText type="smallBold" themeColor="textSecondary">{t('matches.goalkeeperRating')}</ThemedText>
                 <View style={styles.ratingDisplay}>
-                  <ThemedText style={[styles.ratingNumber, { color: colors.accent }]}>{match.rating}</ThemedText>
+                  <ThemedText type="subtitle" style={{ color: colors.accent }}>{match.rating}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">/10</ThemedText>
                 </View>
               </ThemedView>
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     lineHeight: 38,
   },
   cleanSheetBadge: {
@@ -500,7 +500,8 @@ const styles = StyleSheet.create({
   },
   ratingNumber: {
     fontSize: 28,
-    fontWeight: '800',
+    lineHeight: 34,
+    fontFamily: Fonts.sansBold,
   },
   notesCard: {
     marginTop: Spacing.three,
@@ -529,7 +530,7 @@ const styles = StyleSheet.create({
   },
   perfRatingNumber: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
   },
   adminActions: {
     flexDirection: 'row',

@@ -10,7 +10,7 @@ import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { generateInviteCode, listTeamMembers } from '@/lib/api/teams';
-import { Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 
 export default function InviteScreen() {
   const { t } = useTranslation();
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   codeText: {
     letterSpacing: 2,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
   },
   copyBtn: {
     borderRadius: Radius.control,

@@ -17,7 +17,7 @@ import { listTrainings } from '@/lib/api/trainings';
 import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { supabase } from '@/lib/supabase';
 import type { Match, Training, Goalkeeper, MatchPerformance } from '@/types/database';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 /* ── helpers ── */
 
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     lineHeight: 28,
   },
   card: {
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   },
   resultNumber: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     lineHeight: 26,
   },
   divider: {

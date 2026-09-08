@@ -17,7 +17,7 @@ import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { useToast } from '@/context/toast-context';
 import { generateGoalkeeperPdf } from '@/lib/pdf';
 import type { Match, Training, Goalkeeper, MatchPerformance } from '@/types/database';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 export default function SchedaPortiereScreen() {
   const { t } = useTranslation();
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
   },
   quickStats: {
     flexDirection: 'row',
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   quickStatValue: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     lineHeight: 26,
   },
   sectionTitle: {
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   resultNumber: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

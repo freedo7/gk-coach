@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { haptic } from '@/hooks/use-haptic';
 import { supabase } from '@/lib/supabase';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 interface ProfileSub {
   id: string;
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   summaryNum: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
   },
   userRow: {
     flexDirection: 'row',

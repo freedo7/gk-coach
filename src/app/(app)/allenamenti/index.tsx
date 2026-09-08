@@ -21,7 +21,7 @@ import { deleteTraining, getTrainingByDate, listTrainings, toggleTrainingComplet
 import { listGoalkeepers } from '@/lib/api/goalkeepers';
 import { formatTime } from '@/lib/format';
 import type { Goalkeeper, Match, Training } from '@/types/database';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
 function todayISO() {
   const now = new Date();
@@ -158,8 +158,8 @@ export default function AllenamentiScreen() {
           <ThemedText style={[
             styles.dayText,
             disabled && { color: colors.textSecondary, opacity: 0.3 },
-            isToday && !isSelected && { color: colors.accent, fontWeight: '800' },
-            isSelected && { color: colors.accent, fontWeight: '800' },
+            isToday && !isSelected && { color: colors.accent, fontFamily: Fonts.sansBold },
+            isSelected && { color: colors.accent, fontFamily: Fonts.sansBold },
           ]}>
             {date.day}
           </ThemedText>

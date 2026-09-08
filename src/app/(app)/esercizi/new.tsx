@@ -13,7 +13,7 @@ import { usePlan } from '@/hooks/use-plan';
 import { useTheme } from '@/hooks/use-theme';
 import { haptic } from '@/hooks/use-haptic';
 import { createExercise } from '@/lib/api/exercises';
-import { Radius, Spacing, BottomTabInset } from '@/constants/theme';
+import { Fonts, Radius, Spacing, BottomTabInset } from '@/constants/theme';
 import type { FieldElement } from '@/types/database';
 
 type Mode = 'choose' | 'builder' | 'classic';
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   builderTitle: {
     color: '#FFF',
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
     marginTop: Spacing.one,
   },
   builderDesc: {
