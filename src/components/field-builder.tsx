@@ -45,8 +45,8 @@ function DraggableElement({
   groupDragX: Animated.SharedValue<number>; groupDragY: Animated.SharedValue<number>;
   onTapSelect: (i: number) => void; onDragSelect: (i: number) => void; onMove: (i: number, x: number, y: number) => void;
 }) {
-  const translateX = useSharedValue(element.x);
-  const translateY = useSharedValue(element.y);
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
   const dragScale = useSharedValue(1);
   const isDragging = useSharedValue(false);
   const elScale = element.scale ?? 1;
@@ -55,8 +55,6 @@ function DraggableElement({
   const size = baseSize * elScale;
   const imgSize = baseSize * 0.88 * elScale;
 
-  useEffect(() => { translateX.value = element.x; translateY.value = element.y; }, [element.x, element.y]);
-
   const pan = Gesture.Pan()
     .onBegin(() => { dragScale.value = withSpring(1.1); })
     .onStart(() => { isDragging.value = true; runOnJS(onDragSelect)(index); })
@@ -64,15 +62,17 @@ function DraggableElement({
       const z = zoomRef.current;
       const dx = e.translationX / z;
       const dy = e.translationY / z;
-      translateX.value = element.x + dx;
-      translateY.value = element.y + dy;
+      offsetX.value = dx;
+      offsetY.value = dy;
       if (isGroupDrag) { groupDragX.value = dx; groupDragY.value = dy; }
     })
     .onEnd((e) => {
       const z = zoomRef.current;
       const newX = snapToGrid(Math.max(0, Math.min(fieldW - size, element.x + e.translationX / z)));
       const newY = snapToGrid(Math.max(0, Math.min(fieldH - size, element.y + e.translationY / z)));
-      translateX.value = withSpring(newX); translateY.value = withSpring(newY); dragScale.value = withSpring(1);
+      offsetX.value = withSpring(newX - element.x);
+      offsetY.value = withSpring(newY - element.y);
+      dragScale.value = withSpring(1);
       isDragging.value = false;
       if (isGroupDrag) { groupDragX.value = 0; groupDragY.value = 0; }
       runOnJS(onMove)(index, newX, newY);
@@ -80,14 +80,18 @@ function DraggableElement({
     .onFinalize(() => { isDragging.value = false; });
   const tap = Gesture.Tap().onEnd(() => { runOnJS(onTapSelect)(index); });
 
+  // Reset offset when element position changes (after onMove updates state)
+  useEffect(() => { offsetX.value = 0; offsetY.value = 0; }, [element.x, element.y]);
+
   const animStyle = useAnimatedStyle(() => {
-    // If selected but NOT the one being dragged, follow group offset
     const gx = (selected && !isDragging.value) ? groupDragX.value : 0;
     const gy = (selected && !isDragging.value) ? groupDragY.value : 0;
     return {
       width: size, height: size,
+      left: element.x,
+      top: element.y,
       transform: [
-        { translateX: translateX.value + gx }, { translateY: translateY.value + gy },
+        { translateX: offsetX.value + gx }, { translateY: offsetY.value + gy },
         { rotate: `${element.rotation}deg` }, { scaleX: elFlip * dragScale.value }, { scaleY: dragScale.value },
       ],
     };
@@ -239,13 +243,13 @@ function DraggableArrow({
   onResize: (i: number, length: number) => void;
 }) {
   const arrowLen = element.length ?? DEFAULT_ARROW_LEN;
-  const translateX = useSharedValue(element.x);
-  const translateY = useSharedValue(element.y);
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
   const dragScale = useSharedValue(1);
   const isDragging = useSharedValue(false);
   const handleX = useSharedValue(arrowLen);
 
-  useEffect(() => { translateX.value = element.x; translateY.value = element.y; handleX.value = arrowLen; }, [element.x, element.y, arrowLen]);
+  useEffect(() => { offsetX.value = 0; offsetY.value = 0; handleX.value = arrowLen; }, [element.x, element.y, arrowLen]);
 
   const tapBody = Gesture.Tap().onEnd(() => { runOnJS(onTapSelect)(index); });
 
@@ -273,8 +277,8 @@ function DraggableArrow({
       } else {
         const dx = e.translationX / z;
         const dy = e.translationY / z;
-        translateX.value = element.x + dx;
-        translateY.value = element.y + dy;
+        offsetX.value = dx;
+        offsetY.value = dy;
         if (isGroupDrag) { groupDragX.value = dx; groupDragY.value = dy; }
       }
     })
@@ -290,7 +294,9 @@ function DraggableArrow({
       } else {
         const newX = snapToGrid(Math.max(0, Math.min(fieldW - arrowLen, element.x + e.translationX / z)));
         const newY = snapToGrid(Math.max(-10, Math.min(fieldH - 10, element.y + e.translationY / z)));
-        translateX.value = withSpring(newX); translateY.value = withSpring(newY); dragScale.value = withSpring(1);
+        offsetX.value = withSpring(newX - element.x);
+        offsetY.value = withSpring(newY - element.y);
+        dragScale.value = withSpring(1);
         if (isGroupDrag) { groupDragX.value = 0; groupDragY.value = 0; }
         runOnJS(onMove)(index, newX, newY);
       }
@@ -301,7 +307,9 @@ function DraggableArrow({
     const gx = (selected && !isDragging.value) ? groupDragX.value : 0;
     const gy = (selected && !isDragging.value) ? groupDragY.value : 0;
     return {
-      transform: [{ translateX: translateX.value + gx }, { translateY: translateY.value + gy }, { rotate: `${element.rotation}deg` }, { scale: dragScale.value }],
+      left: element.x,
+      top: element.y,
+      transform: [{ translateX: offsetX.value + gx }, { translateY: offsetY.value + gy }, { rotate: `${element.rotation}deg` }, { scale: dragScale.value }],
     };
   });
   const lineStyle = useAnimatedStyle(() => ({ width: handleX.value }));
@@ -515,8 +523,10 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
     return () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP); };
   }, []);
 
-  const { state: elements, set: setElements, undo, redo, canUndo, canRedo, reset: resetElements } = useHistory<FieldElement[]>(initialLayout ?? []);
-  const denormalizedRef = useRef(false);
+  const { state: elements, set: setElements, undo, redo, canUndo, canRedo, reset: resetElements } = useHistory<FieldElement[]>([]);
+  const userEditedRef = useRef(false);
+  const lastDenormFW = useRef(0);
+  const [denormKey, setDenormKey] = useState(0);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [multiMode, setMultiMode] = useState(false);
   const multiModeRef = useRef(false);
@@ -588,10 +598,20 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
   // Denormalize initial layout once (coordinates 0-1 → pixel)
   // Must wait for landscape AND containerSize so fW/fH are final
   useEffect(() => {
-    if (denormalizedRef.current || !initialLayout?.length || !isLandscape || !containerSize || fW < 10) return;
-    const isNorm = initialLayout.every(el => el.x <= 1 && el.y <= 1);
-    if (!isNorm) { denormalizedRef.current = true; return; }
-    denormalizedRef.current = true;
+    if (userEditedRef.current || !isLandscape || !containerSize || fW < 10) return;
+    if (!initialLayout?.length) return;
+    // Skip if fW hasn't changed (avoid unnecessary resets)
+    if (lastDenormFW.current === fW) return;
+    lastDenormFW.current = fW;
+    // Check if normalized: all x/y ≤ 1.05 (small tolerance for float rounding)
+    const maxX = Math.max(...initialLayout.map(el => el.x));
+    const maxY = Math.max(...initialLayout.map(el => el.y));
+    const isNorm = maxX <= 1.05 && maxY <= 1.05;
+    if (!isNorm) {
+      resetElements(initialLayout);
+      setDenormKey(k => k + 1);
+      return;
+    }
     const denorm = initialLayout.map(el => ({
       ...el,
       x: el.x * fW,
@@ -600,6 +620,7 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
       ...(el.points ? { points: el.points.map(p => ({ x: p.x * fW, y: p.y * fH })) } : {}),
     }));
     resetElements(denorm);
+    setDenormKey(k => k + 1);
   }, [fW, fH, isLandscape, containerSize, initialLayout, resetElements]);
 
   // Zoom gestures
@@ -646,7 +667,9 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
   }));
 
   // ─── Azioni ───
+  const markEdited = useCallback(() => { userEditedRef.current = true; }, []);
   const addElement = useCallback((type: ElementType) => {
+    markEdited();
     haptic('light');
     const elSize = fW * ELEMENT_SIZE_RATIO;
     const cx = snapToGrid(fW / 2 - elSize / 2);
@@ -659,6 +682,7 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
   }, [fW, fH, elements, setElements, clearSelection]);
 
   const moveElement = useCallback((i: number, x: number, y: number) => {
+    markEdited();
     if (selectedIndices.size > 1 && selectedIndices.has(i)) {
       // Move group: compute delta from this element's old position
       const dx = x - elements[i].x;
@@ -675,6 +699,7 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
 
   // Move drawing: translate all points by delta
   const moveDrawing = useCallback((i: number, dx: number, dy: number) => {
+    markEdited();
     setElements(elements.map((el, j) => {
       if (j !== i || !el.points) return el;
       return { ...el, x: el.x + dx, y: el.y + dy, points: el.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
@@ -733,7 +758,7 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
   }, [selectedIndex, elements, setElements]);
 
   const deleteSelected = useCallback(() => {
-    if (selectedIndices.size === 0) return; haptic('light');
+    if (selectedIndices.size === 0) return; markEdited(); haptic('light');
     setElements(elements.filter((_, i) => !selectedIndices.has(i)));
     clearSelection();
   }, [selectedIndices, elements, setElements, clearSelection]);
@@ -777,17 +802,17 @@ export function FieldBuilder({ initialLayout, onDone }: Props) {
             </Pressable>
             {elements.map((el, i) =>
               el.type === 'arrow' ? (
-                <DraggableArrow key={i} element={el} index={i} selected={selectedIndices.has(i)}
+                <DraggableArrow key={`${i}-${denormKey}`} element={el} index={i} selected={selectedIndices.has(i)}
                   isGroupDrag={selectedIndices.size > 1 && selectedIndices.has(i)}
                   fieldW={fW} fieldH={fH} zoomRef={zoomRef} groupDragX={groupDragX} groupDragY={groupDragY}
                   onTapSelect={tapSelect} onDragSelect={dragSelect} onMove={moveElement} onResize={resizeArrow} />
               ) : el.type === 'drawing' ? (
-                <DraggableDrawing key={i} element={el} index={i} selected={selectedIndices.has(i)}
+                <DraggableDrawing key={`${i}-${denormKey}`} element={el} index={i} selected={selectedIndices.has(i)}
                   isGroupDrag={selectedIndices.size > 1 && selectedIndices.has(i)}
                   fieldW={fW} fieldH={fH} zoomRef={zoomRef} groupDragX={groupDragX} groupDragY={groupDragY}
                   onTapSelect={tapSelect} onDragSelect={dragSelect} onMove={moveDrawing} />
               ) : (
-                <DraggableElement key={i} element={el} index={i} selected={selectedIndices.has(i)}
+                <DraggableElement key={`${i}-${denormKey}`} element={el} index={i} selected={selectedIndices.has(i)}
                   isGroupDrag={selectedIndices.size > 1 && selectedIndices.has(i)}
                   fieldW={fW} fieldH={fH} zoomRef={zoomRef} groupDragX={groupDragX} groupDragY={groupDragY}
                   onTapSelect={tapSelect} onDragSelect={dragSelect} onMove={moveElement} />
