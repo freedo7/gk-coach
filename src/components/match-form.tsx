@@ -126,6 +126,11 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
   }
 
   const [shotMapperGkId, setShotMapperGkId] = useState<string | null>(null);
+  // Shots for single-goalkeeper mode
+  const [singleGkShots, setSingleGkShots] = useState<ShotEvent[]>(
+    () => initialPerformances?.find((p) => p.goalkeeper_id === initial?.goalkeeper_id)?.shots ?? []
+  );
+  const [singleShotMapperOpen, setSingleShotMapperOpen] = useState(false);
 
   function updateShots(gkId: string, shots: ShotEvent[]) {
     setPerformances((prev) =>
@@ -138,7 +143,7 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
     setError(null);
     setSubmitting(true);
     try {
-      const perfInputs: PerformanceInput[] = performances
+      let perfInputs: PerformanceInput[] = performances
         .filter((p) => p.rating > 0 || p.goals_conceded.trim() || p.notes.trim() || p.shots.length > 0)
         .map((p) => ({
           goalkeeper_id: p.goalkeeper_id,
@@ -147,6 +152,21 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
           shots: p.shots.length > 0 ? p.shots : null,
           notes: p.notes.trim() || null,
         }));
+      // Single-goalkeeper mode: include shots as a performance
+      if (goalkeeperId && singleGkShots.length > 0) {
+        const existing = perfInputs.find((p) => p.goalkeeper_id === goalkeeperId);
+        if (existing) {
+          existing.shots = singleGkShots;
+        } else {
+          perfInputs.push({
+            goalkeeper_id: goalkeeperId,
+            rating: rating > 0 ? rating : null,
+            goals_conceded: goalsConceded.trim() ? parseInt(goalsConceded.trim(), 10) : null,
+            shots: singleGkShots,
+            notes: resultNotes.trim() || null,
+          });
+        }
+      }
       await onSubmit(
         {
           goalkeeper_id: goalkeeperId,
@@ -402,6 +422,29 @@ export function MatchForm({ initial, initialPerformances, submitLabel, onSubmit 
 
             {goalkeeperId !== null && (
               <>
+                {/* Mappa tiri per singolo portiere */}
+                <Pressable
+                  onPress={() => { haptic('light'); setSingleShotMapperOpen(true); }}
+                  style={({ pressed }) => [styles.mapShotsBtn, { backgroundColor: colors.backgroundElement }, pressed && { opacity: 0.7 }]}>
+                  <Ionicons name="locate-outline" size={18} color={colors.accent} />
+                  <ThemedText type="smallBold" style={{ color: colors.accent }}>
+                    {t('matchForm.mapShots')}
+                  </ThemedText>
+                  {singleGkShots.length > 0 && (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t(singleGkShots.length === 1 ? 'matchForm.shotsCountOne' : 'matchForm.shotsCount', { count: singleGkShots.length })}
+                    </ThemedText>
+                  )}
+                </Pressable>
+                <ShotMapper
+                  visible={singleShotMapperOpen}
+                  shots={singleGkShots}
+                  onClose={(newShots) => {
+                    setSingleGkShots(newShots);
+                    setSingleShotMapperOpen(false);
+                  }}
+                />
+
                 <ThemedText type="smallBold" themeColor="textSecondary">
                   {t('matchForm.resultNotes')}
                 </ThemedText>

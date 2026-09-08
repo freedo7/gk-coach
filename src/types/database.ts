@@ -70,13 +70,32 @@ export interface Exercise {
   updated_at: string;
 }
 
+export type ElementType =
+  | 'cone' | 'mannequin' | 'ball' | 'cube' | 'arrow'
+  | 'hurdle' | 'ladder' | 'agility_ring' | 'disc' | 'pole' | 'small_goal'
+  | 'rebounder' | 'mini_pole' | 'medicine_ball'
+  | 'gk_catch_low' | 'gk_catch_front' | 'gk_kick' | 'gk_dive_low' | 'gk_dive_front'
+  | 'drawing';
+
 export interface FieldElement {
-  type: 'cone' | 'mannequin' | 'ball' | 'goalkeeper' | 'goal' | 'cube' | 'arrow';
+  type: ElementType;
   x: number;
   y: number;
   rotation: number;
   /** Lunghezza freccia (solo per type='arrow') */
   length?: number;
+  /** Colore personalizzato */
+  color?: string;
+  /** Etichetta/numero */
+  label?: string;
+  /** Stile linea per frecce */
+  lineStyle?: 'solid' | 'dashed' | 'dotted' | 'curved';
+  /** Scala elemento (1 = default) */
+  scale?: number;
+  /** Specchiamento orizzontale */
+  flipX?: boolean;
+  /** Punti disegno libero (solo per type='drawing') */
+  points?: { x: number; y: number }[];
 }
 
 export interface Training {

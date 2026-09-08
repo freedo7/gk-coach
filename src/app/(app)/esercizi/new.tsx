@@ -40,35 +40,42 @@ export default function NuovoEsercizioScreen() {
     return (
       <ThemedView style={styles.container}>
         <ScrollView contentContainerStyle={styles.chooseContent}>
-          <ThemedText type="title" style={styles.chooseTitle}>{t('exerciseMode.title')}</ThemedText>
-
+          {/* Builder card — highlighted */}
           <Pressable
             onPress={() => { haptic('light'); setMode('builder'); }}
-            style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-            <ThemedView type="card" style={styles.modeCard}>
-              <View style={[styles.modeIcon, { backgroundColor: '#2D7A30' }]}>
-                <Ionicons name="grid-outline" size={28} color="#FFFFFF" />
+            style={({ pressed }) => [pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}>
+            <View style={styles.builderCard}>
+              <View style={styles.builderCardHeader}>
+                <View style={styles.builderIcon}>
+                  <Ionicons name="football-outline" size={30} color="#FFF" />
+                </View>
+                <View style={styles.builderTag}>
+                  <Ionicons name="star" size={10} color="#FFD60A" />
+                  <ThemedText style={styles.builderTagText}>{t('exerciseMode.builderTag')}</ThemedText>
+                </View>
               </View>
-              <View style={styles.modeTextWrap}>
-                <ThemedText type="smallBold">{t('exerciseMode.builder')}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">{t('exerciseMode.builderDesc')}</ThemedText>
+              <ThemedText style={styles.builderTitle}>{t('exerciseMode.builder')}</ThemedText>
+              <ThemedText style={styles.builderDesc}>{t('exerciseMode.builderDesc')}</ThemedText>
+              <View style={styles.builderCta}>
+                <ThemedText style={styles.builderCtaText}>{t('exercises.createExercise')}</ThemedText>
+                <Ionicons name="arrow-forward" size={16} color="#FFF" />
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </ThemedView>
+            </View>
           </Pressable>
 
+          {/* Classic card — subtle */}
           <Pressable
             onPress={() => { haptic('light'); setMode('classic'); }}
-            style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-            <ThemedView type="card" style={styles.modeCard}>
-              <View style={[styles.modeIcon, { backgroundColor: colors.accent }]}>
-                <Ionicons name="create-outline" size={28} color={colors.accentText} />
+            style={({ pressed }) => [pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}>
+            <ThemedView type="card" style={styles.classicCard}>
+              <View style={[styles.classicIcon, { backgroundColor: colors.accent }]}>
+                <Ionicons name="document-text-outline" size={24} color={colors.accentText} />
               </View>
-              <View style={styles.modeTextWrap}>
+              <View style={styles.classicTextWrap}>
                 <ThemedText type="smallBold">{t('exerciseMode.classic')}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">{t('exerciseMode.classicDesc')}</ThemedText>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
             </ThemedView>
           </Pressable>
         </ScrollView>
@@ -107,25 +114,84 @@ const styles = StyleSheet.create({
     paddingBottom: BottomTabInset + Spacing.four,
     gap: Spacing.three,
   },
-  chooseTitle: {
-    textAlign: 'center',
-    marginBottom: Spacing.two,
+  // Builder card — big & prominent
+  builderCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    backgroundColor: '#1B5E20',
+    overflow: 'hidden',
   },
-  modeCard: {
+  builderCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  builderIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  builderTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  builderTagText: {
+    color: '#FFD60A',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  builderTitle: {
+    color: '#FFF',
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: Spacing.one,
+  },
+  builderDesc: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  builderCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: Spacing.two,
+  },
+  builderCtaText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // Classic card — compact
+  classicCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.three,
   },
-  modeIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+  classicIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeTextWrap: {
+  classicTextWrap: {
     flex: 1,
     gap: Spacing.half,
   },

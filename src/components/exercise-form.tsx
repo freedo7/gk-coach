@@ -51,8 +51,16 @@ export function ExerciseForm({ initial, initialLayout, submitLabel, onSubmit }: 
       cone: t('builder.cone'),
       mannequin: t('builder.mannequin'),
       ball: t('builder.ball'),
-      goal: t('builder.goal'),
       cube: t('builder.cube'),
+      hurdle: t('builder.hurdle'),
+      ladder: t('builder.ladder'),
+      agility_ring: t('builder.ring'),
+      disc: t('builder.disc'),
+      pole: t('builder.pole'),
+      small_goal: t('builder.smallGoal'),
+      rebounder: t('builder.rebounder'),
+      mini_pole: t('builder.miniPole'),
+      medicine_ball: t('builder.medicineBall'),
     };
     const counts = new Map<string, number>();
     for (const el of initialLayout) {
