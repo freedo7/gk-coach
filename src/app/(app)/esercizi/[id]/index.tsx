@@ -100,17 +100,20 @@ export default function EsercizioDettaglioScreen() {
           </View>
 
           <ThemedText type="title">{exercise.title}</ThemedText>
-          {(exercise.sets || exercise.reps) && (
-            <ThemedText type="smallBold" themeColor="accent">
-              {[exercise.sets && `${exercise.sets} serie`, exercise.reps && `${exercise.reps} ripetizioni`]
-                .filter(Boolean)
-                .join(' × ')}
-            </ThemedText>
+          {((exercise.sets || exercise.reps) || exercise.description) && (
+            <ThemedView type="card" style={styles.detailCard}>
+              {(exercise.sets || exercise.reps) && (
+                <ThemedText type="smallBold" themeColor="accent">
+                  {[exercise.sets && `${exercise.sets} serie`, exercise.reps && `${exercise.reps} ripetizioni`]
+                    .filter(Boolean)
+                    .join(' × ')}
+                </ThemedText>
+              )}
+              {exercise.description ? (
+                <ThemedText style={styles.description}>{exercise.description}</ThemedText>
+              ) : null}
+            </ThemedView>
           )}
-
-          {exercise.description ? (
-            <ThemedText style={styles.description}>{exercise.description}</ThemedText>
-          ) : null}
 
           {exercise.layout && exercise.layout.length > 0 && (
             <FieldPreview layout={exercise.layout} />
@@ -198,6 +201,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
+  },
+  detailCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.three,
+    gap: Spacing.two,
   },
   description: {
     lineHeight: 22,
