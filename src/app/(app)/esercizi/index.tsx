@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/empty-state';
+import { FadeIn } from '@/components/fade-in';
 import { SkeletonList } from '@/components/skeleton';
 import { IconTecnicaBase } from '@/components/icons/icon-tecnica-base';
 import { IconTecnicaPodalica } from '@/components/icons/icon-tecnica-podalica';
@@ -108,53 +109,56 @@ export default function EserciziScreen() {
             {searchResults.length === 0 ? (
               <EmptyState icon="search-outline" title={t('common.noResults')} subtitle={t('exercises.noResultsFor', { query: trimmed })} />
             ) : (
-              searchResults.map((exercise) => (
-                <Pressable
-                  key={exercise.id}
-                  onPress={() => router.push(`/esercizi/${exercise.id}`)}
-                  style={({ pressed }) => [pressed && styles.pressed]}>
-                  <ThemedView type="card" style={styles.resultCard}>
-                    <ThemedText type="smallBold">{exercise.title}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {exercise.category.name}
-                    </ThemedText>
-                  </ThemedView>
-                </Pressable>
+              searchResults.map((exercise, i) => (
+                <FadeIn key={exercise.id} delay={i * 50}>
+                  <Pressable
+                    onPress={() => router.push(`/esercizi/${exercise.id}`)}
+                    style={({ pressed }) => [pressed && styles.pressed]}>
+                    <ThemedView type="card" style={styles.resultCard}>
+                      <ThemedText type="smallBold">{exercise.title}</ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {exercise.category.name}
+                      </ThemedText>
+                    </ThemedView>
+                  </Pressable>
+                </FadeIn>
               ))
             )}
           </ScrollView>
         ) : (
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {categories !== null && (
-              <View style={styles.grid}>
-                {categories.map((category) => (
-                  <Pressable
-                    key={category.id}
-                    style={({ pressed }) => [styles.cardWrapper, pressed && styles.pressed]}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/esercizi/categoria/[id]',
-                        params: { id: category.id, title: category.name },
-                      })
-                    }>
-                    <View style={[styles.categoryCard, { backgroundColor: colors.accentSoft }]}>
-                      {allExercises !== null && (
-                        <View style={[styles.countBadge, { backgroundColor: colors.accent }]}>
-                          <ThemedText type="small" style={[styles.countText, { color: colors.accentText }]}>
-                            {allExercises.filter((e) => e.category_id === category.id).length}
-                          </ThemedText>
+              <FadeIn>
+                <View style={styles.grid}>
+                  {categories.map((category) => (
+                    <Pressable
+                      key={category.id}
+                      style={({ pressed }) => [styles.cardWrapper, pressed && styles.pressed]}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/esercizi/categoria/[id]',
+                          params: { id: category.id, title: category.name },
+                        })
+                      }>
+                      <View style={[styles.categoryCard, { backgroundColor: colors.accentSoft }]}>
+                        {allExercises !== null && (
+                          <View style={[styles.countBadge, { backgroundColor: colors.accent }]}>
+                            <ThemedText type="small" style={[styles.countText, { color: colors.accentText }]}>
+                              {allExercises.filter((e) => e.category_id === category.id).length}
+                            </ThemedText>
+                          </View>
+                        )}
+                        <View style={[styles.iconCircle, { backgroundColor: colors.card }]}>
+                          <CategoryIcon icon={category.icon} size={28} color={colors.accent} />
                         </View>
-                      )}
-                      <View style={[styles.iconCircle, { backgroundColor: colors.card }]}>
-                        <CategoryIcon icon={category.icon} size={28} color={colors.accent} />
+                        <ThemedText type="smallBold" style={styles.categoryName}>
+                          {category.name}
+                        </ThemedText>
                       </View>
-                      <ThemedText type="smallBold" style={styles.categoryName}>
-                        {category.name}
-                      </ThemedText>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </FadeIn>
             )}
           </ScrollView>
         )}

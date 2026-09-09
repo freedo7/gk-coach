@@ -5,11 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Onboarding } from '@/components/onboarding';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
+import { useLoginTransition } from '@/context/login-transition-context';
 
 const ONBOARDING_KEY = '@gk_onboarding_done';
 
 export default function AuthLayout() {
   const { session, loading } = useAuth();
+  const { active: transitioning } = useLoginTransition();
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function AuthLayout() {
   }, []);
 
   if (loading || onboardingDone === null) return <ThemedView style={{ flex: 1 }} />;
-  if (session) return <Redirect href="/(app)" />;
+  if (session && !transitioning) return <Redirect href="/(app)" />;
 
   if (!onboardingDone) {
     return (

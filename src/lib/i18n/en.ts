@@ -33,6 +33,7 @@ export default {
     trainingsLabel: 'Trainings',
     matchesLabel: 'Matches',
     streakLabel: 'Streak',
+    avgRatingLabel: 'Avg Rating',
     nextTraining: 'NEXT TRAINING',
     noTrainingScheduled: 'No training scheduled.',
     nextMatch: 'NEXT MATCH',
@@ -137,6 +138,8 @@ export default {
     friendly: 'Friendly',
     league: 'League',
     cup: 'Cup',
+    home: 'Home',
+    away: 'Away',
   },
 
   // Match detail
@@ -372,6 +375,10 @@ export default {
     roleCoach: 'Coach',
     roleGoalkeeper: 'Goalkeeper',
     trialDaysLeft: 'Trial · {{days}}d',
+    phone: 'Phone',
+    phoneNotVerified: 'Not verified',
+    phoneVerified: 'Verified',
+    verifyPhone: 'Verify phone',
   },
 
   // Edit name
@@ -485,6 +492,37 @@ export default {
     registerSuccess: 'Registration complete. If required, check your email to confirm your account, then go back to login.',
     hasAccount: 'Already have an account? Log in',
     notAuthenticated: 'Not authenticated',
+    welcomeBack: 'Welcome back, {{name}}',
+    forgotPassword: 'Forgot password?',
+    forgotPasswordTitle: 'Reset password',
+    forgotPasswordSubtitle: 'Enter your email to receive a reset link',
+    sendResetLink: 'Send reset link',
+    resetEmailSent: 'Email sent! Check your inbox.',
+    backToLogin: 'Back to login',
+    emailInvalid: 'Enter a valid email address',
+    passwordTooShort: 'Password does not meet requirements',
+    pwReqLength: 'At least 8 characters',
+    pwReqUppercase: 'One uppercase letter',
+    pwReqSpecial: 'One special character',
+    nameRequired: 'Name is required',
+  },
+
+  // Phone verification
+  phoneVerify: {
+    title: 'Verify phone',
+    subtitle: 'Enter your number to receive a verification code',
+    phonePlaceholder: 'Phone number',
+    sendCode: 'Send code',
+    otpTitle: 'Enter the code',
+    otpSubtitle: 'We sent a 6-digit code to {{phone}}',
+    verify: 'Verify',
+    resendCode: 'Resend code',
+    resendIn: 'Resend in {{seconds}}s',
+    verifying: 'Verifying...',
+    success: 'Phone verified!',
+    successSubtitle: 'Your number has been verified successfully',
+    invalidCode: 'Invalid code. Try again.',
+    continue: 'Continue',
   },
 
   // Navigation

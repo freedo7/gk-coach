@@ -18,6 +18,9 @@ import { PurchasesProvider } from '@/context/purchases-context';
 import { ThemePreferenceProvider, useThemePreference } from '@/context/theme-context';
 import { PushRegistrar } from '@/components/push-registrar';
 import { ToastProvider } from '@/context/toast-context';
+import { LoginTransitionProvider } from '@/context/login-transition-context';
+import { LoginTransitionOverlay } from '@/components/login-transition';
+import { ScreenTransitionProvider } from '@/components/theme-transition';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,9 +35,14 @@ function AppShell() {
       <AuthProvider>
         <PurchasesProvider>
           <ToastProvider>
-            <AnimatedSplashOverlay />
-            <PushRegistrar />
-            <Slot />
+            <LoginTransitionProvider>
+              <ScreenTransitionProvider>
+                <AnimatedSplashOverlay />
+                <PushRegistrar />
+                <Slot />
+                <LoginTransitionOverlay />
+              </ScreenTransitionProvider>
+            </LoginTransitionProvider>
           </ToastProvider>
         </PurchasesProvider>
       </AuthProvider>

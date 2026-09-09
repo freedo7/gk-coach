@@ -214,11 +214,16 @@ export default function PartiteScreen() {
               {upcoming.length > upcomingLimit && (
                 <Pressable
                   onPress={() => setUpcomingLimit((l) => l + 5)}
-                  style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
+                  style={({ pressed }) => [styles.loadMoreBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" themeColor="accent">{t('matches.loadMore')}</ThemedText>
                 </Pressable>
               )}
             </View>
+          )}
+
+          {/* Separator between upcoming and past */}
+          {upcoming.length > 0 && past.length > 0 && (
+            <View style={[styles.separator, { backgroundColor: colors.backgroundElement }]} />
           )}
 
           {past.length > 0 && (
@@ -234,7 +239,7 @@ export default function PartiteScreen() {
               {past.length > pastLimit && (
                 <Pressable
                   onPress={() => setPastLimit((l) => l + 5)}
-                  style={({ pressed }) => [styles.loadMoreBtn, { backgroundColor: colors.accentSoft }, pressed && styles.pressed]}>
+                  style={({ pressed }) => [styles.loadMoreBtn, { borderColor: colors.accent }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" themeColor="accent">{t('matches.loadMore')}</ThemedText>
                 </Pressable>
               )}
@@ -311,8 +316,13 @@ const styles = StyleSheet.create({
   },
   loadMoreBtn: {
     alignItems: 'center',
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
     borderRadius: Radius.control,
+    borderWidth: 1,
+  },
+  separator: {
+    height: 1,
+    marginVertical: Spacing.one,
   },
   gkFilter: {
     flexDirection: 'row',

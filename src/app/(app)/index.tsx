@@ -38,13 +38,11 @@ function calcStreak(trainings: Training[]): number {
     const week = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
     weeks.add(`${d.getFullYear()}-${week}`);
   }
-  // Current week
   const now = new Date();
   const jan1 = new Date(now.getFullYear(), 0, 1);
   let currentWeek = Math.ceil(((now.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
   let currentYear = now.getFullYear();
   let streak = 0;
-  // Count consecutive weeks backwards
   while (weeks.has(`${currentYear}-${currentWeek}`)) {
     streak++;
     currentWeek--;
@@ -57,14 +55,39 @@ function calcStreak(trainings: Training[]): number {
 }
 
 /* ── Mini stat ── */
-function MiniStat({ icon, iconBg, value, label }: { icon: string; iconBg: string; value: string | number; label: string }) {
+function MiniStat({
+  icon,
+  iconBg,
+  value,
+  label,
+}: {
+  icon: string;
+  iconBg: string;
+  value: string | number;
+  label: string;
+}) {
   return (
     <ThemedView type="card" style={styles.miniStat}>
       <View style={[styles.miniStatIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon as any} size={14} color="#fff" />
+        <Ionicons name={icon as any} size={18} color="#fff" />
       </View>
       <ThemedText style={styles.miniStatValue}>{value}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary" style={styles.miniStatLabel}>
+        {label}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+/* ── Empty state inline ── */
+function EmptySection({ icon, text }: { icon: string; text: string }) {
+  const colors = useTheme();
+  return (
+    <ThemedView type="card" style={styles.emptyCard}>
+      <Ionicons name={icon as any} size={22} color={colors.textSecondary} style={{ opacity: 0.4 }} />
+      <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
+        {text}
+      </ThemedText>
     </ThemedView>
   );
 }
@@ -120,7 +143,6 @@ export default function HomeScreen() {
   const trainingsThisMonth = allTrainings.filter((t) => t.training_date.startsWith(monthPrefix)).length;
   const matchesThisMonth = allMatches.filter((m) => m.match_date.startsWith(monthPrefix)).length;
   const streak = calcStreak(allTrainings);
-
   const rated = allMatches.filter((m) => m.rating != null);
   const avgRating = rated.length > 0
     ? (rated.reduce((sum, m) => sum + m.rating!, 0) / rated.length).toFixed(1)
@@ -133,70 +155,77 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         >
+          {/* Greeting */}
           <ThemedText type="title" style={styles.greeting}>
             {t('home.greeting')}{name ? `, ${name.split(' ')[0]}` : ''}
           </ThemedText>
 
           {/* ── Mini stats ── */}
           <FadeIn delay={100}>
-          <View style={styles.miniStatsRow}>
-            <MiniStat icon="calendar-outline" iconBg="#5AC8FA" value={trainingsThisMonth} label={t('home.trainingsLabel')} />
-            <MiniStat icon="football-outline" iconBg="#FF9500" value={matchesThisMonth} label={t('home.matchesLabel')} />
-            <MiniStat icon="flame-outline" iconBg="#FF3B30" value={streak > 0 ? `${streak}w` : '—'} label={t('home.streakLabel')} />
-          </View>
+            <View style={styles.miniStatsRow}>
+              <MiniStat icon="calendar-outline" iconBg="#5AC8FA" value={trainingsThisMonth} label={t('home.trainingsLabel')} />
+              <MiniStat icon="football-outline" iconBg="#FF9500" value={matchesThisMonth} label={t('home.matchesLabel')} />
+              <MiniStat icon="flame-outline" iconBg="#FF3B30" value={streak > 0 ? `${streak}w` : '—'} label={t('home.streakLabel')} />
+            </View>
           </FadeIn>
 
           {/* ── Prossimo allenamento ── */}
           <FadeIn delay={200}>
-          <View style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              {t('home.nextTraining')}
-            </ThemedText>
-            {nextTraining === undefined ? <SkeletonCard /> : nextTraining === null ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('home.noTrainingScheduled')}
+            <View style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                {t('home.nextTraining')}
               </ThemedText>
-            ) : (
-              <ThemedView type="card" style={styles.summaryCard}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  {formatDateLong(nextTraining.training_date)}
-                </ThemedText>
-                <ThemedText type="default" style={{ fontWeight: '700' }}>{nextTraining.title}</ThemedText>
-                {formatTime(nextTraining.training_time) && (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {formatTime(nextTraining.training_time)}
-                  </ThemedText>
-                )}
-              </ThemedView>
-            )}
-          </View>
+              {nextTraining === undefined ? (
+                <SkeletonCard />
+              ) : nextTraining === null ? (
+                <EmptySection icon="barbell-outline" text={t('home.noTrainingScheduled')} />
+              ) : (
+                <ThemedView type="card" style={styles.trainingCard}>
+                  <View style={[styles.accentBar, { backgroundColor: colors.accent }]} />
+                  <View style={styles.trainingCardContent}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {formatDateLong(nextTraining.training_date)}
+                    </ThemedText>
+                    <ThemedText style={styles.trainingTitle}>{nextTraining.title}</ThemedText>
+                    {formatTime(nextTraining.training_time) && (
+                      <View style={styles.timeRow}>
+                        <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {formatTime(nextTraining.training_time)}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                </ThemedView>
+              )}
+            </View>
           </FadeIn>
 
           {/* ── Prossima partita ── */}
           <FadeIn delay={300}>
-          <View style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              {t('home.nextMatch')}
-            </ThemedText>
-            {nextMatch === undefined ? <SkeletonMatchRow /> : nextMatch === null ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('home.noMatchScheduled')}
+            <View style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                {t('home.nextMatch')}
               </ThemedText>
-            ) : (
-              <MatchRow match={nextMatch} />
-            )}
-          </View>
+              {nextMatch === undefined ? (
+                <SkeletonMatchRow />
+              ) : nextMatch === null ? (
+                <EmptySection icon="football-outline" text={t('home.noMatchScheduled')} />
+              ) : (
+                <MatchRow match={nextMatch} />
+              )}
+            </View>
           </FadeIn>
 
           {/* ── Ultima partita ── */}
           {lastMatch && (
             <FadeIn delay={400}>
-            <View style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {t('home.lastMatch')}
-              </ThemedText>
-              <MatchRow match={lastMatch} />
-            </View>
+              <View style={styles.section}>
+                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                  {t('home.lastMatch')}
+                </ThemedText>
+                <MatchRow match={lastMatch} />
+              </View>
             </FadeIn>
           )}
         </ScrollView>
@@ -214,12 +243,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
+    paddingBottom: BottomTabInset + Spacing.six,
     gap: Spacing.four,
   },
   greeting: {
     marginTop: Spacing.two,
   },
+  /* ── Mini stats ── */
   miniStatsRow: {
     flexDirection: 'row',
     gap: Spacing.two,
@@ -227,33 +257,67 @@ const styles = StyleSheet.create({
   miniStat: {
     flex: 1,
     borderRadius: Radius.card,
-    padding: Spacing.three,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.one,
     alignItems: 'center',
     gap: Spacing.half,
   },
   miniStatIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.half,
   },
   miniStatValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: Fonts.sansBold,
-    lineHeight: 24,
+    lineHeight: 26,
   },
+  miniStatLabel: {
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  /* ── Sections ── */
   section: {
     gap: Spacing.two,
   },
   sectionTitle: {
     letterSpacing: 0.5,
   },
-  summaryCard: {
-    borderRadius: Radius.control,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
+  /* ── Training card ── */
+  trainingCard: {
+    borderRadius: Radius.card,
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    width: 4,
+  },
+  trainingCardContent: {
+    flex: 1,
+    padding: Spacing.three,
     gap: Spacing.half,
   },
+  trainingTitle: {
+    fontSize: 16,
+    fontFamily: Fonts.sansBold,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    marginTop: 2,
+  },
+  /* ── Empty state ── */
+  emptyCard: {
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  emptyText: {},
 });

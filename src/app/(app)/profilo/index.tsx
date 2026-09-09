@@ -27,7 +27,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePlan } from '@/hooks/use-plan';
 import { haptic } from '@/hooks/use-haptic';
 import { setLanguage } from '@/lib/i18n';
-import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
+import { useScreenTransition } from '@/components/theme-transition';
+import { FadeIn } from '@/components/fade-in';
+import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 import type { Team } from '@/types/database';
 
 const LANG_OPTIONS: { value: string; label: string; flag: string }[] = [
@@ -53,11 +55,9 @@ function useRoleLabel(): Record<string, string> {
   };
 }
 
-/* ── Row component (iOS-style) ── */
+/* ── Row component ── */
 function SettingsRow({
   icon,
-  iconColor,
-  iconBg,
   label,
   value,
   onPress,
@@ -65,8 +65,6 @@ function SettingsRow({
   last,
 }: {
   icon: string;
-  iconColor?: string;
-  iconBg?: string;
   label: string;
   value?: string;
   onPress?: () => void;
@@ -76,9 +74,7 @@ function SettingsRow({
   const colors = useTheme();
   const row = (
     <View style={[styles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
-      <View style={[styles.iconBox, { backgroundColor: iconBg ?? colors.accent }]}>
-        <Ionicons name={icon as any} size={18} color={iconColor ?? '#fff'} />
-      </View>
+      <Ionicons name={icon as any} size={20} color={colors.textSecondary} />
       <View style={styles.rowBody}>
         <ThemedText type="default">{label}</ThemedText>
         <View style={styles.rowRight}>
@@ -102,10 +98,14 @@ function SettingsRow({
 }
 
 function SectionHeader({ title }: { title: string }) {
+  const colors = useTheme();
   return (
-    <ThemedText type="small" themeColor="textSecondary" style={styles.sectionHeader}>
-      {title}
-    </ThemedText>
+    <View style={styles.sectionHeader}>
+      <View style={[styles.sectionAccent, { backgroundColor: colors.accent }]} />
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionHeaderText}>
+        {title}
+      </ThemedText>
+    </View>
   );
 }
 
@@ -119,6 +119,7 @@ export default function ImpostazioniScreen() {
   const router = useRouter();
   const { preference, setPreference } = useThemePreference();
   const { show: showToast } = useToast();
+  const { transitionTo } = useScreenTransition();
 
   const [query, setQuery] = useState('');
   const [notificheEnabled, setNotificheEnabled] = useState(true);
@@ -178,11 +179,46 @@ export default function ImpostazioniScreen() {
     ? `Trial · ${plan.trialDaysLeft}gg`
     : 'Base';
 
+  const initials = (profile.full_name ?? profile.email)
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ThemedText type="title">{t('settings.title')}</ThemedText>
+
+          {/* ── Hero profile card ── */}
+          <FadeIn>
+            <ThemedView type="card" style={styles.heroCard}>
+              <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+                <ThemedText style={styles.avatarText}>{initials}</ThemedText>
+              </View>
+              <ThemedText style={styles.heroName}>
+                {profile.full_name ?? profile.email}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {profile.email}
+              </ThemedText>
+              <View style={styles.heroBadges}>
+                <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+                  <ThemedText style={[styles.badgeText, { color: colors.accent }]}>
+                    {ROLE_LABEL[profile.role]}
+                  </ThemedText>
+                </View>
+                {currentTeam && (
+                  <View style={[styles.badge, { backgroundColor: colors.backgroundElement }]}>
+                    <Ionicons name="people" size={12} color={colors.textSecondary} />
+                    <ThemedText style={[styles.badgeText, { color: colors.textSecondary }]}>
+                      {currentTeam.name}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+            </ThemedView>
+          </FadeIn>
 
           {/* Search */}
           <ThemedView type="backgroundElement" style={styles.searchBar}>
@@ -200,56 +236,45 @@ export default function ImpostazioniScreen() {
 
           {/* ─── ACCOUNT ─── */}
           {(match('account') || match('nome') || match('email') || match('ruolo') || match('password')) && (
-            <>
+            <FadeIn delay={100}>
               <SectionHeader title={t('settings.accountSection')} />
               <ThemedView type="card" style={styles.card}>
                 {match('nome') && (
                   <SettingsRow
                     icon="person-outline"
-                    iconBg="#5AC8FA"
                     label={t('settings.name')}
                     value={profile.full_name ?? '—'}
                     onPress={() => router.push('/profilo/edit-name')}
                   />
                 )}
-                {match('email') && (
+                {match('telefono') && (
                   <SettingsRow
-                    icon="mail-outline"
-                    iconBg="#FF9500"
-                    label={t('settings.email')}
-                    value={profile.email}
-                  />
-                )}
-                {match('ruolo') && (
-                  <SettingsRow
-                    icon="shield-outline"
-                    iconBg="#AF52DE"
-                    label={t('settings.role')}
-                    value={ROLE_LABEL[profile.role]}
+                    icon="call-outline"
+                    label={t('settings.phone')}
+                    value={profile.phone_verified ? (profile.phone ?? '') : t('settings.phoneNotVerified')}
+                    onPress={() => router.push('/profilo/phone-verify')}
                   />
                 )}
                 {match('password') && (
                   <SettingsRow
                     icon="lock-closed-outline"
-                    iconBg="#FF3B30"
                     label={t('settings.changePassword')}
                     onPress={() => router.push('/profilo/edit-password')}
                     last
                   />
                 )}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── SQUADRA ─── */}
           {(match('squadra') || match('team') || match('membri') || match('invita') || match('portieri')) && (
-            <>
+            <FadeIn delay={200}>
               <SectionHeader title={t('settings.teamSection')} />
               <ThemedView type="card" style={styles.card}>
                 {match('squadra') && (
                   <SettingsRow
                     icon="people-outline"
-                    iconBg="#34C759"
                     label={t('settings.activeTeam')}
                     value={currentTeam?.name ?? '—'}
                     onPress={() => setSwitcherVisible(true)}
@@ -258,7 +283,6 @@ export default function ImpostazioniScreen() {
                 {isAdmin && match('membri') && (
                   <SettingsRow
                     icon="person-add-outline"
-                    iconBg="#007AFF"
                     label={t('settings.teamMembers')}
                     onPress={() => router.push('/profilo/utenti')}
                   />
@@ -266,7 +290,6 @@ export default function ImpostazioniScreen() {
                 {isAdmin && match('portieri') && (
                   <SettingsRow
                     icon="body-outline"
-                    iconBg="#FF9500"
                     label={t('settings.goalkeepers')}
                     onPress={() => router.push('/profilo/portieri')}
                   />
@@ -274,7 +297,6 @@ export default function ImpostazioniScreen() {
                 {isAdmin && match('invita') && (
                   <SettingsRow
                     icon="link-outline"
-                    iconBg="#5856D6"
                     label={t('settings.inviteGoalkeepers')}
                     onPress={() => router.push('/profilo/invite')}
                     last={isAdmin}
@@ -283,8 +305,6 @@ export default function ImpostazioniScreen() {
                 {!isAdmin && match('abbandona') && (
                   <SettingsRow
                     icon="exit-outline"
-                    iconBg="#FF3B30"
-                    iconColor="#fff"
                     label={t('settings.leaveTeam')}
                     onPress={() => {
                       haptic('warning');
@@ -311,25 +331,22 @@ export default function ImpostazioniScreen() {
                   />
                 )}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── ABBONAMENTO ─── */}
           {(match('abbonamento') || match('pro') || match('piano') || match('upgrade') || match('feedback')) && (
-            <>
+            <FadeIn delay={300}>
               <SectionHeader title={t('settings.subscriptionSection')} />
               <ThemedView type="card" style={styles.card}>
                 <SettingsRow
                   icon="star-outline"
-                  iconBg={plan.tier === 'pro' ? '#FFD60A' : '#FF9500'}
-                  iconColor={plan.tier === 'pro' ? '#000' : '#fff'}
                   label={t('settings.currentPlan')}
                   value={planLabel}
                   onPress={() => router.push('/profilo/paywall')}
                 />
                 <SettingsRow
                   icon="chatbubble-ellipses-outline"
-                  iconBg="#5AC8FA"
                   label={t('settings.feedback')}
                   onPress={() => { haptic('light'); setFeedbackOpen(!feedbackOpen); }}
                   trailing={<Ionicons name={feedbackOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textSecondary} />}
@@ -368,17 +385,16 @@ export default function ImpostazioniScreen() {
                   </Pressable>
                 </View>
               )}
-            </>
+            </FadeIn>
           )}
 
           {/* ─── NOTIFICHE ─── */}
           {match('notifiche') && (
-            <>
+            <FadeIn delay={350}>
               <SectionHeader title={t('settings.notificationsSection')} />
               <ThemedView type="card" style={styles.card}>
                 <SettingsRow
                   icon="notifications-outline"
-                  iconBg="#FF3B30"
                   label={t('settings.pushNotifications')}
                   trailing={
                     <Switch
@@ -391,102 +407,93 @@ export default function ImpostazioniScreen() {
                   last
                 />
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── ASPETTO ─── */}
           {(match('aspetto') || match('tema')) && (
-            <>
+            <FadeIn delay={400}>
               <SectionHeader title={t('settings.appearanceSection')} />
               <ThemedView type="card" style={styles.card}>
                 {THEME_OPTIONS.map((opt, idx) => (
                   <Pressable
                     key={opt.value}
-                    onPress={() => { haptic('light'); setPreference(opt.value); }}
+                    onPress={() => { haptic('light'); transitionTo(() => setPreference(opt.value)); }}
                     style={({ pressed }) => pressed && styles.pressed}>
                     <View style={[styles.row, idx < THEME_OPTIONS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
-                      <View style={[styles.iconBox, { backgroundColor: '#5856D6' }]}>
-                        <Ionicons name={opt.icon as any} size={18} color="#fff" />
-                      </View>
+                      <Ionicons name={opt.icon as any} size={20} color={colors.textSecondary} />
                       <View style={styles.rowBody}>
                         <ThemedText type="default">{opt.label}</ThemedText>
                         {preference === opt.value && (
-                          <Ionicons name="checkmark" size={20} color={colors.accent} />
+                          <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
                         )}
                       </View>
                     </View>
                   </Pressable>
                 ))}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── LINGUA ─── */}
           {(match('lingua') || match('language')) && (
-            <>
+            <FadeIn delay={450}>
               <SectionHeader title={t('settings.languageSection', 'LINGUA')} />
               <ThemedView type="card" style={styles.card}>
                 {LANG_OPTIONS.map((opt, idx) => (
                   <Pressable
                     key={opt.value}
-                    onPress={() => { haptic('light'); setLanguage(opt.value); }}
+                    onPress={() => { haptic('light'); transitionTo(() => setLanguage(opt.value)); }}
                     style={({ pressed }) => pressed && styles.pressed}>
                     <View style={[styles.row, idx < LANG_OPTIONS.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
-                      <View style={[styles.iconBox, { backgroundColor: '#007AFF' }]}>
-                        <ThemedText style={{ fontSize: 16 }}>{opt.flag}</ThemedText>
-                      </View>
+                      <ThemedText style={{ fontSize: 18 }}>{opt.flag}</ThemedText>
                       <View style={styles.rowBody}>
                         <ThemedText type="default">{opt.label}</ThemedText>
                         {i18n.language === opt.value && (
-                          <Ionicons name="checkmark" size={20} color={colors.accent} />
+                          <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
                         )}
                       </View>
                     </View>
                   </Pressable>
                 ))}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── ADMIN ─── */}
           {isAdmin && (match('admin') || match('feedback') || match('utenti') || match('abbonamenti')) && (
-            <>
+            <FadeIn delay={500}>
               <SectionHeader title="ADMIN" />
               <ThemedView type="card" style={styles.card}>
                 <SettingsRow
                   icon="mail-open-outline"
-                  iconBg="#AF52DE"
                   label={t('settings.feedbackList')}
                   onPress={() => router.push('/profilo/feedback' as any)}
                 />
                 <SettingsRow
                   icon="people-outline"
-                  iconBg="#007AFF"
                   label={t('settings.adminUsers')}
                   onPress={() => router.push('/profilo/admin-users' as any)}
                 />
                 <SettingsRow
                   icon="card-outline"
-                  iconBg="#34C759"
                   label={t('settings.adminSubscriptions')}
                   onPress={() => router.push('/profilo/admin-subscriptions' as any)}
                   last
                 />
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ─── LOGOUT ─── */}
-          <View style={{ marginTop: Spacing.three }}>
-            <ThemedView type="card" style={styles.card}>
-              <Pressable
-                onPress={() => { haptic('warning'); signOut(); }}
-                style={({ pressed }) => [styles.logoutRow, pressed && styles.pressed]}>
-                <Ionicons name="log-out-outline" size={20} color={colors.danger} />
-                <ThemedText type="default" style={{ color: colors.danger }}>{t('settings.logout')}</ThemedText>
-              </Pressable>
-            </ThemedView>
-          </View>
+          <FadeIn delay={550}>
+            <Pressable
+              onPress={() => { haptic('warning'); signOut(); }}
+              style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}>
+              <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+              <ThemedText type="small" style={{ color: colors.danger }}>{t('settings.logout')}</ThemedText>
+            </Pressable>
+          </FadeIn>
 
           {/* Version */}
           <ThemedText type="small" themeColor="textSecondary" style={styles.version}>
@@ -570,9 +577,52 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.five,
-    paddingBottom: BottomTabInset + Spacing.three,
+    paddingBottom: BottomTabInset + Spacing.six,
     gap: Spacing.one,
   },
+  /* ── Hero card ── */
+  heroCard: {
+    borderRadius: Radius.card,
+    padding: Spacing.four,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.one,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontFamily: Fonts.sansBold,
+    color: '#fff',
+  },
+  heroName: {
+    fontSize: 22,
+    fontFamily: Fonts.sansBold,
+    lineHeight: 26,
+  },
+  heroBadges: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.two + 4,
+    paddingVertical: Spacing.half + 1,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontFamily: Fonts.sansSemiBold,
+  },
+  /* ── Search ── */
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -581,23 +631,31 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     gap: Spacing.two,
     marginTop: Spacing.two,
-    marginBottom: Spacing.two,
+    marginBottom: Spacing.one,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
   },
+  /* ── Section header ── */
   sectionHeader: {
-    marginTop: Spacing.three,
-    marginBottom: Spacing.one,
-    marginLeft: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginTop: Spacing.four,
+    marginBottom: Spacing.two,
+    marginLeft: Spacing.one,
+  },
+  sectionAccent: {
+    width: 3,
+    height: 14,
+    borderRadius: 2,
+  },
+  sectionHeaderText: {
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
-  sectionFooter: {
-    marginTop: Spacing.one,
-    marginLeft: Spacing.three,
-  },
+  /* ── Card & rows ── */
   card: {
     borderRadius: Radius.card,
     overflow: 'hidden',
@@ -606,15 +664,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
+    paddingVertical: Spacing.three,
     gap: Spacing.three,
-  },
-  iconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowBody: {
     flex: 1,
@@ -631,18 +682,21 @@ const styles = StyleSheet.create({
   rowValue: {
     maxWidth: 160,
   },
-  logoutRow: {
+  /* ── Logout ── */
+  logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.three,
     gap: Spacing.two,
+    marginTop: Spacing.four,
+    paddingVertical: Spacing.two,
   },
   version: {
     textAlign: 'center',
-    marginTop: Spacing.four,
+    marginTop: Spacing.two,
     marginBottom: Spacing.two,
   },
+  /* ── Feedback ── */
   feedbackBox: {
     marginTop: Spacing.two,
     gap: Spacing.two,
@@ -664,8 +718,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   pressed: { opacity: 0.7 },
-
-  /* Modal */
+  /* ── Modal ── */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',

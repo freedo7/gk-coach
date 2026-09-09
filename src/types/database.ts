@@ -5,6 +5,8 @@ export interface Profile {
   id: string;
   email: string;
   full_name: string | null;
+  phone: string | null;
+  phone_verified: boolean;
   role: UserRole;
   subscription_tier: SubscriptionTier;
   trial_started_at: string;

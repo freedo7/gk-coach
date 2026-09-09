@@ -33,6 +33,7 @@ export default {
     trainingsLabel: 'Allenamenti',
     matchesLabel: 'Partite',
     streakLabel: 'Streak',
+    avgRatingLabel: 'Media',
     nextTraining: 'PROSSIMO ALLENAMENTO',
     noTrainingScheduled: 'Nessun allenamento in programma.',
     nextMatch: 'PROSSIMA PARTITA',
@@ -137,6 +138,8 @@ export default {
     friendly: 'Amichevole',
     league: 'Campionato',
     cup: 'Coppa',
+    home: 'Casa',
+    away: 'Trasferta',
   },
 
   // Match detail
@@ -372,6 +375,10 @@ export default {
     roleCoach: 'Preparatore',
     roleGoalkeeper: 'Portiere',
     trialDaysLeft: 'Trial · {{days}}gg',
+    phone: 'Telefono',
+    phoneNotVerified: 'Non verificato',
+    phoneVerified: 'Verificato',
+    verifyPhone: 'Verifica telefono',
   },
 
   // Edit name
@@ -485,6 +492,37 @@ export default {
     registerSuccess: "Registrazione completata. Se richiesto, controlla la tua email per confermare l'account, poi torna al login.",
     hasAccount: 'Hai già un account? Accedi',
     notAuthenticated: 'Non autenticato',
+    welcomeBack: 'Bentornato, {{name}}',
+    forgotPassword: 'Password dimenticata?',
+    forgotPasswordTitle: 'Reimposta password',
+    forgotPasswordSubtitle: 'Inserisci la tua email per ricevere il link di reset',
+    sendResetLink: 'Invia link di reset',
+    resetEmailSent: 'Email inviata! Controlla la tua casella di posta.',
+    backToLogin: 'Torna al login',
+    emailInvalid: 'Inserisci un indirizzo email valido',
+    passwordTooShort: 'La password non soddisfa i requisiti',
+    pwReqLength: 'Almeno 8 caratteri',
+    pwReqUppercase: 'Una lettera maiuscola',
+    pwReqSpecial: 'Un carattere speciale',
+    nameRequired: 'Il nome è obbligatorio',
+  },
+
+  // Phone verification
+  phoneVerify: {
+    title: 'Verifica telefono',
+    subtitle: 'Inserisci il tuo numero per ricevere un codice di verifica',
+    phonePlaceholder: 'Numero di telefono',
+    sendCode: 'Invia codice',
+    otpTitle: 'Inserisci il codice',
+    otpSubtitle: 'Abbiamo inviato un codice a 6 cifre a {{phone}}',
+    verify: 'Verifica',
+    resendCode: 'Rinvia codice',
+    resendIn: 'Rinvia tra {{seconds}}s',
+    verifying: 'Verifica in corso...',
+    success: 'Telefono verificato!',
+    successSubtitle: 'Il tuo numero è stato verificato con successo',
+    invalidCode: 'Codice non valido. Riprova.',
+    continue: 'Continua',
   },
 
   // Navigation

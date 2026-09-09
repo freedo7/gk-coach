@@ -131,6 +131,9 @@ export default function AppLayout() {
   if (loading) return <ThemedView style={{ flex: 1 }} />;
   if (!session) return <Redirect href="/(auth)/login" />;
 
+  // Wait for profile and teams to load after login before deciding
+  if (!profile) return <ThemedView style={{ flex: 1 }} />;
+
   if (!currentTeam) {
     if (isAdmin) return <CreateTeamSetup />;
     return <JoinTeamSetup />;

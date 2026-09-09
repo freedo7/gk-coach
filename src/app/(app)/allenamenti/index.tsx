@@ -1,14 +1,18 @@
 import { Link, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, UIManager, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS, Easing } from 'react-native-reanimated';
 import { Calendar, LocaleConfig, type DateData } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useRouter } from 'expo-router';
 import { EmptyState } from '@/components/empty-state';
+import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
+import { SkeletonCard } from '@/components/skeleton';
 import { SwipeableRow } from '@/components/swipeable-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -23,24 +27,61 @@ import { formatTime } from '@/lib/format';
 import type { Goalkeeper, Match, Training } from '@/types/database';
 import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
 
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+/** Get the week (Mon-Sun) containing a given date string */
+function getWeekDays(dateStr: string): { dateString: string; day: number; isCurrentMonth: boolean }[] {
+  const d = new Date(dateStr + 'T12:00:00');
+  const dayOfWeek = d.getDay(); // 0=Sun
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + mondayOffset);
+
+  const month = d.getMonth();
+  const days: { dateString: string; day: number; isCurrentMonth: boolean }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const cur = new Date(monday);
+    cur.setDate(monday.getDate() + i);
+    days.push({
+      dateString: `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`,
+      day: cur.getDate(),
+      isCurrentMonth: cur.getMonth() === month,
+    });
+  }
+  return days;
+}
+
+function formatMonthYear(dateStr: string, monthNames: string[]): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 export default function AllenamentiScreen() {
   const { t, i18n } = useTranslation();
 
-  // Configure calendar locale with translated strings — use current language as key
+  // Configure calendar locale
   const lang = i18n.language;
+  const monthNames = t('calendar.monthNames', { returnObjects: true }) as string[];
+  const dayNamesShort = t('calendar.dayNamesShort', { returnObjects: true }) as string[];
+  const weekDayLabels = [...dayNamesShort.slice(1), dayNamesShort[0]];
+
   LocaleConfig.locales[lang] = {
-    monthNames: t('calendar.monthNames', { returnObjects: true }) as string[],
+    monthNames,
     monthNamesShort: t('calendar.monthNamesShort', { returnObjects: true }) as string[],
     dayNames: t('calendar.dayNames', { returnObjects: true }) as string[],
-    dayNamesShort: t('calendar.dayNamesShort', { returnObjects: true }) as string[],
+    dayNamesShort,
     today: t('calendar.today'),
   };
   LocaleConfig.defaultLocale = lang;
+
   const { isAdmin, currentTeam, myGoalkeeperId } = useAuth();
   const colors = useTheme();
   const router = useRouter();
@@ -54,7 +95,7 @@ export default function AllenamentiScreen() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTraining, setSelectedTraining] = useState<TrainingWithExercises | null>(null);
   const [loadingTraining, setLoadingTraining] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [calendarExpanded, setCalendarExpanded] = useState(false);
 
   // Filter by selected goalkeeper
   const trainings = useMemo(() => {
@@ -68,7 +109,6 @@ export default function AllenamentiScreen() {
     return allMatches;
   }, [allMatches, selectedGk]);
 
-  // Track which dates have trainings and/or matches
   const trainingDatesSet = useMemo(() => new Set((trainings ?? []).map((tr) => tr.training_date)), [trainings]);
   const matchDatesSet = useMemo(() => new Set(matches.map((m) => m.match_date)), [matches]);
 
@@ -93,13 +133,6 @@ export default function AllenamentiScreen() {
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  async function onRefresh() {
-    haptic('light');
-    setRefreshing(true);
-    loadData();
-    setTimeout(() => setRefreshing(false), 600);
-  }
-
   const [prevDate, setPrevDate] = useState(selectedDate);
   useEffect(() => {
     if (!currentTeam) return;
@@ -119,7 +152,84 @@ export default function AllenamentiScreen() {
     [matches, selectedDate],
   );
 
-  // Custom day component for colored rings
+  // ── Week strip ──
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
+  const swipeHandled = useRef(false);
+
+  // Slide animation for week transitions
+  const slideX = useSharedValue(0);
+  const slideOpacity = useSharedValue(1);
+  const slideStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: slideX.value }],
+    opacity: slideOpacity.value,
+  }));
+
+  function navigateWeek(direction: -1 | 1) {
+    haptic('light');
+    // Animate: slide out in direction, then snap to opposite side and slide in
+    const slideOut = direction === 1 ? -60 : 60;
+    const slideIn = direction === 1 ? 60 : -60;
+
+    slideX.value = withTiming(slideOut, { duration: 150, easing: Easing.out(Easing.cubic) }, () => {
+      // Update date on JS thread
+      runOnJS(doNavigateWeek)(direction);
+      // Snap to opposite side instantly
+      slideX.value = slideIn;
+      slideOpacity.value = 0.3;
+      // Slide in
+      slideX.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) });
+      slideOpacity.value = withTiming(1, { duration: 200 });
+    });
+  }
+
+  function doNavigateWeek(direction: -1 | 1) {
+    const d = new Date(selectedDate + 'T12:00:00');
+    d.setDate(d.getDate() + direction * 7);
+    const newDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setSelectedDate(newDate);
+  }
+
+  function toggleCalendar() {
+    haptic('light');
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCalendarExpanded(!calendarExpanded);
+  }
+
+  // Gesture: swipe left/right = navigate weeks, down = expand calendar
+  const weekSwipe = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-25, 25])
+    .activeOffsetY([-100, 25])
+    .onBegin(() => { swipeHandled.current = false; })
+    .onUpdate((e) => {
+      if (swipeHandled.current) return;
+      // Swipe down → expand
+      if (e.translationY > 35 && Math.abs(e.translationX) < 30) {
+        swipeHandled.current = true;
+        toggleCalendar();
+        return;
+      }
+      // Swipe left/right → navigate weeks
+      if (Math.abs(e.translationX) > 40 && Math.abs(e.translationY) < 30) {
+        swipeHandled.current = true;
+        navigateWeek(e.translationX < 0 ? 1 : -1);
+      }
+    });
+
+  // Gesture: swipe up on full calendar = collapse
+  const calendarSwipe = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetY([-25, 100])
+    .onBegin(() => { swipeHandled.current = false; })
+    .onUpdate((e) => {
+      if (swipeHandled.current) return;
+      if (e.translationY < -35 && Math.abs(e.translationX) < 30) {
+        swipeHandled.current = true;
+        toggleCalendar();
+      }
+    });
+
+  // Custom day component for the full calendar
   const renderDay = useCallback(({ date, state }: { date?: DateData; state?: string }) => {
     if (!date) return <View style={styles.dayCell} />;
     const dateStr = date.dateString;
@@ -129,7 +239,6 @@ export default function AllenamentiScreen() {
     const hasMatch = matchDatesSet.has(dateStr);
     const disabled = state === 'disabled';
 
-    // Ring color for the event type
     const eventRing = hasTraining && hasMatch
       ? colors.accent
       : hasTraining
@@ -140,9 +249,8 @@ export default function AllenamentiScreen() {
 
     return (
       <Pressable
-        onPress={() => setSelectedDate(dateStr)}
+        onPress={() => { setSelectedDate(dateStr); }}
         style={styles.dayCell}>
-        {/* Outer event ring — visible when selected AND has event, or when both events on same day */}
         {hasTraining && hasMatch && (
           <View style={[styles.outerRing, { borderColor: colors.danger }]} />
         )}
@@ -171,17 +279,20 @@ export default function AllenamentiScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        {/* Header */}
         <View style={styles.pageHeader}>
           <ThemedText type="title">{t('trainings.title')}</ThemedText>
+          <Pressable
+            onPress={() => router.push('/esercizi')}
+            style={({ pressed }) => [styles.headerIconBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.7 }]}>
+            <Ionicons name="book-outline" size={18} color={colors.accentText} />
+          </Pressable>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
-        >
-          {/* Filtro portiere (solo admin con più di 1 portiere) */}
-          {isAdmin && goalkeepers.length > 1 && (
-            <View style={styles.gkFilter}>
+        {/* Filtro portiere — fuori dallo scroll */}
+        {isAdmin && goalkeepers.length > 1 && (
+          <View style={styles.gkFilterOuter}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gkFilter}>
               <Pressable
                 onPress={() => { haptic('light'); setSelectedGk(null); }}
                 style={styles.gkChipWrapper}>
@@ -214,121 +325,224 @@ export default function AllenamentiScreen() {
                   </Pressable>
                 );
               })}
-            </View>
-          )}
+            </ScrollView>
+          </View>
+        )}
 
+        {/* Calendar section — fuori dallo scroll, gestisce i gesti autonomamente */}
+        <View style={styles.calendarOuter}>
           <ThemedView type="card" style={styles.calendarCard}>
-            <Calendar
-              key={lang}
-              current={selectedDate}
-              firstDay={1}
-              dayComponent={renderDay}
-              theme={{
-                backgroundColor: 'transparent',
-                calendarBackground: 'transparent',
-                textSectionTitleColor: colors.textSecondary,
-                monthTextColor: colors.text,
-                arrowColor: colors.accent,
-                textMonthFontWeight: '700',
-              }}
-            />
-            <View style={styles.legend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-                <ThemedText type="small" themeColor="textSecondary">{t('trainings.trainingLegend')}</ThemedText>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
-                <ThemedText type="small" themeColor="textSecondary">{t('trainings.matchLegend')}</ThemedText>
-              </View>
-            </View>
-          </ThemedView>
+            {calendarExpanded ? (
+              /* ── Full month calendar ── */
+              <GestureDetector gesture={calendarSwipe}>
+                <View>
+                  <Calendar
+                    key={lang}
+                    current={selectedDate}
+                    firstDay={1}
+                    dayComponent={renderDay}
+                    onMonthChange={(month: DateData) => {
+                      setSelectedDate(month.dateString);
+                    }}
+                    theme={{
+                      backgroundColor: 'transparent',
+                      calendarBackground: 'transparent',
+                      textSectionTitleColor: colors.textSecondary,
+                      monthTextColor: colors.text,
+                      arrowColor: colors.accent,
+                      textMonthFontWeight: '700',
+                    }}
+                  />
+                  <View style={styles.legend}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
+                      <ThemedText type="small" themeColor="textSecondary">{t('trainings.trainingLegend')}</ThemedText>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
+                      <ThemedText type="small" themeColor="textSecondary">{t('trainings.matchLegend')}</ThemedText>
+                    </View>
+                  </View>
+                </View>
+              </GestureDetector>
+            ) : (
+              /* ── Week strip ── */
+              <GestureDetector gesture={weekSwipe}>
+                <View>
+                  {/* Month/year + nav arrows */}
+                  <View style={styles.weekHeader}>
+                    <Pressable onPress={() => navigateWeek(-1)} hitSlop={12}>
+                      <Ionicons name="chevron-back" size={20} color={colors.accent} />
+                    </Pressable>
+                    <ThemedText type="smallBold">
+                      {formatMonthYear(selectedDate, monthNames)}
+                    </ThemedText>
+                    <Pressable onPress={() => navigateWeek(1)} hitSlop={12}>
+                      <Ionicons name="chevron-forward" size={20} color={colors.accent} />
+                    </Pressable>
+                  </View>
 
+                  {/* Day labels + day circles */}
+                  <Animated.View style={[styles.weekRow, slideStyle]}>
+                    {weekDays.map((day, i) => {
+                      const isSelected = day.dateString === selectedDate;
+                      const isToday = day.dateString === today;
+                      const hasTraining = trainingDatesSet.has(day.dateString);
+                      const hasMatch = matchDatesSet.has(day.dateString);
+
+                      // Ring color logic (same as full calendar)
+                      const ringColor = hasTraining && hasMatch
+                        ? colors.accent
+                        : hasTraining
+                          ? colors.accent
+                          : hasMatch
+                            ? colors.danger
+                            : null;
+
+                      return (
+                        <Pressable
+                          key={day.dateString}
+                          onPress={() => setSelectedDate(day.dateString)}
+                          style={styles.weekDayCol}>
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.weekDayLabel}>
+                            {weekDayLabels[i]}
+                          </ThemedText>
+                          <View style={styles.weekDayOuter}>
+                            {/* Outer ring for dual events (training + match) */}
+                            {hasTraining && hasMatch && !isSelected && (
+                              <View style={[styles.weekOuterRing, { borderColor: colors.danger }]} />
+                            )}
+                            <View style={[
+                              styles.weekDayCircle,
+                              // Event ring border
+                              !isSelected && ringColor && !(hasTraining && hasMatch) && { borderWidth: 2.5, borderColor: ringColor },
+                              !isSelected && hasTraining && hasMatch && { borderWidth: 2.5, borderColor: colors.accent },
+                              // Selected state
+                              isSelected && { backgroundColor: colors.accentSoft },
+                            ]}>
+                              <ThemedText style={[
+                                styles.weekDayNum,
+                                !day.isCurrentMonth && { opacity: 0.3 },
+                                isToday && !isSelected && { color: colors.accent, fontFamily: Fonts.sansBold },
+                                isSelected && { color: colors.accent, fontFamily: Fonts.sansBold },
+                              ]}>
+                                {day.day}
+                              </ThemedText>
+                            </View>
+                          </View>
+                          {/* Event dots below */}
+                          <View style={styles.dotsRow}>
+                            {hasTraining && <View style={[styles.eventDot, { backgroundColor: colors.accent }]} />}
+                            {hasMatch && <View style={[styles.eventDot, { backgroundColor: colors.danger }]} />}
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </Animated.View>
+                </View>
+              </GestureDetector>
+            )}
+
+            {/* Toggle button */}
+            <Pressable onPress={toggleCalendar} style={styles.toggleBtn}>
+              <Ionicons
+                name={calendarExpanded ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textSecondary}
+              />
+            </Pressable>
+          </ThemedView>
+        </View>
+
+        {/* Scrollable content */}
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Allenamento del giorno */}
           {loadingTraining ? (
-            <ActivityIndicator color={colors.accent} style={styles.trainingLoader} />
+            <SkeletonCard />
           ) : selectedTraining ? (
-            <SwipeableRow
-              enabled={isAdmin}
-              onDelete={async () => {
-                const prev = allTrainings;
-                const prevSelected = selectedTraining;
-                setAllTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
-                setSelectedTraining(null);
-                showToast(t('trainings.trainingDeleted'));
-                try { await deleteTraining(selectedTraining.id); } catch { setAllTrainings(prev); setSelectedTraining(prevSelected); showToast(t('trainings.deleteError'), 'error'); }
-              }}
-              confirmTitle={t('trainings.deleteTrainingConfirm')}
-              confirmMessage={selectedTraining.title}
-            >
-              <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
+            <FadeIn>
+              <SwipeableRow
+                enabled={isAdmin}
+                onDelete={async () => {
+                  const prev = allTrainings;
+                  const prevSelected = selectedTraining;
+                  setAllTrainings((t) => t?.filter((x) => x.id !== selectedTraining.id) ?? null);
+                  setSelectedTraining(null);
+                  showToast(t('trainings.trainingDeleted'));
+                  try { await deleteTraining(selectedTraining.id); } catch { setAllTrainings(prev); setSelectedTraining(prevSelected); showToast(t('trainings.deleteError'), 'error'); }
+                }}
+                confirmTitle={t('trainings.deleteTrainingConfirm')}
+                confirmMessage={selectedTraining.title}
+              >
+                <Link href={`/allenamenti/${selectedTraining.id}`} asChild>
+                  <Pressable>
+                    <ThemedView type="card" style={styles.trainingCard}>
+                      <View style={styles.trainingCardHeader}>
+                        <ThemedText type="smallBold" themeColor="textSecondary">
+                          {t('trainings.training')}
+                        </ThemedText>
+                        <Pressable
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            haptic('light');
+                            const newVal = !selectedTraining.completed;
+                            setSelectedTraining({ ...selectedTraining, completed: newVal });
+                            toggleTrainingCompleted(selectedTraining.id, newVal).catch(() => {
+                              setSelectedTraining({ ...selectedTraining, completed: !newVal });
+                              showToast(t('common.error'), 'error');
+                            });
+                          }}
+                          hitSlop={12}>
+                          <Ionicons
+                            name={selectedTraining.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                            size={24}
+                            color={selectedTraining.completed ? colors.accent : colors.textSecondary}
+                          />
+                        </Pressable>
+                      </View>
+                      <ThemedText type="subtitle" style={selectedTraining.completed && styles.completedText}>{selectedTraining.title}</ThemedText>
+                      {formatTime(selectedTraining.training_time) && (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {formatTime(selectedTraining.training_time)}
+                        </ThemedText>
+                      )}
+                    </ThemedView>
+                  </Pressable>
+                </Link>
+              </SwipeableRow>
+            </FadeIn>
+          ) : isAdmin ? (
+            <FadeIn>
+              <Link href={`/allenamenti/new?date=${selectedDate}`} asChild>
                 <Pressable>
-                  <ThemedView type="card" style={styles.trainingCard}>
-                    <View style={styles.trainingCardHeader}>
-                      <ThemedText type="smallBold" themeColor="textSecondary">
-                        {t('trainings.training')}
-                      </ThemedText>
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          haptic('light');
-                          const newVal = !selectedTraining.completed;
-                          setSelectedTraining({ ...selectedTraining, completed: newVal });
-                          toggleTrainingCompleted(selectedTraining.id, newVal).catch(() => {
-                            setSelectedTraining({ ...selectedTraining, completed: !newVal });
-                            showToast(t('common.error'), 'error');
-                          });
-                        }}
-                        hitSlop={12}>
-                        <Ionicons
-                          name={selectedTraining.completed ? 'checkmark-circle' : 'ellipse-outline'}
-                          size={24}
-                          color={selectedTraining.completed ? colors.accent : colors.textSecondary}
-                        />
-                      </Pressable>
-                    </View>
-                    <ThemedText type="subtitle" style={selectedTraining.completed && styles.completedText}>{selectedTraining.title}</ThemedText>
-                    {formatTime(selectedTraining.training_time) && (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {formatTime(selectedTraining.training_time)}
-                      </ThemedText>
-                    )}
+                  <ThemedView type="backgroundElement" style={styles.emptyTrainingCard}>
+                    <ThemedText type="smallBold" themeColor="accent">
+                      {t('trainings.addTrainingForDay')}
+                    </ThemedText>
                   </ThemedView>
                 </Pressable>
               </Link>
-            </SwipeableRow>
-          ) : isAdmin ? (
-            <Link href={`/allenamenti/new?date=${selectedDate}`} asChild>
-              <Pressable>
-                <ThemedView type="backgroundElement" style={styles.emptyTrainingCard}>
-                  <ThemedText type="smallBold" themeColor="accent">
-                    {t('trainings.addTrainingForDay')}
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            </Link>
+            </FadeIn>
           ) : (
-            <EmptyState icon="calendar-outline" title={t('trainings.noEvents')} subtitle={t('trainings.noTrainingsForDay')} />
+            <FadeIn>
+              <EmptyState icon="calendar-outline" title={t('trainings.noEvents')} subtitle={t('trainings.noTrainingsForDay')} />
+            </FadeIn>
           )}
-
-          {/* Libreria esercizi */}
-          <Pressable
-            onPress={() => router.push('/esercizi')}
-            style={({ pressed }) => [styles.libraryBtn, { backgroundColor: colors.accent }, pressed && { opacity: 0.7 }]}>
-            <Ionicons name="book-outline" size={20} color={colors.accentText} />
-            <ThemedText type="smallBold" style={{ color: colors.accentText }}>{t('trainings.exerciseLibrary')}</ThemedText>
-          </Pressable>
 
           {/* Partite del giorno */}
           {dayMatches.length > 0 && (
-            <View style={styles.matchSection}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-                {dayMatches.length === 1 ? t('trainings.match') : t('trainings.matchesPlural')}
-              </ThemedText>
-              {dayMatches.map((m) => (
-                <MatchRow key={m.id} match={m} />
-              ))}
-            </View>
+            <FadeIn delay={100}>
+              <View style={styles.matchSection}>
+                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                  {dayMatches.length === 1 ? t('trainings.match') : t('trainings.matchesPlural')}
+                </ThemedText>
+                {dayMatches.map((m, i) => (
+                  <FadeIn key={m.id} delay={150 + i * 60}>
+                    <MatchRow match={m} />
+                  </FadeIn>
+                ))}
+              </View>
+            </FadeIn>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -344,28 +558,110 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
   },
-  libraryBtn: {
-    flexDirection: 'row',
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.two,
-    borderRadius: Radius.control,
-    paddingVertical: Spacing.three,
   },
-  scrollContent: {
-    padding: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.six,
-    gap: Spacing.three,
+  /* ── GK filter ── */
+  gkFilterOuter: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.two,
+  },
+  gkFilter: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  gkChipWrapper: {},
+  gkChip: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+  },
+  /* ── Calendar card ── */
+  calendarOuter: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.two,
   },
   calendarCard: {
     borderRadius: Radius.card,
     overflow: 'hidden',
+    paddingBottom: Spacing.one,
+  },
+  /* ── Week strip ── */
+  weekHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
   },
+  weekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: Spacing.two,
+    paddingBottom: Spacing.one,
+  },
+  weekDayCol: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 2,
+  },
+  weekDayLabel: {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  weekDayOuter: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekOuterRing: {
+    position: 'absolute',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 2,
+  },
+  weekDayCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekDayNum: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 3,
+    height: 6,
+    alignItems: 'center',
+  },
+  eventDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  toggleBtn: {
+    alignItems: 'center',
+    paddingVertical: Spacing.one,
+  },
+  /* ── Full calendar ── */
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -406,8 +702,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  trainingLoader: {
-    marginVertical: Spacing.two,
+  /* ── Scrollable content ── */
+  scrollContent: {
+    padding: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: BottomTabInset + Spacing.six,
+    gap: Spacing.three,
   },
   trainingCard: {
     borderRadius: Radius.card,
@@ -428,25 +728,10 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     alignItems: 'center',
   },
-  emptyText: {
-    textAlign: 'center',
-    paddingVertical: Spacing.two,
-  },
   matchSection: {
     gap: Spacing.two,
   },
   sectionTitle: {
     letterSpacing: 0.5,
-  },
-  gkFilter: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.one,
-  },
-  gkChipWrapper: {},
-  gkChip: {
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one + 2,
   },
 });

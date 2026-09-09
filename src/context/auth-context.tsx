@@ -32,6 +32,9 @@ interface AuthContextValue {
     inviteCode?: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  sendPhoneOtp: (phone: string) => Promise<{ error: string | null }>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -148,6 +151,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   }
 
+  async function resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    return { error: error?.message ?? null };
+  }
+
+  async function sendPhoneOtp(phone: string) {
+    const { error } = await supabase.auth.updateUser({ phone });
+    return { error: error?.message ?? null };
+  }
+
+  async function verifyPhoneOtp(phone: string, token: string) {
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'phone_change' });
+    if (!error && session) {
+      await supabase.from('profiles').update({ phone, phone_verified: true }).eq('id', session.user.id);
+      await loadProfile(session.user.id);
+    }
+    return { error: error?.message ?? null };
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     await AsyncStorage.removeItem(CURRENT_TEAM_KEY);
@@ -222,6 +244,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        resetPassword,
+        sendPhoneOtp,
+        verifyPhoneOtp,
         refreshProfile,
       }}>
       {children}

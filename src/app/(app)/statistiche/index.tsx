@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
+import { FadeIn } from '@/components/fade-in';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -42,7 +43,6 @@ function timeCutoff(period: 'all' | 'season' | '3m' | '1m'): string | null {
   } else if (period === '3m') {
     now.setMonth(now.getMonth() - 3);
   } else {
-    // season: from August 1 of current or previous year
     const seasonStart = now.getMonth() >= 7
       ? new Date(now.getFullYear(), 7, 1)
       : new Date(now.getFullYear() - 1, 7, 1);
@@ -60,7 +60,6 @@ interface CategoryCount {
 function StatCard({ icon, iconBg, label, value, sub }: {
   icon: string; iconBg: string; label: string; value: string | number; sub?: string;
 }) {
-  const colors = useTheme();
   return (
     <ThemedView type="card" style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
@@ -109,7 +108,6 @@ export default function StatisticheScreen() {
       setAllPerformances(perfs);
       setGoalkeepers(gks);
 
-      // Count categories
       const catMap: Record<string, number> = {};
       (catData ?? []).forEach((te: any) => {
         const name = te.exercise?.category?.name;
@@ -134,10 +132,8 @@ export default function StatisticheScreen() {
     setRefreshing(false);
   }
 
-  // ── Filter by goalkeeper + time period ──
   const cutoffDate = useMemo(() => timeCutoff(timePeriod), [timePeriod]);
 
-  // Performance lookup: per portiere singolo, mappa match_id -> performance
   const perfByMatch = useMemo(() => {
     const map: Record<string, MatchPerformance> = {};
     if (!selectedGk) return map;
@@ -147,7 +143,6 @@ export default function StatisticheScreen() {
     return map;
   }, [allPerformances, selectedGk]);
 
-  // Per vista generale: tutte le performance raggruppate per match
   const perfsByMatch = useMemo(() => {
     const map: Record<string, MatchPerformance[]> = {};
     allPerformances.forEach((p) => {
@@ -160,12 +155,12 @@ export default function StatisticheScreen() {
   const matches = useMemo(() => {
     let filtered = allMatches;
     if (selectedGk) {
-      // Includi partite assegnate al portiere O che hanno una performance per lui
       filtered = filtered.filter((m) => m.goalkeeper_id === selectedGk || perfByMatch[m.id]);
     }
     if (cutoffDate) filtered = filtered.filter((m) => m.match_date >= cutoffDate);
     return filtered;
   }, [allMatches, selectedGk, cutoffDate, perfByMatch]);
+
   const trainings = useMemo(() => {
     let filtered = selectedGk ? allTrainings.filter((t) => t.goalkeeper_id === selectedGk) : allTrainings;
     if (cutoffDate) filtered = filtered.filter((t) => t.training_date >= cutoffDate);
@@ -185,7 +180,6 @@ export default function StatisticheScreen() {
   const losses = matchesWithScore.filter((m) => m.goals_scored! < m.goals_conceded!).length;
   const cleanSheets = useMemo(() => {
     if (!selectedGk) return matchesWithScore.filter((m) => m.goals_conceded === 0).length;
-    // Per portiere singolo: usa goals_conceded dalla performance se disponibile
     return matches.filter((m) => {
       const perf = perfByMatch[m.id];
       if (perf && perf.goals_conceded != null) return perf.goals_conceded === 0;
@@ -194,14 +188,12 @@ export default function StatisticheScreen() {
     }).length;
   }, [matches, matchesWithScore, selectedGk, perfByMatch]);
 
-  // Rating: include sia match.rating che performance individuali
   const ratingData = useMemo(() => {
     const ratings: number[] = [];
     if (!selectedGk) {
       matches.forEach((m) => {
         const perfs = perfsByMatch[m.id];
         if (perfs && perfs.length > 0) {
-          // Aggiungi ogni voto individuale
           perfs.forEach((p) => { if (p.rating != null) ratings.push(p.rating); });
         } else if (m.rating != null) {
           ratings.push(m.rating);
@@ -222,11 +214,10 @@ export default function StatisticheScreen() {
     ? (matchesWithScore.reduce((sum, m) => sum + m.goals_conceded!, 0) / matchesWithScore.length).toFixed(1)
     : '—';
 
-  // Match type distribution
   const byType = { amichevole: 0, campionato: 0, coppa: 0 };
   matches.forEach((m) => { byType[m.match_type] = (byType[m.match_type] ?? 0) + 1; });
 
-  // Weekly activity (last 4 weeks) — allenamenti + partite
+  // Weekly activity (last 4 weeks)
   const cutoff = weeksAgo(4);
   const recentTrainings = trainings.filter((t) => t.training_date >= cutoff);
   const recentMatches = matches.filter((m) => m.match_date >= cutoff);
@@ -237,10 +228,7 @@ export default function StatisticheScreen() {
     const day = d.getDay();
     const monday = new Date(d);
     monday.setDate(d.getDate() - ((day + 6) % 7));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
     const label = `${monday.getDate()}/${monday.getMonth() + 1}`;
-    const key = weekKey(d.toISOString().slice(0, 10));
     weeklyActivity.push({ label, trainings: 0, matches: 0 });
   }
   recentTrainings.forEach((t) => {
@@ -262,6 +250,9 @@ export default function StatisticheScreen() {
   const totalWeeklyTrainings = weeklyActivity.reduce((s, w) => s + w.trainings, 0);
   const totalWeeklyMatches = weeklyActivity.reduce((s, w) => s + w.matches, 0);
   const hasWeeklyActivity = totalWeeklyTrainings > 0 || totalWeeklyMatches > 0;
+
+  // Top category max for progress bars
+  const topCatMax = categories.length > 0 ? categories[0].count : 1;
 
   if (loading) {
     return (
@@ -364,38 +355,40 @@ export default function StatisticheScreen() {
           )}
 
           {/* ── Riepilogo ── */}
-          <View style={styles.statsGrid}>
-            <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
-            <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
-            <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${ratingData.count} ${t('stats.rated')}`} />
-            <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
-          </View>
+          <FadeIn>
+            <View style={styles.statsGrid}>
+              <StatCard icon="football-outline" iconBg="#FF9500" label={t('stats.matchesLabel')} value={matches.length} sub={`${matchesThisMonth.length} ${t('stats.thisMonth')}`} />
+              <StatCard icon="calendar-outline" iconBg="#5AC8FA" label={t('stats.trainingsLabel')} value={trainings.length} sub={`${trainingsThisMonth.length} ${t('stats.thisMonth')}`} />
+              <StatCard icon="star-outline" iconBg="#FFD60A" label={t('stats.avgRating')} value={avgRating} sub={`${ratingData.count} ${t('stats.rated')}`} />
+              <StatCard icon="shield-checkmark-outline" iconBg="#34C759" label={t('stats.cleanSheets')} value={cleanSheets} sub={matchesWithScore.length > 0 ? `${Math.round((cleanSheets / matchesWithScore.length) * 100)}%` : '—'} />
+            </View>
+          </FadeIn>
 
           {/* ── Risultati ── */}
           {matchesWithScore.length > 0 && (
-            <>
+            <FadeIn delay={100}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 {t('stats.results')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 {/* Barra visiva V/P/S */}
                 <View style={styles.resultBar}>
-                  {wins > 0 && <View style={[styles.resultBarSegment, { flex: wins, backgroundColor: '#34C759' }]} />}
+                  {wins > 0 && <View style={[styles.resultBarSegment, { flex: wins, backgroundColor: '#34C759', borderRadius: losses === 0 && draws === 0 ? 5 : undefined, borderTopLeftRadius: 5, borderBottomLeftRadius: 5 }]} />}
                   {draws > 0 && <View style={[styles.resultBarSegment, { flex: draws, backgroundColor: colors.textSecondary }]} />}
-                  {losses > 0 && <View style={[styles.resultBarSegment, { flex: losses, backgroundColor: '#FF3B30' }]} />}
+                  {losses > 0 && <View style={[styles.resultBarSegment, { flex: losses, backgroundColor: '#FF3B30', borderTopRightRadius: 5, borderBottomRightRadius: 5 }]} />}
                 </View>
                 <View style={styles.resultRow}>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#34C759' }]}>{wins}</ThemedText>
-                    <ThemedText type="small" style={{ color: '#34C759' }}>V</ThemedText>
+                    <ThemedText type="small" style={{ color: '#34C759' }}>{t('stats.wins')}</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: colors.textSecondary }]}>{draws}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">P</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.draws')}</ThemedText>
                   </View>
                   <View style={styles.resultItem}>
                     <ThemedText style={[styles.resultNumber, { color: '#FF3B30' }]}>{losses}</ThemedText>
-                    <ThemedText type="small" style={{ color: '#FF3B30' }}>S</ThemedText>
+                    <ThemedText type="small" style={{ color: '#FF3B30' }}>{t('stats.losses')}</ThemedText>
                   </View>
                 </View>
                 {matchesWithScore.length < matches.length && (
@@ -406,89 +399,93 @@ export default function StatisticheScreen() {
                 <View style={styles.divider} />
                 <View style={styles.avgRow}>
                   <ThemedText type="small" themeColor="textSecondary">{t('stats.avgConceded')}</ThemedText>
-                  <ThemedText type="smallBold">{avgConceded}</ThemedText>
+                  <ThemedText style={styles.avgValue}>{avgConceded}</ThemedText>
                 </View>
                 <View style={styles.avgRow}>
                   <ThemedText type="small" themeColor="textSecondary">{t('stats.cleanSheets')}</ThemedText>
-                  <ThemedText type="smallBold">{cleanSheets}</ThemedText>
+                  <ThemedText style={styles.avgValue}>{cleanSheets}</ThemedText>
                 </View>
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ── Mappa tiri ── */}
           {allPerformances.some((p) => p.shots && p.shots.length > 0 && (!selectedGk || p.goalkeeper_id === selectedGk)) && (
-            <Pressable
-              onPress={() => router.push(`/statistiche/mappa-tiri${selectedGk ? `?gk=${selectedGk}` : ''}` as any)}
-              style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
-              <ThemedView type="card" style={[styles.card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: Spacing.three }]}>
-                <Ionicons name="locate-outline" size={18} color={colors.accent} />
-                <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('stats.shotMaps')}</ThemedText>
-                <Ionicons name="chevron-forward" size={14} color={colors.accent} />
-              </ThemedView>
-            </Pressable>
+            <FadeIn delay={150}>
+              <Pressable
+                onPress={() => router.push(`/statistiche/mappa-tiri${selectedGk ? `?gk=${selectedGk}` : ''}` as any)}
+                style={({ pressed }) => [pressed && { opacity: 0.7 }]}>
+                <ThemedView type="card" style={styles.shotMapCard}>
+                  <Ionicons name="locate-outline" size={20} color={colors.accent} />
+                  <ThemedText type="smallBold" style={{ color: colors.accent }}>{t('stats.shotMaps')}</ThemedText>
+                  <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+                </ThemedView>
+              </Pressable>
+            </FadeIn>
           )}
 
           {/* ── Attività settimanale ── */}
-          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-            {t('stats.weeklyActivity')}
-          </ThemedText>
-          {hasWeeklyActivity ? (
-            <ThemedView type="card" style={styles.card}>
-              {(() => {
-                const BAR_MAX_H = 80;
-                const max = Math.max(...weeklyActivity.map((x) => Math.max(x.trainings, x.matches)), 1);
-                return (
-                  <View style={styles.chartContainer}>
-                    {weeklyActivity.map((w, i) => (
-                      <View key={i} style={styles.chartCol}>
-                        <View style={styles.chartPairWrapper}>
-                          <View style={styles.chartBarWrapper}>
-                            {w.trainings > 0 && (
-                              <ThemedText type="small" style={styles.chartNum}>
-                                {w.trainings}
-                              </ThemedText>
-                            )}
-                            <View style={[styles.chartBar, { height: w.trainings > 0 ? (w.trainings / max) * BAR_MAX_H : 4, backgroundColor: w.trainings > 0 ? colors.accent : colors.backgroundElement }]} />
+          <FadeIn delay={200}>
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              {t('stats.weeklyActivity')}
+            </ThemedText>
+            {hasWeeklyActivity ? (
+              <ThemedView type="card" style={styles.card}>
+                {(() => {
+                  const BAR_MAX_H = 100;
+                  const max = Math.max(...weeklyActivity.map((x) => Math.max(x.trainings, x.matches)), 1);
+                  return (
+                    <View style={styles.chartContainer}>
+                      {weeklyActivity.map((w, i) => (
+                        <View key={i} style={styles.chartCol}>
+                          <View style={styles.chartPairWrapper}>
+                            <View style={styles.chartBarWrapper}>
+                              {w.trainings > 0 && (
+                                <ThemedText type="small" style={styles.chartNum}>
+                                  {w.trainings}
+                                </ThemedText>
+                              )}
+                              <View style={[styles.chartBar, { height: w.trainings > 0 ? (w.trainings / max) * BAR_MAX_H : 4, backgroundColor: w.trainings > 0 ? colors.accent : colors.backgroundElement }]} />
+                            </View>
+                            <View style={styles.chartBarWrapper}>
+                              {w.matches > 0 && (
+                                <ThemedText type="small" style={[styles.chartNum, { color: '#FF9500' }]}>
+                                  {w.matches}
+                                </ThemedText>
+                              )}
+                              <View style={[styles.chartBar, { height: w.matches > 0 ? (w.matches / max) * BAR_MAX_H : 4, backgroundColor: w.matches > 0 ? '#FF9500' : colors.backgroundElement }]} />
+                            </View>
                           </View>
-                          <View style={styles.chartBarWrapper}>
-                            {w.matches > 0 && (
-                              <ThemedText type="small" style={[styles.chartNum, { color: '#FF9500' }]}>
-                                {w.matches}
-                              </ThemedText>
-                            )}
-                            <View style={[styles.chartBar, { height: w.matches > 0 ? (w.matches / max) * BAR_MAX_H : 4, backgroundColor: w.matches > 0 ? '#FF9500' : colors.backgroundElement }]} />
-                          </View>
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
+                            {w.label}
+                          </ThemedText>
                         </View>
-                        <ThemedText type="small" themeColor="textSecondary" style={styles.chartLabel}>
-                          {w.label}
-                        </ThemedText>
-                      </View>
-                    ))}
+                      ))}
+                    </View>
+                  );
+                })()}
+                <View style={styles.legendRow}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.trainingsLabel')} ({totalWeeklyTrainings})</ThemedText>
                   </View>
-                );
-              })()}
-              <View style={styles.legendRow}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-                  <ThemedText type="small" themeColor="textSecondary">{t('stats.trainingsLabel')} ({totalWeeklyTrainings})</ThemedText>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#FF9500' }]} />
+                    <ThemedText type="small" themeColor="textSecondary">{t('stats.matchesLabel')} ({totalWeeklyMatches})</ThemedText>
+                  </View>
                 </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#FF9500' }]} />
-                  <ThemedText type="small" themeColor="textSecondary">{t('stats.matchesLabel')} ({totalWeeklyMatches})</ThemedText>
-                </View>
-              </View>
-            </ThemedView>
-          ) : (
-            <ThemedView type="card" style={[styles.card, { alignItems: 'center', paddingVertical: Spacing.four }]}>
-              <Ionicons name="fitness-outline" size={28} color={colors.textSecondary} />
-              <ThemedText type="small" themeColor="textSecondary">{t('stats.noRecentActivity')}</ThemedText>
-            </ThemedView>
-          )}
+              </ThemedView>
+            ) : (
+              <ThemedView type="card" style={styles.emptyActivityCard}>
+                <Ionicons name="fitness-outline" size={22} color={colors.textSecondary} style={{ opacity: 0.4 }} />
+                <ThemedText type="small" themeColor="textSecondary">{t('stats.noRecentActivity')}</ThemedText>
+              </ThemedView>
+            )}
+          </FadeIn>
 
           {/* ── Tipo partite ── */}
           {matches.length > 0 && (
-            <>
+            <FadeIn delay={300}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 {t('stats.matchesByType')}
               </ThemedText>
@@ -497,54 +494,66 @@ export default function StatisticheScreen() {
                   { key: 'campionato' as const, label: t('matches.league'), color: '#FF9500' },
                   { key: 'coppa' as const, label: t('matches.cup'), color: '#AF52DE' },
                   { key: 'amichevole' as const, label: t('matches.friendly'), color: '#5AC8FA' },
-                ]).map(({ key, label, color }) => (
-                  <View key={key} style={styles.typeRow}>
-                    <View style={[styles.typeDot, { backgroundColor: color }]} />
-                    <ThemedText type="default" style={{ flex: 1 }}>{label}</ThemedText>
-                    <ThemedText type="smallBold">{byType[key]}</ThemedText>
-                    <View style={styles.typeBarBg}>
-                      <View
-                        style={[
-                          styles.typeBarFill,
-                          {
-                            backgroundColor: color,
-                            width: `${matches.length > 0 ? (byType[key] / matches.length) * 100 : 0}%`,
-                          },
-                        ]}
-                      />
+                ]).map(({ key, label, color }) => {
+                  const pct = matches.length > 0 ? Math.round((byType[key] / matches.length) * 100) : 0;
+                  return (
+                    <View key={key} style={styles.typeRow}>
+                      <View style={[styles.typeDot, { backgroundColor: color }]} />
+                      <ThemedText type="default" style={styles.typeLabel}>{label}</ThemedText>
+                      <ThemedText type="smallBold">{byType[key]}</ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary" style={styles.typePct}>{pct}%</ThemedText>
+                      <View style={[styles.typeBarBg, { backgroundColor: colors.backgroundElement }]}>
+                        <View
+                          style={[
+                            styles.typeBarFill,
+                            { backgroundColor: color, width: `${pct}%` },
+                          ]}
+                        />
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* ── Categorie più allenate ── */}
           {categories.length > 0 && (
-            <>
+            <FadeIn delay={400}>
               <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
                 {t('stats.topCategories')}
               </ThemedText>
               <ThemedView type="card" style={styles.card}>
                 {categories.slice(0, 5).map((cat, i) => (
-                  <View key={cat.name} style={[styles.categoryRow, i < Math.min(categories.length, 5) - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
+                  <View
+                    key={cat.name}
+                    style={[styles.categoryRow, i < Math.min(categories.length, 5) - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.backgroundElement }]}>
                     <ThemedText type="smallBold" style={styles.categoryRank}>{i + 1}</ThemedText>
-                    <ThemedText type="default" style={{ flex: 1 }}>{cat.name}</ThemedText>
-                    <ThemedText type="smallBold" themeColor="accent">{cat.count}</ThemedText>
+                    <View style={styles.categoryContent}>
+                      <View style={styles.categoryHeader}>
+                        <ThemedText type="default" style={{ flex: 1 }}>{cat.name}</ThemedText>
+                        <ThemedText type="smallBold" themeColor="accent">{cat.count}</ThemedText>
+                      </View>
+                      <View style={[styles.categoryBarBg, { backgroundColor: colors.backgroundElement }]}>
+                        <View style={[styles.categoryBarFill, { backgroundColor: colors.accent, width: `${(cat.count / topCatMax) * 100}%`, opacity: 1 - i * 0.15 }]} />
+                      </View>
+                    </View>
                   </View>
                 ))}
               </ThemedView>
-            </>
+            </FadeIn>
           )}
 
           {/* Empty state */}
           {matches.length === 0 && trainings.length === 0 && (
-            <ThemedView type="card" style={[styles.card, styles.emptyCard]}>
-              <Ionicons name="bar-chart-outline" size={40} color={colors.textSecondary} />
-              <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
-                {t('stats.emptyStats')}
-              </ThemedText>
-            </ThemedView>
+            <FadeIn delay={100}>
+              <ThemedView type="card" style={styles.emptyCard}>
+                <Ionicons name="bar-chart-outline" size={40} color={colors.textSecondary} />
+                <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
+                  {t('stats.emptyStats')}
+                </ThemedText>
+              </ThemedView>
+            </FadeIn>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -558,7 +567,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.five,
-    paddingBottom: BottomTabInset + Spacing.three,
+    paddingBottom: BottomTabInset + Spacing.six,
     gap: Spacing.one,
   },
   gkFilter: {
@@ -583,12 +592,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   sectionTitle: {
-    marginTop: Spacing.three,
-    marginBottom: Spacing.one,
+    marginTop: Spacing.four,
+    marginBottom: Spacing.two,
     marginLeft: Spacing.one,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
+  /* ── Stat cards ── */
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -615,15 +625,17 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansBold,
     lineHeight: 28,
   },
+  /* ── Cards ── */
   card: {
     borderRadius: Radius.card,
-    padding: Spacing.three,
+    padding: Spacing.three + 4,
     gap: Spacing.two,
   },
+  /* ── Results ── */
   resultBar: {
     flexDirection: 'row',
-    height: 6,
-    borderRadius: 3,
+    height: 10,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   resultBarSegment: {
@@ -632,60 +644,78 @@ const styles = StyleSheet.create({
   resultRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginTop: Spacing.one,
   },
   resultItem: {
     alignItems: 'center',
     gap: Spacing.half,
   },
   resultNumber: {
-    fontSize: 22,
+    fontSize: 26,
     fontFamily: Fonts.sansBold,
-    lineHeight: 26,
+    lineHeight: 30,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: 'rgba(128,128,128,0.2)',
+    marginVertical: Spacing.one,
   },
   avgRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: Spacing.half,
   },
+  avgValue: {
+    fontSize: 16,
+    fontFamily: Fonts.sansBold,
+  },
+  /* ── Shot map ── */
+  shotMapCard: {
+    borderRadius: Radius.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.three + 4,
+  },
+  /* ── Chart ── */
   chartContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 110,
+    height: 130,
     gap: Spacing.two,
   },
   chartCol: {
     flex: 1,
     alignItems: 'center',
-    gap: Spacing.half,
+    gap: Spacing.one,
   },
   chartPairWrapper: {
     height: '100%',
     flexDirection: 'row',
-    gap: 3,
+    gap: 4,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
   chartBarWrapper: {
-    width: 16,
+    width: 20,
     alignItems: 'center',
   },
   chartBar: {
     width: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   chartNum: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 11,
+    fontFamily: Fonts.sansBold,
     marginBottom: 2,
   },
   legendRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: Spacing.four,
+    marginTop: Spacing.one,
   },
   legendItem: {
     flexDirection: 'row',
@@ -693,35 +723,44 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   chartLabel: {
-    fontSize: 9,
+    fontSize: 10,
   },
+  /* ── Match type distribution ── */
   typeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    paddingVertical: Spacing.one,
+    paddingVertical: Spacing.one + 2,
   },
   typeDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
   },
+  typeLabel: {
+    flex: 1,
+  },
+  typePct: {
+    width: 32,
+    textAlign: 'right',
+    fontSize: 11,
+  },
   typeBarBg: {
-    width: 60,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(128,128,128,0.15)',
+    width: 80,
+    height: 8,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   typeBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
   },
+  /* ── Categories ── */
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -729,11 +768,41 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   categoryRank: {
-    width: 20,
+    width: 22,
     textAlign: 'center',
-    opacity: 0.4,
+    opacity: 0.35,
+    fontSize: 16,
+    fontFamily: Fonts.sansBold,
+  },
+  categoryContent: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  categoryBarBg: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  categoryBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  /* ── Empty states ── */
+  emptyActivityCard: {
+    borderRadius: Radius.card,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
   },
   emptyCard: {
+    borderRadius: Radius.card,
     marginTop: Spacing.four,
     alignItems: 'center',
     gap: Spacing.three,
