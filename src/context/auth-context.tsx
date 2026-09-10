@@ -15,6 +15,8 @@ interface AuthContextValue {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
+  /** true quando la lista squadre è stata effettivamente caricata almeno una volta */
+  teamsLoaded: boolean;
   teams: Team[];
   currentTeam: Team | null;
   myGoalkeeperId: string | null;
@@ -45,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [teamsLoaded, setTeamsLoaded] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
   const [myGoalkeeperId, setMyGoalkeeperId] = useState<string | null>(null);
@@ -65,8 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedId = await AsyncStorage.getItem(CURRENT_TEAM_KEY);
       const found = storedId ? myTeams.find((t) => t.id === storedId) : null;
       setCurrentTeamState(found ?? myTeams[0] ?? null);
-    } catch {
+    } catch (e) {
+      console.error('[auth] loadTeams failed:', e);
       setTeams([]);
+    } finally {
+      setTeamsLoaded(true);
     }
   }
 
@@ -113,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         setTeams([]);
+        setTeamsLoaded(false);
         setCurrentTeamState(null);
         setMyGoalkeeperId(null);
       }
@@ -246,6 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isAdmin,
         loading,
+        teamsLoaded,
         teams,
         currentTeam,
         myGoalkeeperId,

@@ -130,15 +130,25 @@ function JoinTeamSetup() {
   );
 }
 
+function Booting() {
+  const colors = useTheme();
+  return (
+    <ThemedView style={styles.booting}>
+      <ActivityIndicator color={colors.accent} />
+    </ThemedView>
+  );
+}
+
 export default function AppLayout() {
-  const { session, loading, profile, isAdmin, currentTeam } = useAuth();
+  const { session, loading, profile, teamsLoaded, isAdmin, currentTeam } = useAuth();
   const scheme = useColorScheme();
 
-  if (loading) return <ThemedView style={{ flex: 1 }} />;
+  if (loading) return <Booting />;
   if (!session) return <Redirect href="/(auth)/login" />;
 
-  // Wait for profile and teams to load after login before deciding
-  if (!profile) return <ThemedView style={{ flex: 1 }} />;
+  // Dopo il login profilo e squadre arrivano in modo asincrono: senza aspettare
+  // entrambi il gate "crea/unisciti squadra" comparirebbe per errore.
+  if (!profile || !teamsLoaded) return <Booting />;
 
   if (!currentTeam) {
     if (isAdmin) return <CreateTeamSetup />;
@@ -158,6 +168,11 @@ export default function AppLayout() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+  },
+  booting: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   gateContainer: {
     flex: 1,
