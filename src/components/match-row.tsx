@@ -50,10 +50,7 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
   const content = (
     <Link href={`/partite/${match.id}`} asChild>
       <AnimatedPressable>
-        <ThemedView type="card" style={[styles.row, muted && styles.rowMuted]}>
-          {/* Colored side bar */}
-          <View style={[styles.sideBar, { backgroundColor: sideBarColor, borderTopLeftRadius: Radius.card, borderBottomLeftRadius: Radius.card }]} />
-
+        <ThemedView type="card" style={[styles.row, { borderLeftColor: sideBarColor }, muted && styles.rowMuted]}>
           <View style={styles.rowContent}>
             <View style={styles.rowLeft}>
               <ThemedText type="smallBold" themeColor="textSecondary">
@@ -124,13 +121,12 @@ export function MatchRow({ match, muted, onDelete }: { match: Match; muted?: boo
 const styles = StyleSheet.create({
   row: {
     borderRadius: Radius.card,
+    borderLeftWidth: 4,
     flexDirection: 'row',
+    overflow: 'hidden',
   },
   rowMuted: {
     opacity: 0.7,
-  },
-  sideBar: {
-    width: 4,
   },
   rowContent: {
     flex: 1,
