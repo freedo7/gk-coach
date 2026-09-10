@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import i18n from '@/lib/i18n';
 import { listMyTeams, createTeam as apiCreateTeam, joinTeamByCode as apiJoinTeamByCode, removeTeamMember } from '@/lib/api/teams';
 import { getGoalkeeperByProfile, createGoalkeeperForProfile } from '@/lib/api/goalkeepers';
+import { RESET_PASSWORD_URL } from '@/constants/legal';
 import type { Profile, Team } from '@/types/database';
 
 const CURRENT_TEAM_KEY = 'currentTeamId';
@@ -164,7 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: RESET_PASSWORD_URL,
+    });
     return { error: error?.message ?? null };
   }
 

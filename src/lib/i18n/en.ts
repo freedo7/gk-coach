@@ -398,14 +398,19 @@ export default {
 
   // Edit password
   editPassword: {
+    currentLabel: 'CURRENT PASSWORD',
+    currentPlaceholder: 'Your current password',
+    wrongCurrent: 'The current password is not correct.',
     newPasswordLabel: 'NEW PASSWORD',
-    newPasswordPlaceholder: 'Minimum 6 characters',
+    newPasswordPlaceholder: 'Minimum 8 characters',
     confirmLabel: 'CONFIRM PASSWORD',
     confirmPlaceholder: 'Repeat password',
-    tooShort: 'Minimum 6 characters.',
+    tooShort: 'Minimum 8 characters.',
     mismatch: 'Passwords do not match.',
     updated: 'Password updated',
     updateButton: 'Update password',
+    forgotLink: 'Forgot your password?',
+    resetSent: 'We sent you an email to reset it.',
   },
 
   // Goalkeepers management

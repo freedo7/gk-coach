@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/context/toast-context';
+import { useAuth } from '@/context/auth-context';
 import { supabase } from '@/lib/supabase';
 import { haptic } from '@/hooks/use-haptic';
 import { Radius, Spacing } from '@/constants/theme';
@@ -16,18 +17,34 @@ export default function EditPasswordScreen() {
   const colors = useTheme();
   const router = useRouter();
   const { show: showToast } = useToast();
+  const { profile, resetPassword } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-  const valid = newPassword.length >= 6 && newPassword === confirmPassword;
+  const valid = currentPassword.length > 0 && newPassword.length >= 8 && newPassword === confirmPassword;
 
   async function handleSave() {
     setError(null);
-    if (newPassword.length < 6) { setError(t('editPassword.tooShort')); return; }
+    if (!currentPassword) { setError(t('editPassword.wrongCurrent')); return; }
+    if (newPassword.length < 8) { setError(t('editPassword.tooShort')); return; }
     if (newPassword !== confirmPassword) { setError(t('editPassword.mismatch')); return; }
+    if (!profile?.email) return;
     setSaving(true);
+    // Verifica la password attuale ri-autenticando l'utente.
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: profile.email,
+      password: currentPassword,
+    });
+    if (reauthError) {
+      setSaving(false);
+      haptic('error');
+      setError(t('editPassword.wrongCurrent'));
+      return;
+    }
     const { error: err } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (err) { haptic('error'); setError(err.message); return; }
@@ -36,10 +53,29 @@ export default function EditPasswordScreen() {
     router.back();
   }
 
+  async function handleForgot() {
+    if (!profile?.email) return;
+    const { error: e } = await resetPassword(profile.email);
+    if (e) { setError(e); return; }
+    haptic('success');
+    setResetSent(true);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ThemedText type="smallBold" themeColor="textSecondary">{t('editPassword.newPasswordLabel')}</ThemedText>
+        <ThemedText type="smallBold" themeColor="textSecondary">{t('editPassword.currentLabel')}</ThemedText>
+        <TextInput
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+          autoComplete="current-password"
+          placeholder={t('editPassword.currentPlaceholder')}
+          placeholderTextColor={colors.textSecondary}
+          style={[styles.input, { backgroundColor: colors.backgroundElement, color: colors.text }]}
+        />
+
+        <ThemedText type="smallBold" themeColor="textSecondary" style={{ marginTop: Spacing.three }}>{t('editPassword.newPasswordLabel')}</ThemedText>
         <TextInput
           value={newPassword}
           onChangeText={setNewPassword}
@@ -64,6 +100,16 @@ export default function EditPasswordScreen() {
 
         {error && (
           <ThemedText type="small" themeColor="accent" style={{ marginTop: Spacing.two }}>{error}</ThemedText>
+        )}
+
+        {resetSent ? (
+          <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: Spacing.two }}>
+            {t('editPassword.resetSent')}
+          </ThemedText>
+        ) : (
+          <Pressable onPress={handleForgot} style={{ marginTop: Spacing.two, alignSelf: 'flex-start' }}>
+            <ThemedText type="small" themeColor="accent">{t('editPassword.forgotLink')}</ThemedText>
+          </Pressable>
         )}
 
         <Pressable

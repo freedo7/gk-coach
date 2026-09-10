@@ -7,3 +7,6 @@ export const LEGAL_URLS = {
   terms: `${BASE}/termini`,
   cookie: `${BASE}/cookie`,
 } as const;
+
+/** Pagina web che gestisce il link di reimpostazione password inviato via email. */
+export const RESET_PASSWORD_URL = `${BASE}/reset-password`;
