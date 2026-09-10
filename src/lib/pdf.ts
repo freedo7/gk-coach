@@ -3,7 +3,7 @@ import type { Match, Goalkeeper } from '@/types/database';
 import { formatDateLong, formatTime } from '@/lib/format';
 import i18n from '@/lib/i18n';
 
-const APP_URL = 'https://gk-coach.app';
+const APP_URL = 'https://gkcoach.it';
 const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(APP_URL)}`;
 
 function escapeHtml(str: string): string {
