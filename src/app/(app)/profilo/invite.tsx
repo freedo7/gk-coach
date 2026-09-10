@@ -42,7 +42,13 @@ export default function InviteScreen() {
       const newCode = await generateInviteCode(currentTeam.id);
       setCode(newCode);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('invite.unknownError'));
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === 'object' && e !== null && 'message' in e
+            ? String((e as { message: unknown }).message)
+            : t('invite.unknownError');
+      setError(msg);
     } finally {
       setLoading(false);
     }

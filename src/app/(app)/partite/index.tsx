@@ -9,6 +9,7 @@ import { haptic } from '@/hooks/use-haptic';
 import { EmptyState } from '@/components/empty-state';
 import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
+import { SectionLabel } from '@/components/section-label';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -203,9 +204,9 @@ export default function PartiteScreen() {
 
           {upcoming.length > 0 && (
             <View style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel>
                 {t('matches.upcomingMatches')}
-              </ThemedText>
+              </SectionLabel>
               {upcoming.slice(0, upcomingLimit).map((match, index) => (
                 <FadeIn key={match.id} delay={index * 60}>
                   <MatchRow match={match} onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
@@ -228,9 +229,9 @@ export default function PartiteScreen() {
 
           {past.length > 0 && (
             <View style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel>
                 {t('matches.pastMatches')}
-              </ThemedText>
+              </SectionLabel>
               {past.slice(0, pastLimit).map((match, index) => (
                 <FadeIn key={match.id} delay={index * 60}>
                   <MatchRow match={match} muted onDelete={isAdmin ? () => handleDelete(match.id) : undefined} />
@@ -310,9 +311,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.two,
-  },
-  sectionTitle: {
-    letterSpacing: 0.5,
   },
   loadMoreBtn: {
     alignItems: 'center',

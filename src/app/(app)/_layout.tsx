@@ -17,7 +17,7 @@ const BG_DARK = require('@/assets/images/sfondo-dark.png');
 
 function CreateTeamSetup() {
   const { t } = useTranslation();
-  const { createTeam } = useAuth();
+  const { createTeam, signOut } = useAuth();
   const colors = useTheme();
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -64,6 +64,9 @@ function CreateTeamSetup() {
             )}
           </Pressable>
         </ThemedView>
+        <Pressable onPress={() => signOut()} style={styles.gateLogout} hitSlop={8}>
+          <ThemedText type="small" themeColor="textSecondary">{t('settings.logout')}</ThemedText>
+        </Pressable>
       </SafeAreaView>
     </ThemedView>
   );
@@ -71,7 +74,7 @@ function CreateTeamSetup() {
 
 function JoinTeamSetup() {
   const { t } = useTranslation();
-  const { joinTeam } = useAuth();
+  const { joinTeam, signOut } = useAuth();
   const colors = useTheme();
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -119,6 +122,9 @@ function JoinTeamSetup() {
             )}
           </Pressable>
         </ThemedView>
+        <Pressable onPress={() => signOut()} style={styles.gateLogout} hitSlop={8}>
+          <ThemedText type="small" themeColor="textSecondary">{t('settings.logout')}</ThemedText>
+        </Pressable>
       </SafeAreaView>
     </ThemedView>
   );
@@ -173,6 +179,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     padding: Spacing.four,
     gap: Spacing.three,
+  },
+  gateLogout: {
+    marginTop: Spacing.four,
+    alignSelf: 'center',
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
   },
   input: {
     borderRadius: Radius.control,

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -30,6 +31,7 @@ import { setLanguage } from '@/lib/i18n';
 import { useScreenTransition } from '@/components/theme-transition';
 import { FadeIn } from '@/components/fade-in';
 import { BottomTabInset, Fonts, Radius, Spacing } from '@/constants/theme';
+import { LEGAL_URLS } from '@/constants/legal';
 import type { Team } from '@/types/database';
 
 const LANG_OPTIONS: { value: string; label: string; flag: string }[] = [
@@ -113,7 +115,7 @@ export default function ImpostazioniScreen() {
   const { t, i18n } = useTranslation();
   const ROLE_LABEL = useRoleLabel();
   const THEME_OPTIONS = useThemeOptions();
-  const { profile, isAdmin, signOut, teams, currentTeam, setCurrentTeam, createTeam, leaveTeam } = useAuth();
+  const { profile, isAdmin, signOut, deleteAccount, teams, currentTeam, setCurrentTeam, createTeam, leaveTeam } = useAuth();
   const colors = useTheme();
   const plan = usePlan();
   const router = useRouter();
@@ -133,8 +135,30 @@ export default function ImpostazioniScreen() {
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [createTeamError, setCreateTeamError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   if (!profile) return null;
+
+  function handleDeleteAccount() {
+    haptic('warning');
+    Alert.alert(
+      t('settings.deleteAccountConfirm'),
+      t('settings.deleteAccountMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.deleteAccountCta'),
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+            const { error } = await deleteAccount();
+            setDeletingAccount(false);
+            if (error) showToast(t('settings.deleteAccountError'), 'error');
+          },
+        },
+      ],
+    );
+  }
 
   async function handleCreateTeam() {
     if (!newTeamName.trim()) return;
@@ -460,6 +484,26 @@ export default function ImpostazioniScreen() {
             </FadeIn>
           )}
 
+          {/* ─── INFO / LEGALE ─── */}
+          {(match('info') || match('legale') || match('privacy') || match('termini') || match('cookie')) && (
+            <FadeIn delay={475}>
+              <SectionHeader title={t('settings.infoSection')} />
+              <ThemedView type="card" style={styles.card}>
+                <SettingsRow
+                  icon="shield-checkmark-outline"
+                  label={t('settings.privacyPolicy')}
+                  onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
+                />
+                <SettingsRow
+                  icon="document-text-outline"
+                  label={t('settings.termsOfService')}
+                  onPress={() => Linking.openURL(LEGAL_URLS.terms)}
+                  last
+                />
+              </ThemedView>
+            </FadeIn>
+          )}
+
           {/* ─── ADMIN ─── */}
           {isAdmin && (match('admin') || match('feedback') || match('utenti') || match('abbonamenti')) && (
             <FadeIn delay={500}>
@@ -492,6 +536,23 @@ export default function ImpostazioniScreen() {
               style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}>
               <Ionicons name="log-out-outline" size={18} color={colors.danger} />
               <ThemedText type="small" style={{ color: colors.danger }}>{t('settings.logout')}</ThemedText>
+            </Pressable>
+          </FadeIn>
+
+          {/* ─── ELIMINA ACCOUNT ─── */}
+          <FadeIn delay={575}>
+            <Pressable
+              onPress={handleDeleteAccount}
+              disabled={deletingAccount}
+              style={({ pressed }) => [styles.deleteAccountBtn, pressed && styles.pressed]}>
+              {deletingAccount ? (
+                <ActivityIndicator size="small" color={colors.textSecondary} />
+              ) : (
+                <>
+                  <Ionicons name="trash-outline" size={15} color={colors.textSecondary} />
+                  <ThemedText type="small" themeColor="textSecondary">{t('settings.deleteAccount')}</ThemedText>
+                </>
+              )}
             </Pressable>
           </FadeIn>
 
@@ -689,6 +750,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.two,
     marginTop: Spacing.four,
+    paddingVertical: Spacing.two,
+  },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    marginTop: Spacing.one,
     paddingVertical: Spacing.two,
   },
   version: {

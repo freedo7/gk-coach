@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { haptic } from '@/hooks/use-haptic';
 import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
+import { SectionLabel } from '@/components/section-label';
 import { SkeletonCard, SkeletonMatchRow } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -172,9 +173,9 @@ export default function HomeScreen() {
           {/* ── Prossimo allenamento ── */}
           <FadeIn delay={200}>
             <View style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel>
                 {t('home.nextTraining')}
-              </ThemedText>
+              </SectionLabel>
               {nextTraining === undefined ? (
                 <SkeletonCard />
               ) : nextTraining === null ? (
@@ -204,9 +205,9 @@ export default function HomeScreen() {
           {/* ── Prossima partita ── */}
           <FadeIn delay={300}>
             <View style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel>
                 {t('home.nextMatch')}
-              </ThemedText>
+              </SectionLabel>
               {nextMatch === undefined ? (
                 <SkeletonMatchRow />
               ) : nextMatch === null ? (
@@ -221,9 +222,9 @@ export default function HomeScreen() {
           {lastMatch && (
             <FadeIn delay={400}>
               <View style={styles.section}>
-                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                <SectionLabel>
                   {t('home.lastMatch')}
-                </ThemedText>
+                </SectionLabel>
                 <MatchRow match={lastMatch} />
               </View>
             </FadeIn>
@@ -282,9 +283,6 @@ const styles = StyleSheet.create({
   /* ── Sections ── */
   section: {
     gap: Spacing.two,
-  },
-  sectionTitle: {
-    letterSpacing: 0.5,
   },
   /* ── Training card ── */
   trainingCard: {

@@ -6,6 +6,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -42,6 +43,7 @@ import { supabase } from '@/lib/supabase';
 import { isValidEmail, isValidPassword, getPasswordChecks } from '@/lib/validation';
 import { useLoginTransition } from '@/context/login-transition-context';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { LEGAL_URLS } from '@/constants/legal';
 
 const PARALLAX_RANGE = 15;
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -314,12 +316,17 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+  // true solo quando un campo viene riempito in un colpo solo (autofill / incolla),
+  // non durante la digitazione manuale (+1 carattere per volta).
+  const filledByAutofill = useRef(false);
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !submitting;
 
-  // Dismiss keyboard after autofill populates both fields
+  // Chiude la tastiera solo dopo un autofill che popola entrambi i campi
   useEffect(() => {
+    if (!filledByAutofill.current) return;
     if (email.trim().length > 0 && password.length > 0) {
+      filledByAutofill.current = false;
       const timer = setTimeout(() => Keyboard.dismiss(), 100);
       return () => clearTimeout(timer);
     }
@@ -352,7 +359,7 @@ function LoginForm() {
       <GlowInput
         placeholder={t('auth.emailPlaceholder')}
         value={email}
-        onChangeText={(v) => { setEmail(v); if (emailError) setEmailError(null); }}
+        onChangeText={(v) => { if (v.length - email.length > 1) filledByAutofill.current = true; setEmail(v); if (emailError) setEmailError(null); }}
         onBlur={() => { if (email.trim() && !isValidEmail(email)) setEmailError(t('auth.emailInvalid')); else setEmailError(null); }}
         onSubmitEditing={() => passwordRef.current?.focus()}
         keyboardType="email-address"
@@ -366,7 +373,7 @@ function LoginForm() {
         inputRef={passwordRef}
         placeholder={t('auth.passwordPlaceholder')}
         value={password}
-        onChangeText={(v) => { setPassword(v); if (passwordError) setPasswordError(null); }}
+        onChangeText={(v) => { if (v.length - password.length > 1) filledByAutofill.current = true; setPassword(v); if (passwordError) setPasswordError(null); }}
         onBlur={() => { if (password && !isValidPassword(password)) setPasswordError(t('auth.passwordTooShort')); else setPasswordError(null); }}
         onSubmitEditing={handleSubmit}
         secureTextEntry={!showPassword}
@@ -412,6 +419,7 @@ function RegisterForm() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'preparatore' | 'portiere'>('preparatore');
   const [inviteCode, setInviteCode] = useState('');
@@ -422,8 +430,10 @@ function RegisterForm() {
   const [done, setDone] = useState(false);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+  const confirmPwRef = useRef<TextInput>(null);
 
-  const canSubmit = fullName.trim().length > 0 && isValidEmail(email) && isValidPassword(password) && !submitting;
+  const passwordsMatch = password === confirmPassword;
+  const canSubmit = fullName.trim().length > 0 && isValidEmail(email) && isValidPassword(password) && passwordsMatch && confirmPassword.length > 0 && !submitting;
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -477,9 +487,10 @@ function RegisterForm() {
         value={password}
         onChangeText={(v) => { setPassword(v); if (passwordError) setPasswordError(null); }}
         onBlur={() => { if (password && !isValidPassword(password)) setPasswordError(t('auth.passwordTooShort')); else setPasswordError(null); }}
+        onSubmitEditing={() => confirmPwRef.current?.focus()}
         secureTextEntry={!showPassword}
         autoComplete="new-password"
-        returnKeyType="done"
+        returnKeyType="next"
         delay={300}
         error={passwordError}
         rightIcon={
@@ -514,6 +525,29 @@ function RegisterForm() {
           })}
         </Animated.View>
       )}
+
+      <GlowInput
+        inputRef={confirmPwRef}
+        placeholder={t('auth.confirmPasswordPlaceholder')}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry={!showPassword}
+        autoComplete="new-password"
+        returnKeyType="done"
+        delay={350}
+        error={confirmPassword.length > 0 && !passwordsMatch ? t('auth.passwordMismatch') : null}
+        rightIcon={
+          confirmPassword.length > 0 ? (
+            <View style={styles.eyeButton}>
+              <Ionicons
+                name={passwordsMatch ? 'checkmark-circle' : 'close-circle'}
+                size={20}
+                color={passwordsMatch ? colors.accent : '#ef4444'}
+              />
+            </View>
+          ) : undefined
+        }
+      />
 
       <Animated.View entering={FadeInDown.delay(400).duration(300)}>
         <ThemedText type="smallBold" themeColor="textSecondary" style={{ marginBottom: Spacing.one }}>
@@ -560,6 +594,19 @@ function RegisterForm() {
         loading={submitting}
         delay={500}
       />
+
+      <Animated.View entering={FadeInDown.delay(550).duration(300)}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.legalText}>
+          {t('auth.legalPrefix')}{' '}
+          <ThemedText type="small" themeColor="accent" onPress={() => Linking.openURL(LEGAL_URLS.terms)}>
+            {t('auth.legalTerms')}
+          </ThemedText>
+          {' '}{t('auth.legalAnd')}{' '}
+          <ThemedText type="small" themeColor="accent" onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>
+            {t('auth.legalPrivacy')}
+          </ThemedText>.
+        </ThemedText>
+      </Animated.View>
     </>
   );
 }
@@ -705,6 +752,10 @@ const styles = StyleSheet.create({
   forgotLink: {
     alignSelf: 'flex-end',
     marginTop: -Spacing.one,
+  },
+  legalText: {
+    textAlign: 'center',
+    lineHeight: 18,
   },
   pwRequirements: {
     gap: Spacing.one,

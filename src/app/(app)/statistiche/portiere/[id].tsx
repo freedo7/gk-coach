@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { haptic } from '@/hooks/use-haptic';
+import { SectionLabel } from '@/components/section-label';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MatchRow } from '@/components/match-row';
@@ -169,9 +170,9 @@ export default function SchedaPortiereScreen() {
           {/* Risultati */}
           {matchesWithScore.length > 0 && (
             <>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('stats.results')}
-              </ThemedText>
+              </SectionLabel>
               <ThemedView type="card" style={styles.card}>
                 <View style={styles.resultRow}>
                   <View style={styles.resultItem}>
@@ -203,9 +204,9 @@ export default function SchedaPortiereScreen() {
           {/* Trend voto */}
           {ratingTrend.length > 1 && (
             <>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('goalkeeperProfile.ratingTrend', { count: ratingTrend.length })}
-              </ThemedText>
+              </SectionLabel>
               <ThemedView type="card" style={styles.card}>
                 <View style={styles.trendRow}>
                   {ratingTrend.map((r, i) => (
@@ -222,9 +223,9 @@ export default function SchedaPortiereScreen() {
           {/* Storico partite */}
           {matches.length > 0 && (
             <>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('goalkeeperProfile.matchHistory')}
-              </ThemedText>
+              </SectionLabel>
               {[...matches].reverse().slice(0, 10).map((m) => (
                 <MatchRow key={m.id} match={m} />
               ))}

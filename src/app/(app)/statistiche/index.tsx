@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { FadeIn } from '@/components/fade-in';
+import { SectionLabel } from '@/components/section-label';
 import { SkeletonList } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -367,9 +368,9 @@ export default function StatisticheScreen() {
           {/* ── Risultati ── */}
           {matchesWithScore.length > 0 && (
             <FadeIn delay={100}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('stats.results')}
-              </ThemedText>
+              </SectionLabel>
               <ThemedView type="card" style={styles.card}>
                 {/* Barra visiva V/P/S */}
                 <View style={styles.resultBar}>
@@ -426,9 +427,9 @@ export default function StatisticheScreen() {
 
           {/* ── Attività settimanale ── */}
           <FadeIn delay={200}>
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+            <SectionLabel style={styles.sectionTitle}>
               {t('stats.weeklyActivity')}
-            </ThemedText>
+            </SectionLabel>
             {hasWeeklyActivity ? (
               <ThemedView type="card" style={styles.card}>
                 {(() => {
@@ -486,9 +487,9 @@ export default function StatisticheScreen() {
           {/* ── Tipo partite ── */}
           {matches.length > 0 && (
             <FadeIn delay={300}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('stats.matchesByType')}
-              </ThemedText>
+              </SectionLabel>
               <ThemedView type="card" style={styles.card}>
                 {([
                   { key: 'campionato' as const, label: t('matches.league'), color: '#FF9500' },
@@ -520,9 +521,9 @@ export default function StatisticheScreen() {
           {/* ── Categorie più allenate ── */}
           {categories.length > 0 && (
             <FadeIn delay={400}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              <SectionLabel style={styles.sectionTitle}>
                 {t('stats.topCategories')}
-              </ThemedText>
+              </SectionLabel>
               <ThemedView type="card" style={styles.card}>
                 {categories.slice(0, 5).map((cat, i) => (
                   <View

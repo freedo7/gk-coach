@@ -5,6 +5,11 @@ import { usePurchases } from '@/context/purchases-context';
 const TRIAL_DAYS_ADMIN = 14;
 const TRIAL_DAYS_PORTIERE = 30;
 
+// Lancio gratuito: la monetizzazione (Pro / RevenueCat / limiti piano) è
+// rinviata a dopo la validazione. Finché è `false` tutti gli utenti hanno
+// accesso completo senza limiti. Rimettere a `true` quando si attivano i piani.
+const MONETIZATION_ENABLED = false;
+
 export interface PlanInfo {
   tier: 'trial' | 'base' | 'pro';
   isTrialActive: boolean;
@@ -46,6 +51,7 @@ export function usePlan(): PlanInfo {
   const { isPro: isProRC } = usePurchases();
 
   return useMemo(() => {
+    if (!MONETIZATION_ENABLED) return PRO; // lancio gratuito: nessun limite
     if (!profile) return PRO; // non ancora caricato, non bloccare
 
     // RevenueCat ha la precedenza — entitlement attivo = Pro

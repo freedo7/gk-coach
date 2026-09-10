@@ -14,6 +14,7 @@ import { FadeIn } from '@/components/fade-in';
 import { MatchRow } from '@/components/match-row';
 import { SkeletonCard } from '@/components/skeleton';
 import { SwipeableRow } from '@/components/swipeable-row';
+import { SectionLabel } from '@/components/section-label';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/context/auth-context';
@@ -533,9 +534,9 @@ export default function AllenamentiScreen() {
           {dayMatches.length > 0 && (
             <FadeIn delay={100}>
               <View style={styles.matchSection}>
-                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+                <SectionLabel>
                   {dayMatches.length === 1 ? t('trainings.match') : t('trainings.matchesPlural')}
-                </ThemedText>
+                </SectionLabel>
                 {dayMatches.map((m, i) => (
                   <FadeIn key={m.id} delay={150 + i * 60}>
                     <MatchRow match={m} />
@@ -730,8 +731,5 @@ const styles = StyleSheet.create({
   },
   matchSection: {
     gap: Spacing.two,
-  },
-  sectionTitle: {
-    letterSpacing: 0.5,
   },
 });

@@ -32,6 +32,7 @@ interface AuthContextValue {
     inviteCode?: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   sendPhoneOtp: (phone: string) => Promise<{ error: string | null }>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error: string | null }>;
@@ -49,7 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [myGoalkeeperId, setMyGoalkeeperId] = useState<string | null>(null);
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (error) {
+      console.error('[auth] loadProfile failed:', error.message, error);
+      return;
+    }
     if (data) setProfile(data as Profile);
   }
 
@@ -175,6 +180,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.removeItem(CURRENT_TEAM_KEY);
   }
 
+  async function deleteAccount() {
+    const { error } = await supabase.rpc('delete_my_account');
+    if (error) return { error: error.message };
+    await supabase.auth.signOut();
+    await AsyncStorage.removeItem(CURRENT_TEAM_KEY);
+    return { error: null };
+  }
+
   async function refreshProfile() {
     if (session) await loadProfile(session.user.id);
   }
@@ -244,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        deleteAccount,
         resetPassword,
         sendPhoneOtp,
         verifyPhoneOtp,
