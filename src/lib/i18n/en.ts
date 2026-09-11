@@ -351,6 +351,7 @@ export default {
     infoSection: 'INFO',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms & Conditions',
+    cookiePolicy: 'Cookie Policy',
     leaveTeam: 'Leave team',
     leaveTeamConfirm: 'Leave this team?',
     leaveTeamMessage: 'You will no longer see trainings and matches from this team.',

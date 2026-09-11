@@ -498,6 +498,11 @@ export default function ImpostazioniScreen() {
                   icon="document-text-outline"
                   label={t('settings.termsOfService')}
                   onPress={() => Linking.openURL(LEGAL_URLS.terms)}
+                />
+                <SettingsRow
+                  icon="information-circle-outline"
+                  label={t('settings.cookiePolicy')}
+                  onPress={() => Linking.openURL(LEGAL_URLS.cookie)}
                   last
                 />
               </ThemedView>

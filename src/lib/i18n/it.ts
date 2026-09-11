@@ -351,6 +351,7 @@ export default {
     infoSection: 'INFO',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Termini e Condizioni',
+    cookiePolicy: 'Cookie Policy',
     leaveTeam: 'Abbandona squadra',
     leaveTeamConfirm: 'Abbandonare la squadra?',
     leaveTeamMessage: 'Non vedrai più gli allenamenti e le partite di questa squadra.',

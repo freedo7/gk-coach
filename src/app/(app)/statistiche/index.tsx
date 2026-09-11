@@ -66,9 +66,9 @@ function StatCard({ icon, iconBg, label, value, sub }: {
       <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
         <Ionicons name={icon as any} size={18} color="#fff" />
       </View>
-      <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
-      <ThemedText style={styles.statValue}>{value}</ThemedText>
-      {sub && <ThemedText type="small" themeColor="textSecondary">{sub}</ThemedText>}
+      <ThemedText type="small" themeColor="textSecondary" style={styles.statText}>{label}</ThemedText>
+      <ThemedText style={[styles.statValue, styles.statText]}>{value}</ThemedText>
+      {sub && <ThemedText type="small" themeColor="textSecondary" style={styles.statText}>{sub}</ThemedText>}
     </ThemedView>
   );
 }
@@ -612,6 +612,7 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     width: '48%',
     flexGrow: 1,
+    alignItems: 'center',
   },
   statIcon: {
     width: 30,
@@ -625,6 +626,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: Fonts.sansBold,
     lineHeight: 28,
+  },
+  statText: {
+    textAlign: 'center',
   },
   /* ── Cards ── */
   card: {
